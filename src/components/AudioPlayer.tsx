@@ -1,6 +1,12 @@
 import { useState, useEffect, useRef, FormEvent, ChangeEvent } from 'react';
 import { MusicTrack } from '../types';
 import {
+  NatureSoundType,
+  NATURE_SOUNDSCAPES_OPTIONS,
+  setupNatureSoundscape,
+  SoundscapeHandle,
+} from '../services/natureSoundscapes';
+import {
   Music,
   Play,
   Pause,
@@ -21,7 +27,11 @@ import {
   VolumeX,
   X,
   Clock,
-  ChevronRight
+  ChevronRight,
+  Waves,
+  TreePine,
+  CloudRain,
+  Wind,
 } from 'lucide-react';
 
 interface AudioPlayerProps {
@@ -81,7 +91,8 @@ export default function AudioPlayer({
   const [composerHz, setComposerHz] = useState<number>(528);
   const [composerWave, setComposerWave] = useState<OscillatorType>('sine');
   const [composerBeat, setComposerBeat] = useState<'none' | 'theta' | 'alpha' | 'delta'>('theta');
-  const [composerNature, setComposerNature] = useState<'none' | 'ocean' | 'wind'>('ocean');
+  const [composerNature, setComposerNature] = useState<NatureSoundType>('ocean');
+  const [composerNatureVol, setComposerNatureVol] = useState<number>(0.65);
   const [composerName, setComposerName] = useState<string>('');
   const [isLiveComposing, setIsLiveComposing] = useState<boolean>(false);
   const [isRecordingComposer, setIsRecordingComposer] = useState<boolean>(false);
@@ -104,6 +115,7 @@ export default function AudioPlayer({
   const synthIntervalRef = useRef<number | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
   const mainGainRef = useRef<GainNode | null>(null);
+  const natureSoundscapeHandleRef = useRef<SoundscapeHandle | null>(null);
   const activeOscillatorsRef = useRef<OscillatorNode[]>([]);
   const activeGainNodesRef = useRef<GainNode[]>([]);
   const activeSourceNodesRef = useRef<AudioBufferSourceNode[]>([]);
@@ -226,7 +238,8 @@ export default function AudioPlayer({
       freq: parseFloat(params.get('freq') || '528'),
       wave: (params.get('wave') || 'sine') as OscillatorType,
       beat: (params.get('beat') || 'theta') as 'none' | 'theta' | 'alpha' | 'delta',
-      soundscape: params.get('soundscape') || 'ocean',
+      soundscape: (params.get('soundscape') || 'ocean') as NatureSoundType,
+      natureVol: parseFloat(params.get('natureVol') || '0.65'),
     };
   };
 
@@ -235,7 +248,8 @@ export default function AudioPlayer({
     let baseHz = 528;
     let waveShape: OscillatorType = 'sine';
     let beatType: 'none' | 'theta' | 'alpha' | 'delta' = 'theta';
-    let natureType = 'ocean';
+    let natureType: NatureSoundType = 'ocean';
+    let natureVol = 0.65;
 
     if (currentTrack.id.startsWith('custom-synth-')) {
       const parsed = parseSynthUrl(currentTrack.url);
@@ -243,7 +257,8 @@ export default function AudioPlayer({
         baseHz = parsed.freq;
         waveShape = parsed.wave;
         beatType = parsed.beat;
-        natureType = parsed.soundscape as any;
+        natureType = parsed.soundscape;
+        natureVol = parsed.natureVol;
       }
     } else if (currentTrack.id === 'princess-synth') {
       // Celestial default parameters
@@ -251,9 +266,10 @@ export default function AudioPlayer({
       waveShape = 'sine';
       beatType = 'theta';
       natureType = 'ocean';
+      natureVol = 0.65;
     }
 
-    runProceduralSynth(baseHz, waveShape, beatType, natureType);
+    runProceduralSynth(baseHz, waveShape, beatType, natureType, natureVol);
   };
 
   const stopSynth = () => {
@@ -261,6 +277,11 @@ export default function AudioPlayer({
     if (synthIntervalRef.current) {
       clearTimeout(synthIntervalRef.current);
       synthIntervalRef.current = null;
+    }
+
+    if (natureSoundscapeHandleRef.current) {
+      natureSoundscapeHandleRef.current.stop();
+      natureSoundscapeHandleRef.current = null;
     }
 
     const oscsToStop = [...activeOscillatorsRef.current];
@@ -297,22 +318,37 @@ export default function AudioPlayer({
     newHz = composerHz,
     newWave = composerWave,
     newBeat = composerBeat,
-    newNature = composerNature
+    newNature = composerNature,
+    newNatureVol = composerNatureVol
   ) => {
     if (isLiveComposing) {
-      runProceduralSynth(newHz, newWave, newBeat, newNature);
+      runProceduralSynth(newHz, newWave, newBeat, newNature, newNatureVol);
     }
   };
 
-  // White noise buffer creator for organic natural soundscapes
-  const createNoiseBuffer = (ctx: AudioContext) => {
-    const bufferSize = ctx.sampleRate * 4; // 4 seconds of unique noise
-    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) {
-      data[i] = Math.random() * 2 - 1;
+  // Real-time change of nature soundscape without restarting tonal oscillators
+  const handleSelectNature = (nat: NatureSoundType) => {
+    setComposerNature(nat);
+    if (isLiveComposing && audioCtxRef.current && mainGainRef.current) {
+      if (natureSoundscapeHandleRef.current) {
+        natureSoundscapeHandleRef.current.stop();
+        natureSoundscapeHandleRef.current = null;
+      }
+      natureSoundscapeHandleRef.current = setupNatureSoundscape(
+        audioCtxRef.current,
+        mainGainRef.current,
+        nat,
+        composerNatureVol
+      );
     }
-    return buffer;
+  };
+
+  // Real-time nature volume slider adjustment
+  const handleNatureVolumeChange = (newVol: number) => {
+    setComposerNatureVol(newVol);
+    if (natureSoundscapeHandleRef.current) {
+      natureSoundscapeHandleRef.current.setVolume(newVol);
+    }
   };
 
   // Run the synthesizer engine with parameterized nodes
@@ -320,12 +356,17 @@ export default function AudioPlayer({
     baseHz: number,
     waveShape: OscillatorType,
     beatType: 'none' | 'theta' | 'alpha' | 'delta',
-    natureType: string
+    natureType: NatureSoundType,
+    natureVol = composerNatureVol
   ) => {
     // Stop any existing synthesis cleanly
     if (synthIntervalRef.current) {
       clearTimeout(synthIntervalRef.current);
       synthIntervalRef.current = null;
+    }
+    if (natureSoundscapeHandleRef.current) {
+      natureSoundscapeHandleRef.current.stop();
+      natureSoundscapeHandleRef.current = null;
     }
     activeOscillatorsRef.current.forEach((osc) => {
       try { osc.stop(); osc.disconnect(); } catch (e) {}
@@ -473,51 +514,8 @@ export default function AudioPlayer({
       activeOscillatorsRef.current.push(oscL, oscR);
     }
 
-    // C. Natural White-Noise Soundscapes
-    if (natureType === 'ocean' || natureType === 'wind') {
-      const noiseBuffer = createNoiseBuffer(ctx);
-      const noiseNode = ctx.createBufferSource();
-      noiseNode.buffer = noiseBuffer;
-      noiseNode.loop = true;
-
-      const noiseFilter1 = ctx.createBiquadFilter();
-      noiseFilter1.type = natureType === 'ocean' ? 'lowpass' : 'bandpass';
-      noiseFilter1.Q.setValueAtTime(natureType === 'ocean' ? 1.0 : 2.0, ctx.currentTime);
-      noiseFilter1.frequency.setValueAtTime(natureType === 'ocean' ? 220 : 550, ctx.currentTime);
-
-      const noiseFilter2 = ctx.createBiquadFilter();
-      noiseFilter2.type = 'lowpass';
-      noiseFilter2.Q.setValueAtTime(1.0, ctx.currentTime);
-      noiseFilter2.frequency.setValueAtTime(natureType === 'ocean' ? 220 : 550, ctx.currentTime);
-
-      const noiseGain = ctx.createGain();
-      noiseGain.gain.setValueAtTime(natureType === 'ocean' ? 0.07 : 0.035, ctx.currentTime);
-
-      const lfo = ctx.createOscillator();
-      lfo.frequency.setValueAtTime(natureType === 'ocean' ? 0.12 : 0.08, ctx.currentTime);
-      const lfoGain = ctx.createGain();
-      lfoGain.gain.setValueAtTime(natureType === 'ocean' ? 120 : 250, ctx.currentTime);
-
-      lfo.connect(lfoGain);
-      lfoGain.connect(noiseFilter1.frequency);
-      lfoGain.connect(noiseFilter2.frequency);
-
-      const lfoVol = ctx.createGain();
-      lfoVol.gain.setValueAtTime(natureType === 'ocean' ? 0.025 : 0.012, ctx.currentTime);
-      lfo.connect(lfoVol);
-      lfoVol.connect(noiseGain.gain);
-
-      noiseNode.connect(noiseFilter1);
-      noiseFilter1.connect(noiseFilter2);
-      noiseFilter2.connect(noiseGain);
-      noiseGain.connect(mainGain);
-
-      noiseNode.start();
-      lfo.start();
-
-      activeSourceNodesRef.current.push(noiseNode);
-      activeOscillatorsRef.current.push(lfo);
-    }
+    // C. High-Fidelity Natural Soundscapes (Pink/Brown noise, dynamic LFOs & generative acoustics)
+    natureSoundscapeHandleRef.current = setupNatureSoundscape(ctx, mainGain, natureType, natureVol);
 
     // D. Soft sparkling Solfeggio chimes
     const pentatonicScale = [1, 1.25, 1.5, 1.875, 2, 2.5, 3];
@@ -730,31 +728,8 @@ export default function AudioPlayer({
       osc3.stop(t + 3.2);
     }, 1200);
 
-    // Natural background wind/ocean synthesis
-    let noiseSrc: AudioBufferSourceNode | null = null;
-    if (composerNature === 'ocean' || composerNature === 'wind') {
-      const noiseBuffer = createNoiseBuffer(ctx);
-      noiseSrc = ctx.createBufferSource();
-      noiseSrc.buffer = noiseBuffer;
-      noiseSrc.loop = true;
-
-      const filter1 = ctx.createBiquadFilter();
-      filter1.type = composerNature === 'ocean' ? 'lowpass' : 'bandpass';
-      filter1.frequency.setValueAtTime(composerNature === 'ocean' ? 220 : 550, ctx.currentTime);
-
-      const filter2 = ctx.createBiquadFilter();
-      filter2.type = 'lowpass';
-      filter2.frequency.setValueAtTime(composerNature === 'ocean' ? 220 : 550, ctx.currentTime);
-
-      const gain = ctx.createGain();
-      gain.gain.setValueAtTime(composerNature === 'ocean' ? 0.08 : 0.04, ctx.currentTime);
-
-      noiseSrc.connect(filter1);
-      filter1.connect(filter2);
-      filter2.connect(gain);
-      gain.connect(renderingGain);
-      noiseSrc.start();
-    }
+    // Natural background soundscape synthesis attached to rendering pipe
+    const recSoundscapeHandle = setupNatureSoundscape(ctx, renderingGain, composerNature, composerNatureVol);
 
     // MediaRecorder on the Web Audio stream destination
     const chunks: Blob[] = [];
@@ -773,11 +748,7 @@ export default function AudioPlayer({
           o.stop();
         } catch (err) {}
       });
-      if (noiseSrc) {
-        try {
-          noiseSrc.stop();
-        } catch (err) {}
-      }
+      recSoundscapeHandle.stop();
       ctx.close();
 
       const blob = new Blob(chunks, { type: 'audio/webm' });
@@ -809,7 +780,7 @@ export default function AudioPlayer({
     const newTrack: MusicTrack = {
       id: `custom-synth-${Date.now()}`,
       name: `🎹 ${name}`,
-      url: `synth:freq=${composerHz}&wave=${composerWave}&beat=${composerBeat}&soundscape=${composerNature}`,
+      url: `synth:freq=${composerHz}&wave=${composerWave}&beat=${composerBeat}&soundscape=${composerNature}&natureVol=${composerNatureVol}`,
       isCustom: true,
     };
 
@@ -1263,35 +1234,49 @@ export default function AudioPlayer({
             </div>
 
             {/* 3. Soundscapes Overlay */}
-            <div>
-              <span className="text-[10px] uppercase font-bold tracking-wider text-[#8e6d72] block mb-1.5">
-                {language === 'en' ? '🌊 Organic Soundscapes' : '🌊 模拟大自然环境音浪 (Organic Soundscapes)'}
-              </span>
-              <div className="grid grid-cols-3 gap-2">
-                {[
-                  { id: 'ocean', name: '🌊 潮汐涌动', nameEn: '🌊 Ocean Tide', desc: 'Ocean Waves' },
-                  { id: 'wind', name: '🍃 幽谷清风', nameEn: '🍃 Valley Breeze', desc: 'Temple Breeze' },
-                  { id: 'none', name: '🚫 关闭背景', nameEn: '🚫 Silent Background', desc: 'Pure Frequencies' },
-                ].map((item) => (
-                  <button
-                    key={item.id}
-                    onClick={() => {
-                      const nat = item.id as any;
-                      setComposerNature(nat);
-                      handleUpdateComposerSetting(composerHz, composerWave, composerBeat, nat);
-                    }}
-                    className={`p-2.5 rounded-xl border text-center transition-all ${
-                      composerNature === item.id
-                        ? 'bg-white border-[#8e6d72] text-[#8e6d72] shadow-sm font-semibold'
-                        : 'bg-white/20 border-white/20 text-[#4a3a3a] hover:bg-white/40'
-                    }`}
-                  >
-                    <div className="text-[11px] font-bold">
-                      {language === 'en' ? item.nameEn : item.name}
-                    </div>
-                    <div className="text-[7.5px] font-mono text-[#b49196]">{item.desc}</div>
-                  </button>
-                ))}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] uppercase font-bold tracking-wider text-[#8e6d72] block">
+                  {language === 'en' ? '🌿 Organic Nature Soundscapes' : '🌿 模拟高保真大自然环境音浪 (Organic Soundscapes)'}
+                </span>
+                <div className="flex items-center gap-1.5 text-[10px] text-[#8e6d72]">
+                  <span>{language === 'en' ? 'Nature Vol:' : '环境音量:'}</span>
+                  <input
+                    type="range"
+                    min="0"
+                    max="1.2"
+                    step="0.05"
+                    value={composerNatureVol}
+                    onChange={(e) => handleNatureVolumeChange(parseFloat(e.target.value))}
+                    className="w-16 h-1 accent-[#8e6d72] cursor-pointer"
+                  />
+                  <span className="font-mono text-[9px] w-6 text-right">{Math.round(composerNatureVol * 100)}%</span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {NATURE_SOUNDSCAPES_OPTIONS.map((item) => {
+                  const isSelected = composerNature === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => handleSelectNature(item.id)}
+                      className={`p-2.5 rounded-xl border text-left transition-all ${
+                        isSelected
+                          ? 'bg-white border-[#8e6d72] text-[#8e6d72] shadow-sm font-semibold ring-1 ring-[#8e6d72]/30'
+                          : 'bg-white/20 border-white/20 text-[#4a3a3a] hover:bg-white/40'
+                      }`}
+                    >
+                      <div className="text-[11px] font-bold truncate">
+                        {language === 'en' ? item.nameEn : item.name}
+                      </div>
+                      <div className="text-[8px] font-mono text-[#b49196] truncate mt-0.5">
+                        {language === 'en' ? item.descEn : item.desc}
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
@@ -1346,7 +1331,7 @@ export default function AudioPlayer({
                     } else {
                       stopSynth();
                       setIsPlaying(true);
-                      runProceduralSynth(composerHz, composerWave, composerBeat, composerNature);
+                      runProceduralSynth(composerHz, composerWave, composerBeat, composerNature, composerNatureVol);
                     }
                   }}
                   className={`flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-white font-semibold text-xs shadow transition-all ${
