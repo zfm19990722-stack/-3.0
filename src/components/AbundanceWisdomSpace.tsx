@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
-  Sparkles, Heart, Compass, BookOpen, Send, RefreshCw, Check, ArrowRight,
+  Sparkles, Heart, Compass, BookOpen, Send, RefreshCw, Check, ArrowRight, ArrowLeft,
   Volume2, Eye, Hand, Ear, Wind, ShieldCheck, Flame, Layers, Clock, Sun, Feather,
   ChevronDown, ChevronUp, Maximize2, Minimize2, Sparkle
 } from 'lucide-react';
@@ -11,7 +11,7 @@ interface AbundanceWisdomSpaceProps {
   language?: 'zh' | 'en';
   onSpeak?: (text: string) => Promise<void>;
   onAddCustomWish?: (title: string, details: string, category: 'wealth' | 'love' | 'beauty' | 'career' | 'lifestyle') => void;
-  defaultExpanded?: boolean;
+  onBack?: () => void;
 }
 
 export interface MindsetCard {
@@ -117,23 +117,7 @@ const GRATITUDE_QUOTES = [
   }
 ];
 
-export default function AbundanceWisdomSpace({ language = 'zh', onSpeak, onAddCustomWish, defaultExpanded = false }: AbundanceWisdomSpaceProps) {
-  const [isExpanded, setIsExpanded] = useState<boolean>(() => {
-    try {
-      const saved = localStorage.getItem('lumiere_wisdom_expanded');
-      return saved !== null ? JSON.parse(saved) : defaultExpanded;
-    } catch {
-      return defaultExpanded;
-    }
-  });
-
-  const handleToggleExpand = (val: boolean) => {
-    setIsExpanded(val);
-    try {
-      localStorage.setItem('lumiere_wisdom_expanded', JSON.stringify(val));
-    } catch (e) {}
-  };
-
+export default function AbundanceWisdomSpace({ language = 'zh', onSpeak, onAddCustomWish, onBack }: AbundanceWisdomSpaceProps) {
   const [activeTab, setActiveTab] = useState<'alchemy' | 'now' | 'chapters' | 'gratitude' | 'surrender'>('chapters');
   
   // Gratitude Resonance states
@@ -376,83 +360,49 @@ export default function AbundanceWisdomSpace({ language = 'zh', onSpeak, onAddCu
     }
   ];
 
-  if (!isExpanded) {
-    return (
-      <div
-        className="p-6 md:p-8 rounded-[32px] bg-gradient-to-r from-amber-50/75 via-white/85 to-rose-50/75 backdrop-blur-2xl border border-amber-200/60 shadow-xl shadow-pink-100/10 relative overflow-hidden text-left transition-all duration-500 hover:shadow-2xl hover:border-amber-300/80 group"
-        id="abundance-wisdom-space-folded"
-      >
-        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-amber-200/30 via-pink-200/20 to-transparent pointer-events-none rounded-full blur-3xl" />
-        <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
-          <div className="space-y-2 max-w-xl">
-            <div className="flex items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10.5px] font-mono font-bold tracking-wider uppercase flex items-center gap-1">
-                <Sparkles className="w-3 h-3 text-amber-600" />
-                <span>{isEn ? "Dr. Jan's Wisdom Sanctuary" : "杨定一博士《全部生命系列》"}</span>
-              </span>
-              <span className="text-[10px] text-[#8e6d72] font-semibold bg-white/80 px-2 py-0.5 rounded-full border border-amber-200/40">
-                {isEn ? "Collapsible Page" : "折叠专属空间"}
-              </span>
-            </div>
-            <h3 className="font-serif text-xl md:text-2xl text-[#8e6d72] font-bold flex items-center gap-2">
-              <Compass className="w-6 h-6 text-amber-500 animate-spin" style={{ animationDuration: '16s' }} />
-              <span>{isEn ? 'The Abundance Sanctuary & Wei-Shi Space' : '丰盛智慧觉醒空间 · 唯识真如殿堂'}</span>
-            </h3>
-            <p className="text-xs text-[#6d5b5e] leading-relaxed">
-              {isEn
-                ? "Explore Dr. Jan's 6 core book chapters, AI-powered Wei-Shi mindset alchemy, sensory grounding, Tibetan bowl gratitude resonance, and radical surrender practices."
-                : "收纳《丰盛》《唯识》《活在当下》全书6大篇章要义与读书笔记、唯识转念炼金术、3D立体转念卡片、1分钟感官当下着陆、西藏颂钵感恩共振与全然臣服练习。"}
-            </p>
-            <div className="flex flex-wrap gap-2 pt-1">
-              <span className="text-[11px] font-medium text-[#8e6d72]/85 bg-white/70 px-2.5 py-1 rounded-xl border border-white/80">📖 6大篇章笔记</span>
-              <span className="text-[11px] font-medium text-[#8e6d72]/85 bg-white/70 px-2.5 py-1 rounded-xl border border-white/80">✨ 唯识转念炼金</span>
-              <span className="text-[11px] font-medium text-[#8e6d72]/85 bg-white/70 px-2.5 py-1 rounded-xl border border-white/80">🧘 当下身体着陆</span>
-              <span className="text-[11px] font-medium text-[#8e6d72]/85 bg-white/70 px-2.5 py-1 rounded-xl border border-white/80">🔔 颂钵感恩共振</span>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => handleToggleExpand(true)}
-            className="w-full md:w-auto px-6 py-3.5 rounded-2xl bg-gradient-to-r from-amber-600 via-[#8e6d72] to-[#7e5d62] hover:from-amber-700 hover:to-[#6d4e53] text-white text-xs font-bold font-sans transition-all shadow-lg shadow-amber-900/15 flex items-center justify-center gap-2 group-hover:scale-105 active:scale-95 cursor-pointer shrink-0"
-            id="expand-wisdom-space-btn"
-          >
-            <span>{isEn ? 'Unfold & Enter Sanctuary' : '展开进入觉醒空间'}</span>
-            <ChevronDown className="w-4 h-4 text-amber-200 transition-transform group-hover:translate-y-0.5" />
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div
-      className="p-5 md:p-8 rounded-[32px] bg-white/45 backdrop-blur-2xl border border-white/40 shadow-xl shadow-pink-100/10 relative overflow-hidden text-left animate-fadeIn"
+      className="p-5 md:p-8 rounded-[32px] bg-white/55 backdrop-blur-2xl border border-white/50 shadow-2xl shadow-pink-100/15 relative overflow-hidden text-left animate-fadeIn"
       id="abundance-wisdom-space"
     >
       {/* Visual Header Decoration */}
-      <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-bl from-amber-100/40 via-pink-100/20 to-transparent pointer-events-none rounded-full blur-2xl" />
+      <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-amber-100/50 via-pink-100/30 to-transparent pointer-events-none rounded-full blur-3xl" />
+      <div className="absolute -bottom-10 -left-10 w-48 h-48 bg-gradient-to-tr from-rose-100/30 to-transparent pointer-events-none rounded-full blur-2xl" />
       
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 pb-4 border-b border-[#8e6d72]/15 gap-4">
-        <div>
-          <div className="flex items-center gap-1.5 mb-1">
-            <span className="px-2 py-0.5 rounded-full bg-amber-100/80 text-amber-800 text-[10px] font-mono font-bold tracking-wider uppercase">
-              {isEn ? 'Dr. Jan Ding-I Wisdom' : '杨定一博士《全部生命系列》'}
-            </span>
-            <span className="text-[10px] text-[#8e6d72]/70 font-semibold">
-              {isEn ? 'Abundance • Consciousness • Now' : '《丰盛》《唯识》《活在当下》'}
-            </span>
+      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between mb-6 pb-4 border-b border-[#8e6d72]/15 gap-4 relative z-10">
+        <div className="flex items-center gap-3">
+          {onBack && (
+            <button
+              type="button"
+              onClick={onBack}
+              className="p-2.5 rounded-2xl bg-white/70 hover:bg-white text-[#8e6d72] border border-[#8e6d72]/20 shadow-xs hover:shadow-md transition-all active:scale-95 cursor-pointer shrink-0"
+              title={isEn ? "Back to Manifestation Oasis" : "返回显化主殿"}
+              id="wisdom-back-button"
+            >
+              <ArrowLeft className="w-5 h-5 text-[#8e6d72]" />
+            </button>
+          )}
+
+          <div>
+            <div className="flex flex-wrap items-center gap-1.5 mb-1">
+              <span className="px-2.5 py-0.5 rounded-full bg-amber-100/90 text-amber-800 text-[10px] font-mono font-bold tracking-wider uppercase border border-amber-200/50">
+                {isEn ? "Dr. Jan's Wisdom Sanctuary" : "杨定一博士《全部生命系列》"}
+              </span>
+              <span className="text-[10px] text-[#8e6d72]/80 font-semibold bg-white/70 px-2 py-0.5 rounded-full border border-[#8e6d72]/15">
+                {isEn ? 'Abundance • Consciousness • Now' : '《丰盛》《唯识》《活在当下》'}
+              </span>
+            </div>
+            <h2 className="font-serif text-xl md:text-2xl text-[#8e6d72] font-bold flex items-center gap-2">
+              <Compass className="w-5 h-5 text-amber-500 animate-spin shrink-0" style={{ animationDuration: '16s' }} />
+              <span>{isEn ? 'The Abundance Sanctuary & Wei-Shi Space' : '丰盛智慧觉醒空间 · 唯识真如殿堂'}</span>
+            </h2>
           </div>
-          <h3 className="font-serif text-xl md:text-2xl text-[#8e6d72] font-bold flex items-center gap-2">
-            <Compass className="w-5 h-5 text-amber-500 animate-spin" style={{ animationDuration: '12s' }} />
-            <span>{isEn ? 'The Abundance Sanctuary' : '丰盛智慧觉醒空间'}</span>
-          </h3>
         </div>
 
-        {/* Top Controls: Collapse Button & Tabs */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full md:w-auto">
+        {/* Top Controls: Back Button & Tabs */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full lg:w-auto">
           {/* Top Feature Nav Tabs */}
-          <div className="flex flex-wrap gap-1 bg-[#8e6d72]/5 p-1 rounded-2xl border border-[#8e6d72]/10 w-full sm:w-auto">
+          <div className="flex flex-wrap gap-1 bg-[#8e6d72]/10 p-1 rounded-2xl border border-[#8e6d72]/15 w-full sm:w-auto">
             {[
               { id: 'chapters', label: isEn ? '📖 Chapters & Notes' : '📖 篇章要义与读书笔记' },
               { id: 'alchemy', label: isEn ? '✨ Mindset Alchemy' : '✨ 唯识转念' },
@@ -463,10 +413,10 @@ export default function AbundanceWisdomSpace({ language = 'zh', onSpeak, onAddCu
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all duration-300 flex-1 sm:flex-none text-center cursor-pointer ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all duration-300 flex-1 sm:flex-none text-center cursor-pointer ${
                   activeTab === tab.id
-                    ? 'bg-[#8e6d72] text-white shadow-md shadow-pink-900/10'
-                    : 'text-[#8e6d72]/80 hover:bg-white/40'
+                    ? 'bg-[#8e6d72] text-white shadow-md shadow-pink-900/15 scale-[1.02]'
+                    : 'text-[#8e6d72]/80 hover:bg-white/50 hover:text-[#8e6d72]'
                 }`}
                 id={`wisdom-tab-${tab.id}`}
               >
@@ -475,17 +425,18 @@ export default function AbundanceWisdomSpace({ language = 'zh', onSpeak, onAddCu
             ))}
           </div>
 
-          {/* Collapse Button */}
-          <button
-            type="button"
-            onClick={() => handleToggleExpand(false)}
-            className="px-3.5 py-1.5 rounded-xl bg-white/50 hover:bg-white/80 text-[#8e6d72] border border-[#8e6d72]/20 text-xs font-bold transition-all flex items-center justify-center gap-1 shadow-sm active:scale-95 cursor-pointer shrink-0"
-            title={isEn ? "Fold/Collapse Space" : "收起折叠空间"}
-            id="collapse-wisdom-space-btn"
-          >
-            <ChevronUp className="w-4 h-4" />
-            <span>{isEn ? 'Collapse' : '收起折叠'}</span>
-          </button>
+          {/* Quick return button */}
+          {onBack && (
+            <button
+              type="button"
+              onClick={onBack}
+              className="hidden lg:flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/70 hover:bg-white text-[#8e6d72] border border-[#8e6d72]/20 text-xs font-bold transition-all shadow-xs hover:shadow active:scale-95 cursor-pointer shrink-0"
+              id="top-back-oasis-btn"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>{isEn ? 'Return' : '返回主殿'}</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -1239,24 +1190,35 @@ export default function AbundanceWisdomSpace({ language = 'zh', onSpeak, onAddCu
 
       </div>
 
-      {/* Bottom Fold / Collapse Action Bar */}
-      <div className="mt-8 pt-4 border-t border-[#8e6d72]/15 flex items-center justify-between">
-        <span className="text-[11px] text-[#8e6d72]/70 italic">
-          {isEn ? 'Dr. Jan: "Life is complete in this very moment."' : '杨定一博士：“全部生命，在此时此刻本自具足。”'}
+      {/* Bottom Action & Wisdom Bar */}
+      <div className="mt-8 pt-5 border-t border-[#8e6d72]/15 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <span className="text-xs text-[#8e6d72]/80 italic">
+          {isEn ? 'Dr. Jan: "Life is complete and whole in this very moment."' : '杨定一博士：“全部生命，在此时此刻本自具足。”'}
         </span>
-        <button
-          type="button"
-          onClick={() => {
-            handleToggleExpand(false);
-            const el = document.getElementById('abundance-wisdom-space-folded');
-            if (el) el.scrollIntoView({ behavior: 'smooth' });
-          }}
-          className="px-4 py-2 rounded-xl bg-white/60 hover:bg-white/90 text-[#8e6d72] border border-[#8e6d72]/20 text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm active:scale-95 cursor-pointer"
-          id="bottom-collapse-wisdom-space-btn"
-        >
-          <ChevronUp className="w-4 h-4" />
-          <span>{isEn ? 'Fold / Collapse Space' : '收起折叠空间'}</span>
-        </button>
+        <div className="flex items-center gap-2">
+          {onBack && (
+            <button
+              type="button"
+              onClick={onBack}
+              className="px-5 py-2.5 rounded-xl bg-white/70 hover:bg-white text-[#8e6d72] border border-[#8e6d72]/20 text-xs font-bold transition-all flex items-center gap-1.5 shadow-xs hover:shadow active:scale-95 cursor-pointer"
+              id="bottom-back-oasis-btn"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>{isEn ? 'Return to Manifestation Oasis' : '返回显化主殿'}</span>
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => {
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className="px-4 py-2.5 rounded-xl bg-[#8e6d72]/10 hover:bg-[#8e6d72]/20 text-[#8e6d72] text-xs font-bold transition-all flex items-center gap-1 active:scale-95 cursor-pointer"
+            id="bottom-scroll-top-btn"
+          >
+            <ChevronUp className="w-4 h-4" />
+            <span>{isEn ? 'Top' : '回顶部'}</span>
+          </button>
+        </div>
       </div>
     </div>
   );

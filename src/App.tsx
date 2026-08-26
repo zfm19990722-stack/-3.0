@@ -7,6 +7,8 @@ import AudioPlayer from './components/AudioPlayer';
 import AffirmationCard from './components/AffirmationCard';
 import Wishlist from './components/Wishlist';
 import AbundanceWisdomSpace from './components/AbundanceWisdomSpace';
+import AbundanceWisdomPortalCard from './components/AbundanceWisdomPortalCard';
+import ImmersiveMeditationPortalCard from './components/ImmersiveMeditationPortalCard';
 import { ChakraVisualizer } from './components/ChakraVisualizer';
 import { BreathingRingWithParticles } from './components/BreathingRingWithParticles';
 import {
@@ -86,6 +88,17 @@ const GRATITUDE_WHISPERS_EN = [
   "Grateful for this moment of deep release. I receive every elegant gift of life with absolute joy."
 ];
 
+export const DEFAULT_UNIVERSAL_WISH: Wish = {
+  id: 'universal-cosmic-abundance-meditation',
+  title: '✨ 宇宙源头纯净丰盛与内在真我同频冥想',
+  category: 'lifestyle',
+  details: '进入内在无限宁静的觉知殿堂，与宇宙源头的无穷丰盛、喜悦与平静融为一体。在此刻无需向外追寻，你本自具足。',
+  visualizationDetails: '闭上双眼，将注意力轻轻带回温热的呼吸。感受一道温润柔和的金粉色宇宙源头光芒，从头顶百会穴如丝绸般倾泻而下，滋养着全身每一个细胞。在深沉绵长的呼吸中，释放掉过去所有的紧绷与匮乏念头。你就是无边无际的觉知本身，丰盛、健康、喜悦与无限可能，早已在此时此刻与你完全合一。',
+  visualizationDetailsEn: 'Gently close your eyes and bring your gentle attention to the warmth of your breath. Feel a soft, luminous golden-rose celestial light descending like pure silk from the crown of your head, illuminating and soothing every cell within your body. With every effortless breath, release all striving and perceived lack into the infinite space. You are timeless consciousness itself—pure abundance, wholeness, peace, and boundless vitality are already here within you.',
+  isManifested: false,
+  createdAt: '2026-01-01T00:00:00.000Z',
+};
+
 const PREBUILT_MUSIC: MusicTrack[] = [
   { id: 'princess-synth', name: '✨ 圣洁公主琴音 (Web 实时合成)', nameEn: '✨ Sacred Princess Chords (Web Synth)', url: '' },
   { id: 'track-rose', name: '🎵 玫瑰古堡钢琴曲 (舒适冥想)', nameEn: '🎵 Rose Castle Piano (Comfort Meditation)', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3' },
@@ -116,6 +129,7 @@ const getSentenceSegments = (text: string): SentenceSegment[] => {
 };
 
 export default function App() {
+  const [currentView, setCurrentView] = useState<'main' | 'wisdom' | 'meditation'>('main');
   const [language, setLanguage] = useState<'zh' | 'en'>('zh');
   const [wishes, setWishes] = useState<Wish[]>([]);
   const [isGeneratingMap, setIsGeneratingMap] = useState<Record<string, boolean>>({});
@@ -1045,12 +1059,22 @@ export default function App() {
     }
   };
 
+  const handleEnterMeditationSpace = (wishToUse?: Wish) => {
+    setCurrentView('meditation');
+    const targetWish = wishToUse || activeWishSession || DEFAULT_UNIVERSAL_WISH;
+    handleStartManifestationSession(targetWish);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const handleExitManifestationSession = () => {
     setActiveWishSession(null);
     setIsTimerRunning(false);
     setShowFinishedOverlay(false);
     handleStopSpeaking();
     stopSolfeggioSynth();
+    if (currentView === 'meditation') {
+      setCurrentView('main');
+    }
   };
 
   const handleSetTimerDuration = (minutes: number) => {
@@ -1087,6 +1111,60 @@ export default function App() {
 
         {/* Background Visualizer Picker & Welcome */}
         <div className="flex items-center gap-4 flex-wrap">
+          {/* Main Sanctuary vs Meditation Space vs Wisdom Sanctuary View Switcher */}
+          <div className="flex items-center space-x-1 bg-white/30 backdrop-blur-md p-1 rounded-full border border-white/40 shadow-sm">
+            <button
+              onClick={() => {
+                setCurrentView('main');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className={`px-3.5 py-1.5 rounded-full text-xs font-sans transition-all duration-300 flex items-center gap-1.5 cursor-pointer ${
+                currentView === 'main'
+                  ? 'bg-white text-[#8e6d72] shadow-sm font-bold scale-[1.02]'
+                  : 'text-[#8e6d72]/70 hover:text-[#8e6d72] hover:bg-white/20'
+              }`}
+              id="nav-view-main"
+            >
+              <span>🏰</span>
+              <span className="text-[11px]">
+                {language === 'en' ? 'Manifestation Oasis' : '显化圣殿'}
+              </span>
+            </button>
+            <button
+              onClick={() => {
+                handleEnterMeditationSpace();
+              }}
+              className={`px-3.5 py-1.5 rounded-full text-xs font-sans transition-all duration-300 flex items-center gap-1.5 cursor-pointer ${
+                currentView === 'meditation'
+                  ? 'bg-white text-[#8e6d72] shadow-sm font-bold scale-[1.02]'
+                  : 'text-[#8e6d72]/70 hover:text-[#8e6d72] hover:bg-white/20'
+              }`}
+              id="nav-view-meditation"
+            >
+              <span className="text-sm">🧘</span>
+              <span className="text-[11px]">
+                {language === 'en' ? 'Meditation Space' : '沉浸冥想空间'}
+              </span>
+            </button>
+            <button
+              onClick={() => {
+                setCurrentView('wisdom');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className={`px-3.5 py-1.5 rounded-full text-xs font-sans transition-all duration-300 flex items-center gap-1.5 cursor-pointer ${
+                currentView === 'wisdom'
+                  ? 'bg-white text-[#8e6d72] shadow-sm font-bold scale-[1.02]'
+                  : 'text-[#8e6d72]/70 hover:text-[#8e6d72] hover:bg-white/20'
+              }`}
+              id="nav-view-wisdom"
+            >
+              <Compass className="w-3.5 h-3.5 text-amber-500 animate-spin" style={{ animationDuration: '16s' }} />
+              <span className="text-[11px]">
+                {language === 'en' ? 'Wisdom Space' : '丰盛智慧空间'}
+              </span>
+            </button>
+          </div>
+
           <div className="flex items-center space-x-1.5 bg-white/30 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/40 shadow-sm">
             <span className="text-[10px] font-bold text-[#8e6d72] uppercase tracking-wider px-1 hidden sm:inline">
               {language === 'en' ? 'Canvas Theme:' : '可视化画布:'}
@@ -1327,102 +1405,130 @@ export default function App() {
           </div>
         )}
 
-        {/* Bento Box style Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          
-          {/* Column A: Left side (Wishes details and list) */}
-          <div className="lg:col-span-2 space-y-6">
-            <Wishlist
-              language={language}
-              wishes={wishes}
-              onAddWish={handleAddWish}
-              onDeleteWish={handleDeleteWish}
-              onGenerateDetails={handleGenerateDetails}
-              onStartSession={handleStartManifestationSession}
-              isGeneratingMap={isGeneratingMap}
-              onUpdateWish={handleUpdateWish}
-            />
-
-            {/* Dr. Jan's Abundance Wisdom Experience Space */}
+        {currentView === 'wisdom' ? (
+          /* Standalone Dedicated Abundance Wisdom Awakening Sanctuary Screen */
+          <div className="space-y-6 animate-fadeIn" id="standalone-abundance-wisdom-view">
             <AbundanceWisdomSpace
               language={language}
               onSpeak={handleSpeakText}
               onAddCustomWish={(title, details, category) => {
                 handleAddWish({ title, details, category });
               }}
+              onBack={() => {
+                setCurrentView('main');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
             />
           </div>
+        ) : (
+          /* Main Dashboard Bento Box Layout */
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fadeIn" id="main-sanctuary-grid">
+            
+            {/* Column A: Left side (Wishes details and list, plus Portal Card) */}
+            <div className="lg:col-span-2 space-y-6">
+              <Wishlist
+                language={language}
+                wishes={wishes}
+                onAddWish={handleAddWish}
+                onDeleteWish={handleDeleteWish}
+                onGenerateDetails={handleGenerateDetails}
+                onStartSession={handleStartManifestationSession}
+                isGeneratingMap={isGeneratingMap}
+                onUpdateWish={handleUpdateWish}
+              />
 
-          {/* Column B: Right side (Affirmation of the day and customized meditation music) */}
-          <div className="space-y-6">
-            {/* Daily Affirmation */}
-            <AffirmationCard
-              language={language}
-              onSpeak={handleSpeakText}
-              isSpeaking={isSpeaking}
-              onStopSpeaking={handleStopSpeaking}
-            />
+              {/* Portal Entrance Cards to Dedicated Sanctuaries */}
+              <div className="space-y-4">
+                {/* Immersive Meditation Space Entrance Card */}
+                <ImmersiveMeditationPortalCard
+                  language={language}
+                  onEnter={() => {
+                    handleEnterMeditationSpace();
+                  }}
+                />
 
-            {/* Customized Meditation Tracks */}
-            <AudioPlayer
-              language={language}
-              currentTrack={currentTrack}
-              onTrackChange={setCurrentTrack}
-              tracks={tracks}
-              onAddCustomTrack={handleAddCustomTrack}
-              voiceTone={voiceTone}
-              onVoiceToneChange={setVoiceTone}
-              isPlaying={isMusicPlaying}
-              setIsPlaying={setIsMusicPlaying}
-              volume={musicVolume}
-              setVolume={setMusicVolume}
-              activeWishSession={activeWishSession}
-            />
+                {/* Portal Entrance Card to Dedicated Abundance Wisdom Sanctuary */}
+                <AbundanceWisdomPortalCard
+                  language={language}
+                  onEnter={() => {
+                    setCurrentView('wisdom');
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                />
+              </div>
+            </div>
 
-            {/* Quick guidance tips */}
-            <div className="p-6 rounded-[32px] bg-[#8e6d72]/10 backdrop-blur-2xl border border-[#8e6d72]/20 shadow-xl shadow-pink-100/5">
-              <h4 className="font-serif text-lg mb-4 text-[#8e6d72] flex items-center gap-1.5">
-                <span>🧘</span>
-                <span>{language === 'en' ? 'Lumière Trilogy' : 'Lumière 三部曲'}</span>
-              </h4>
-              <ul className="text-xs text-[#6d5b5e] space-y-3.5 leading-relaxed font-sans">
-                {language === 'en' ? (
-                  <>
-                    <li className="flex items-start gap-2">
-                      <span className="text-[#8e6d72] font-bold shrink-0">1.</span>
-                      <span>Write down specific wishes and activate Gemini AI to materialize every sensory detail (temperature, textures, aroma).</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-[#8e6d72] font-bold shrink-0">2.</span>
-                      <span>Turn on the immersive music and enter full-screen meditation, following the deep voice to guide your subconsciousness.</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-[#8e6d72] font-bold shrink-0">3.</span>
-                      <span>Relax completely and maintain a high sense of deservingness; the beautiful things you desire are already waiting for you in the warm future.</span>
-                    </li>
-                  </>
-                ) : (
-                  <>
-                    <li className="flex items-start gap-2">
-                      <span className="text-[#8e6d72] font-bold shrink-0">1.</span>
-                      <span>写下具体愿望，启动 Gemini 智能算法为您具象化每一个感官细节（温度、材质、气息）。</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-[#8e6d72] font-bold shrink-0">2.</span>
-                      <span>开启沉浸式音乐，进入全屏冥想，跟随着呼唤潜意识的深沉女声进行丰盛暗示注入。</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-[#8e6d72] font-bold shrink-0">3.</span>
-                      <span>完全放松并保持极高配得感，相信您所想要的美丽，早已在温暖的未来微笑着等待。</span>
-                    </li>
-                  </>
-                )}
-              </ul>
+            {/* Column B: Right side (Affirmation of the day and customized meditation music) */}
+            <div className="space-y-6">
+              {/* Daily Affirmation */}
+              <AffirmationCard
+                language={language}
+                onSpeak={handleSpeakText}
+                isSpeaking={isSpeaking}
+                onStopSpeaking={handleStopSpeaking}
+              />
+
+              {/* Customized Meditation Tracks */}
+              <AudioPlayer
+                language={language}
+                currentTrack={currentTrack}
+                onTrackChange={setCurrentTrack}
+                tracks={tracks}
+                onAddCustomTrack={handleAddCustomTrack}
+                voiceTone={voiceTone}
+                onVoiceToneChange={setVoiceTone}
+                isPlaying={isMusicPlaying}
+                setIsPlaying={setIsMusicPlaying}
+                volume={musicVolume}
+                setVolume={setMusicVolume}
+                activeWishSession={activeWishSession}
+              />
+
+              {/* Quick guidance tips */}
+              <div className="p-6 rounded-[32px] bg-[#8e6d72]/10 backdrop-blur-2xl border border-[#8e6d72]/20 shadow-xl shadow-pink-100/5">
+                <h4 className="font-serif text-lg mb-4 text-[#8e6d72] flex items-center gap-1.5">
+                  <span>🧘</span>
+                  <span>{language === 'en' ? 'Lumière Trilogy' : 'Lumière 三部曲'}</span>
+                </h4>
+                <ul className="text-xs text-[#6d5b5e] space-y-3.5 leading-relaxed font-sans">
+                  {language === 'en' ? (
+                    <>
+                      <li className="flex items-start gap-2">
+                        <span className="text-[#8e6d72] font-bold shrink-0">1.</span>
+                        <span>Write down specific wishes and activate Gemini AI to materialize every sensory detail (temperature, textures, aroma).</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-[#8e6d72] font-bold shrink-0">2.</span>
+                        <span>Turn on the immersive music and enter full-screen meditation, following the deep voice to guide your subconsciousness.</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-[#8e6d72] font-bold shrink-0">3.</span>
+                        <span>Relax completely and maintain a high sense of deservingness; the beautiful things you desire are already waiting for you in the warm future.</span>
+                      </li>
+                    </>
+                  ) : (
+                    <>
+                      <li className="flex items-start gap-2">
+                        <span className="text-[#8e6d72] font-bold shrink-0">1.</span>
+                        <span>写下具体愿望，启动 Gemini 智能算法为您具象化每一个感官细节（温度、材质、气息）。</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-[#8e6d72] font-bold shrink-0">2.</span>
+                        <span>开启沉浸式音乐，进入全屏冥想，跟随着呼唤潜意识的深沉女声进行丰盛暗示注入。</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-[#8e6d72] font-bold shrink-0">3.</span>
+                        <span>完全放松并保持极高配得感，相信您所想要的美丽，早已在温暖的未来微笑着等待。</span>
+                      </li>
+                    </>
+                  )}
+                </ul>
+              </div>
+
             </div>
 
           </div>
-
-        </div>
+        )}
       </main>
 
       {/* FULL SCREEN IMMERSIVE MANIFESTATION VISUALIZATION OVERLAY */}
@@ -1825,6 +1931,61 @@ export default function App() {
 
             {/* Immersive Text details */}
             <div className="space-y-3 md:space-y-4 px-4 w-full">
+              {/* Intent / Wish Selector Bar */}
+              <div className={`p-2.5 rounded-2xl border backdrop-blur-md flex flex-wrap items-center justify-between gap-2 shadow-sm ${
+                isBgDark ? 'bg-white/10 border-white/15' : 'bg-white/70 border-[#8e6d72]/20'
+              }`}>
+                <div className="flex flex-wrap items-center gap-1.5 overflow-x-auto max-w-full custom-scrollbar py-0.5">
+                  <span className={`text-[10.5px] font-bold uppercase tracking-wider pl-1 shrink-0 ${isBgDark ? 'text-pink-200' : 'text-[#8e6d72]'}`}>
+                    {language === 'en' ? '🧘 Meditation Topic:' : '🧘 冥想意图:'}
+                  </span>
+                  
+                  {/* Default Universal Cosmic Abundance */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleStartManifestationSession(DEFAULT_UNIVERSAL_WISH);
+                    }}
+                    className={`px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all flex items-center gap-1.5 cursor-pointer shrink-0 ${
+                      activeWishSession.id === DEFAULT_UNIVERSAL_WISH.id
+                        ? isBgDark
+                          ? 'bg-white text-[#8e6d72] shadow-sm font-extrabold scale-[1.02]'
+                          : 'bg-[#8e6d72] text-white shadow-sm font-extrabold scale-[1.02]'
+                        : isBgDark
+                          ? 'bg-white/10 text-white/80 hover:bg-white/20'
+                          : 'bg-white/60 text-[#8e6d72] hover:bg-white/90 border border-[#8e6d72]/15'
+                    }`}
+                  >
+                    <span>✨</span>
+                    <span>{language === 'en' ? 'Universal Cosmic Abundance' : '宇宙纯净丰盛 (通用)'}</span>
+                  </button>
+
+                  {/* User wishes */}
+                  {wishes.map((w) => (
+                    <button
+                      key={w.id}
+                      type="button"
+                      onClick={() => {
+                        handleStartManifestationSession(w);
+                      }}
+                      className={`px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all flex items-center gap-1.5 cursor-pointer max-w-[200px] truncate shrink-0 ${
+                        activeWishSession.id === w.id
+                          ? isBgDark
+                            ? 'bg-white text-[#8e6d72] shadow-sm font-extrabold scale-[1.02]'
+                            : 'bg-[#8e6d72] text-white shadow-sm font-extrabold scale-[1.02]'
+                          : isBgDark
+                            ? 'bg-white/10 text-white/80 hover:bg-white/20'
+                            : 'bg-white/60 text-[#8e6d72] hover:bg-white/90 border border-[#8e6d72]/15'
+                      }`}
+                      title={w.title}
+                    >
+                      <span>💎</span>
+                      <span className="truncate">{w.title}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 w-full">
                 <h2 className={`text-xl md:text-2xl lg:text-3xl font-serif font-bold tracking-wide transition-colors duration-1000 ${
                   isBgDark ? 'text-white text-shadow text-left' : 'text-[#4a2e31] text-shadow-sm text-left'
