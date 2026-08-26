@@ -416,6 +416,140 @@ async function startServer() {
     }
   });
 
+  // 1.6 AI Multi-Sensory Intuitive Channeling & Auto-Writing (AI 辅助五感细节感应与自动书写)
+  app.post("/api/wish/sense", async (req, res) => {
+    try {
+      const {
+        title,
+        category = 'lifestyle',
+        currentText = '',
+        sensoryDimensions = ['visual', 'acoustic', 'aroma', 'tactile', 'worthiness'],
+        vibeTone = 'princess_royal',
+        language = 'zh'
+      } = req.body;
+
+      const categoryMap: Record<string, string> = {
+        love: "浪漫情缘（灵魂伴侣、被无条件深爱与娇宠）",
+        wealth: "丰盛财富（财富轻松流淌、资产丰足、金钱磁吸）",
+        beauty: "健康焕颜（神圣容光、优雅体态、细胞年轻活力）",
+        career: "优雅事业（从容取得卓越成果、才华受敬仰、无压力创造）",
+        lifestyle: "理想生活（奢华安宁、花香暖阳、被宇宙极尽宠溺）"
+      };
+
+      const toneMap: Record<string, string> = {
+        princess_royal: "高贵公主庄园风格（水晶、丝缎、金边骨瓷、玫瑰花香、优雅从容）",
+        nature_zen: "大自然静心空灵风格（山林清泉、晨雾、阳光丁达尔效应、微风松针）",
+        modern_luxury: "现代轻奢摩登风格（顶层景观大平层、纯白极简、柔和暖光、高定质感）",
+        cosmic_ethereal: "高维宇宙光能风格（金粉色星芒、星际安宁、本自具足、神圣同频）"
+      };
+
+      if (!ai) {
+        // High quality offline fallback for sensory channeling
+        const offlineSensoryData: Record<string, any> = {
+          visual: "金色温暖的晨曦透过复古拱形窗洒在天鹅绒地毯上，空气中折射出剔透如水晶般柔和的光晕。眼前是一处毫无杂质的至美空间，每一处细节都在诉说着高贵与安宁。",
+          acoustic: "耳畔回响着舒缓纯净的自然白噪音与若有若无的大提琴和弦，微风轻拂过窗外的花树，发出极度放松的沙沙轻响，让整个神经系统彻底松弛下来。",
+          aroma: "空气中漫溢着初绽大马士革玫瑰与清甜大吉岭红茶的温润气息，伴随着阳光晒暖的淡淡香草芬芳，每一次呼吸都是生命深层的滋养。",
+          tactile: "肌肤触碰着极细腻柔软的奶油色羊绒毛毯，指尖传来温热茶杯的踏实暖意。肩颈彻底沉降放松，心轮处升起一团温润充盈的金光。",
+          worthiness: "我深深知晓：我不必用力证明，我天生便被宇宙的无尽丰盛与至高慈爱所包裹。我全然配得拥有一切最优雅美好的人事物。"
+        };
+
+        const autoNarrativeZh = `【我期望显化的终极状态】\n在「${title || '美好愿望'}」的实相中，我全然拥有了最丰盛、最从容的圆满体验。\n\n【令我身临其境的五感画卷】\n${offlineSensoryData.visual}\n${offlineSensoryData.acoustic}\n${offlineSensoryData.aroma}\n${offlineSensoryData.tactile}\n\n【我的高配得感誓言】\n${offlineSensoryData.worthiness}`;
+        const autoNarrativeEn = `【My Ultimate Manifestation State】\nIn the sacred reality of "${title || 'Divine Wish'}", I am living the most effortless, radiant, and fulfilled manifestation.\n\n【Immersive Multi-Sensory Canvas】\nSoft morning sunlight filters through arched windows onto plush velvet carpets, scattering gentle crystal rainbows. Distant soothing strings and a gentle breeze ease every nerve into profound relaxation. The air carries the delicate aroma of fresh roses and warm vanilla tea, while warm cashmere softly cradles my skin.\n\n【Affirmation of Absolute Worthiness】\nI am timelessly worthy. The infinite universe naturally orchestrates everything for my highest joy, dignity, and abundance.`;
+
+        return res.json({
+          sensoryChanneling: offlineSensoryData,
+          autoWrittenNarrative: autoNarrativeZh,
+          autoWrittenNarrativeEn: autoNarrativeEn,
+          isOffline: true
+        });
+      }
+
+      const prompt = `你是一位专门引导人们进行潜意识潜能显化（Manifestation）与高维感官描绘的艺术大师与意识导师。
+用户提出了一个愿望：
+- 愿望主题: "${title || '我的丰盛显化愿望'}"
+- 所属分类: "${categoryMap[category] || category}"
+- 已有描述或灵感线索: "${currentText || '希望获得最圆满、舒心、丰盛的终极状态'}"
+- 氛围基调: "${toneMap[vibeTone] || toneMap.princess_royal}"
+- 需要重点感应的感官维度: ${sensoryDimensions.join(', ')}
+
+请运用高度细腻、富有诗意与极致沉浸感的艺术笔触，为用户进行【AI 五感全息感应与自动书写】。
+请以第一人称「我」或最深切的身临其境沉浸口吻进行感应输出。
+
+请严格返回合法的 JSON 格式，结构如下：
+{
+  "sensoryChanneling": {
+    "visual": "（视觉景象感应：细腻描绘光影、色彩、空间陈设、服饰质感、眼前的景致，约50-80字）",
+    "acoustic": "（声场律动感应：细腻描绘周围环境的背景声、风声、琴音、鸟鸣、水波或深沉宁静，约40-60字）",
+    "aroma": "（香气温度感应：细腻描绘空气中弥漫的花香、茶香、精油、阳光温度与微风触感，约40-60字）",
+    "tactile": "（触觉体感感应：细腻描绘身体肌肤触感、放松程度、心轮温热感、呼吸深长与松弛，约40-60字）",
+    "worthiness": "（潜意识高配得誓言：一句极具力量、高贵笃定、直击潜意识深处消除匮乏感的显化宣言，约25-45字）"
+  },
+  "autoWrittenNarrative": "（将上述五感感应融汇成一段一气呵成、可以直接作为愿望详情或显化画卷的自动书写中文文本，包含【我期望显化的终极状态】、【令我身临其境的感官画面】、【我的高配得感誓言】三部分）",
+  "autoWrittenNarrativeEn": "（The above auto-written narrative translated into highly elegant, poetic, and luxurious English with [My Ultimate Manifestation State], [Immersive Sensory Imagery], and [Affirmation of Absolute Worthiness]）"
+}`;
+
+      let responseText = "";
+      try {
+        const response = await safeGenerateContent("gemini-3.1-flash-lite", {
+          contents: prompt,
+          config: {
+            responseMimeType: "application/json",
+            responseSchema: {
+              type: Type.OBJECT,
+              properties: {
+                sensoryChanneling: {
+                  type: Type.OBJECT,
+                  properties: {
+                    visual: { type: Type.STRING },
+                    acoustic: { type: Type.STRING },
+                    aroma: { type: Type.STRING },
+                    tactile: { type: Type.STRING },
+                    worthiness: { type: Type.STRING },
+                  },
+                  required: ["visual", "acoustic", "aroma", "tactile", "worthiness"]
+                },
+                autoWrittenNarrative: { type: Type.STRING },
+                autoWrittenNarrativeEn: { type: Type.STRING }
+              },
+              required: ["sensoryChanneling", "autoWrittenNarrative", "autoWrittenNarrativeEn"]
+            }
+          }
+        });
+        if (response && response.text) {
+          responseText = response.text;
+        }
+      } catch (err: any) {
+        console.warn("AI Sensory Channeling attempt 1 failed:", err);
+      }
+
+      if (!responseText) {
+        try {
+          const response = await safeGenerateContent("gemini-3.5-flash", {
+            contents: prompt,
+            config: {
+              responseMimeType: "application/json"
+            }
+          });
+          if (response && response.text) {
+            responseText = response.text;
+          }
+        } catch (err2: any) {
+          console.warn("AI Sensory Channeling attempt 2 failed:", err2);
+        }
+      }
+
+      if (!responseText) {
+        throw new Error("Failed to generate sensory channeling response from Gemini.");
+      }
+
+      const parsed = JSON.parse(responseText.trim().replace(/^```json/, '').replace(/```$/, ''));
+      res.json(parsed);
+    } catch (error: any) {
+      console.error("Sensory Channeling API Error:", error);
+      res.status(500).json({ error: error.message || "Failed to channel sensory details." });
+    }
+  });
+
   // 1.8 AI-powered Wei-Shi Mindset Transmutation (唯识转念炼金术) based on Dr. Jan Ding-I
   app.post("/api/wisdom/alchemize", async (req, res) => {
     try {

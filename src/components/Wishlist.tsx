@@ -1,6 +1,7 @@
 import { useState, FormEvent } from 'react';
 import { Wish } from '../types';
-import { Sparkles, Heart, DollarSign, Sparkle, Briefcase, Sofa, Plus, Trash2, Eye, EyeOff, Edit3, Save, X, ChevronDown, ChevronUp, Trash, Wand2 } from 'lucide-react';
+import { Sparkles, Heart, DollarSign, Sparkle, Briefcase, Sofa, Plus, Trash2, Eye, EyeOff, Edit3, Save, X, ChevronDown, ChevronUp, Trash, Wand2, Mic, Radio, Compass } from 'lucide-react';
+import AiSensoryChannelingModal from './AiSensoryChannelingModal';
 
 interface WishlistProps {
   wishes: Wish[];
@@ -33,12 +34,52 @@ export default function Wishlist({
   const [expandedDetailsMap, setExpandedDetailsMap] = useState<Record<string, boolean>>({});
   const [expandedVisualDetailsMap, setExpandedVisualDetailsMap] = useState<Record<string, boolean>>({});
 
+  // AI Sensory Channeling & Auto-Scribe Modal states
+  const [channelingModalOpen, setChannelingModalOpen] = useState<boolean>(false);
+  const [channelingTarget, setChannelingTarget] = useState<{
+    wishId?: string;
+    title: string;
+    category: 'love' | 'wealth' | 'beauty' | 'career' | 'lifestyle';
+    currentText: string;
+  } | null>(null);
+
   // Refinement, direct editing and stacking states
   const [refineInputs, setRefineInputs] = useState<Record<string, string>>({});
   const [isEditingAll, setIsEditingAll] = useState<Record<string, boolean>>({});
   const [editingText, setEditingText] = useState<Record<string, string>>({});
   const [editingTextEn, setEditingTextEn] = useState<Record<string, string>>({});
   const [isRefinementOpen, setIsRefinementOpen] = useState<Record<string, boolean>>({});
+
+  const handleOpenChannelingForNewWish = () => {
+    setChannelingTarget({
+      title: title || (language === 'en' ? 'My Manifestation Wish' : '我的显化愿望'),
+      category: category,
+      currentText: details,
+    });
+    setChannelingModalOpen(true);
+  };
+
+  const handleOpenChannelingForWish = (wish: Wish) => {
+    setChannelingTarget({
+      wishId: wish.id,
+      title: wish.title,
+      category: wish.category,
+      currentText: wish.details || '',
+    });
+    setChannelingModalOpen(true);
+  };
+
+  const handleApplyChanneledDetails = (detailsText: string, visualizationText?: string, visualizationTextEn?: string) => {
+    if (channelingTarget?.wishId) {
+      onUpdateWish(channelingTarget.wishId, {
+        details: detailsText,
+        ...(visualizationText ? { visualizationDetails: visualizationText } : {}),
+        ...(visualizationTextEn ? { visualizationDetailsEn: visualizationTextEn } : {}),
+      });
+    } else {
+      setDetails(detailsText);
+    }
+  };
 
   // Splits text by double newlines and deletes the selected paragraph segment
   const handleDeleteSegment = (wishId: string, indexToDelete: number, lang: 'zh' | 'en') => {
@@ -322,18 +363,36 @@ export default function Wishlist({
 
           {/* Raw Description */}
           <div className="space-y-1">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between flex-wrap gap-2">
               <label className="text-xs font-semibold text-[#8e6d72] block">
                 {language === 'en' ? '🕊️ Describe Your Wish' : '🕊️ 你的心愿描绘（写得越真切，显化越快哦）'}
               </label>
-              <button
-                type="button"
-                onClick={insertFramework}
-                className="text-[10px] font-bold text-[#8e6d72] hover:text-[#8e6d72]/80 flex items-center gap-1 bg-[#8e6d72]/5 px-2.5 py-1 rounded-lg border border-[#8e6d72]/10 transition-all hover:scale-105 active:scale-95"
-              >
-                <span>🖋️</span>
-                <span>{language === 'en' ? '✨ Import 3D Framework' : '✨ 导入三维显化框架'}</span>
-              </button>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <button
+                  type="button"
+                  onClick={handleOpenChannelingForNewWish}
+                  className="text-[10px] font-bold text-pink-700 hover:text-pink-800 flex items-center gap-1 bg-pink-100/60 hover:bg-pink-200/70 px-2.5 py-1 rounded-lg border border-pink-300/40 transition-all hover:scale-105 active:scale-95 shadow-xs cursor-pointer"
+                >
+                  <Wand2 className="w-3 h-3 text-pink-600 animate-pulse" />
+                  <span>{language === 'en' ? '🔮 AI Sensory Channeling Studio' : '🔮 AI 辅助五感感应工坊'}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleOpenChannelingForNewWish}
+                  className="text-[10px] font-bold text-[#8e6d72] hover:text-[#8e6d72]/80 flex items-center gap-1 bg-white/70 hover:bg-white px-2.5 py-1 rounded-lg border border-[#8e6d72]/15 transition-all hover:scale-105 active:scale-95 shadow-xs cursor-pointer"
+                >
+                  <Mic className="w-3 h-3 text-rose-500" />
+                  <span>{language === 'en' ? '🎙️ Voice Auto-Scribe' : '🎙️ 语音自动书写'}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={insertFramework}
+                  className="text-[10px] font-bold text-[#8e6d72] hover:text-[#8e6d72]/80 flex items-center gap-1 bg-[#8e6d72]/5 px-2.5 py-1 rounded-lg border border-[#8e6d72]/10 transition-all hover:scale-105 active:scale-95"
+                >
+                  <span>🖋️</span>
+                  <span>{language === 'en' ? '✨ Import 3D Framework' : '✨ 导入三维显化框架'}</span>
+                </button>
+              </div>
             </div>
             <textarea
               placeholder={language === 'en' ? "Please describe the fine canvas of your heart. It is recommended to include the ultimate state and sensory details..." : "请描述您内心深处的精细画卷。建议包含期望达到的终极状态，以及画面感（如闻到红茶清香、温暖清风、心中的无限笃定与配得感等）..."}
@@ -344,17 +403,27 @@ export default function Wishlist({
               id="wish-details-textarea"
             />
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mt-1 px-1">
-              <button
-                type="button"
-                onClick={handleExpandDetails}
-                disabled={isExpanding}
-                className="text-[10px] font-bold text-[#8e6d72] hover:text-white bg-[#8e6d72]/10 hover:bg-[#8e6d72] disabled:bg-[#8e6d72]/20 disabled:text-[#8e6d72]/50 px-3.5 py-1.5 rounded-xl border border-[#8e6d72]/20 transition-all hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer disabled:cursor-not-allowed"
-              >
-                <span>🔮</span>
-                <span>{isExpanding ? (language === 'en' ? 'AI drawing sensory details...' : '正在根据提示词深度描绘细节...') : (language === 'en' ? '🔮 AI Sensory Detailing: Expand description with AI' : '🔮 一键智能描绘：根据我的提示词扩写细节')}</span>
-              </button>
+              <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  type="button"
+                  onClick={handleOpenChannelingForNewWish}
+                  className="text-[10px] font-bold text-white bg-gradient-to-r from-[#b49196] to-[#8e6d72] hover:opacity-95 px-3.5 py-1.5 rounded-xl shadow-xs transition-all hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <span>🔮</span>
+                  <span>{language === 'en' ? '🔮 AI Multi-Sensory Sensing & Auto-Writing' : '🔮 AI 五感感应与自动书写记录'}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleExpandDetails}
+                  disabled={isExpanding}
+                  className="text-[10px] font-bold text-[#8e6d72] hover:text-white bg-[#8e6d72]/10 hover:bg-[#8e6d72] disabled:bg-[#8e6d72]/20 disabled:text-[#8e6d72]/50 px-3 py-1.5 rounded-xl border border-[#8e6d72]/20 transition-all hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer disabled:cursor-not-allowed"
+                >
+                  <span>✨</span>
+                  <span>{isExpanding ? (language === 'en' ? 'Expanding details...' : '正在深度扩写细节...') : (language === 'en' ? '✨ Fast AI Expand' : '✨ 极速智能扩写')}</span>
+                </button>
+              </div>
               <span className="text-[9px] text-[#b49196] italic text-right">
-                {language === 'en' ? 'Enter a simple prompt first, then click expand' : '输入简单提示词（如：在海边喝咖啡，每天都有好心情）后点击'}
+                {language === 'en' ? 'AI can automatically sense and scribe rich 5D details' : 'AI 辅助全息感应五感，自动书写并记录至愿望'}
               </span>
             </div>
             {expandError && (
@@ -663,26 +732,37 @@ export default function Wishlist({
                 </div>
 
                 <div className="mt-4 pt-3.5 border-t border-white/50 flex items-center justify-between gap-2 flex-wrap">
-                  <button
-                    onClick={() => onGenerateDetails(wish.id, 'overwrite')}
-                    disabled={isGenerating}
-                    className={`text-[10.5px] font-bold px-3 py-1.5 rounded-full border transition-all ${
-                      wish.visualizationDetails
-                        ? 'border-amber-200 bg-amber-50/40 text-amber-800 hover:bg-amber-50'
-                        : 'border-[#b49196]/30 bg-white/50 text-[#8e6d72] hover:bg-white/80'
-                    } disabled:opacity-50`}
-                    id={`generate-details-btn-${wish.id}`}
-                  >
-                    {isGenerating ? (
-                      <span className="flex items-center gap-1">
-                        <span className="animate-spin text-xs">✨</span> {language === 'en' ? 'Tuning into Universe...' : '宇宙感应中...'}
-                      </span>
-                    ) : wish.visualizationDetails ? (
-                      language === 'en' ? '✨ Regenerate Luxury Details' : '✨ 重新感应奢华细节'
-                    ) : (
-                      language === 'en' ? '✨ Activate Sensory Details' : '✨ 激活具体显化细节'
-                    )}
-                  </button>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <button
+                      onClick={() => handleOpenChannelingForWish(wish)}
+                      className="text-[10.5px] font-bold px-3 py-1.5 rounded-full border border-pink-300/40 bg-pink-50/50 text-pink-700 hover:bg-pink-100/70 hover:scale-[1.02] transition-all flex items-center gap-1 cursor-pointer shadow-2xs"
+                      title={language === 'en' ? 'AI Sensory Channeling: Sense visual, acoustic, aroma, tactile & worthiness' : 'AI 五感全息感应：感应视觉、声场、气味、体感与配得誓言'}
+                    >
+                      <Wand2 className="w-3 h-3 text-pink-600" />
+                      <span>{language === 'en' ? '🔮 AI Sensory Channeling' : '🔮 AI 辅助感应细节'}</span>
+                    </button>
+
+                    <button
+                      onClick={() => onGenerateDetails(wish.id, 'overwrite')}
+                      disabled={isGenerating}
+                      className={`text-[10.5px] font-bold px-3 py-1.5 rounded-full border transition-all ${
+                        wish.visualizationDetails
+                          ? 'border-amber-200 bg-amber-50/40 text-amber-800 hover:bg-amber-50'
+                          : 'border-[#b49196]/30 bg-white/50 text-[#8e6d72] hover:bg-white/80'
+                      } disabled:opacity-50`}
+                      id={`generate-details-btn-${wish.id}`}
+                    >
+                      {isGenerating ? (
+                        <span className="flex items-center gap-1">
+                          <span className="animate-spin text-xs">✨</span> {language === 'en' ? 'Tuning into Universe...' : '宇宙感应中...'}
+                        </span>
+                      ) : wish.visualizationDetails ? (
+                        language === 'en' ? '✨ Fast Regenerate' : '✨ 极速重绘'
+                      ) : (
+                        language === 'en' ? '✨ Fast Activate' : '✨ 快速激活细节'
+                      )}
+                    </button>
+                  </div>
 
                   <button
                     disabled={!wish.visualizationDetails}
@@ -698,6 +778,22 @@ export default function Wishlist({
           })
         )}
       </div>
+
+      {/* AI Sensory Channeling & Auto-Scribe Modal */}
+      {channelingModalOpen && channelingTarget && (
+        <AiSensoryChannelingModal
+          isOpen={channelingModalOpen}
+          onClose={() => {
+            setChannelingModalOpen(false);
+            setChannelingTarget(null);
+          }}
+          wishTitle={channelingTarget.title}
+          category={channelingTarget.category}
+          initialText={channelingTarget.currentText}
+          language={language}
+          onApplyDetails={handleApplyChanneledDetails}
+        />
+      )}
     </div>
   );
 }
