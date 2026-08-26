@@ -2,6 +2,7 @@ import { useState, FormEvent } from 'react';
 import { Wish } from '../types';
 import { Sparkles, Heart, DollarSign, Sparkle, Briefcase, Sofa, Plus, Trash2, Eye, EyeOff, Edit3, Save, X, ChevronDown, ChevronUp, Trash, Wand2, Mic, Radio, Compass } from 'lucide-react';
 import AiSensoryChannelingModal from './AiSensoryChannelingModal';
+import ManualEditWishModal from './ManualEditWishModal';
 
 interface WishlistProps {
   wishes: Wish[];
@@ -33,6 +34,9 @@ export default function Wishlist({
   const [expandError, setExpandError] = useState<string | null>(null);
   const [expandedDetailsMap, setExpandedDetailsMap] = useState<Record<string, boolean>>({});
   const [expandedVisualDetailsMap, setExpandedVisualDetailsMap] = useState<Record<string, boolean>>({});
+
+  // Manual Edit Modal states
+  const [manualEditWish, setManualEditWish] = useState<Wish | null>(null);
 
   // AI Sensory Channeling & Auto-Scribe Modal states
   const [channelingModalOpen, setChannelingModalOpen] = useState<boolean>(false);
@@ -478,33 +482,54 @@ export default function Wishlist({
                       {categoryIcons[wish.category]}
                       {categoryLabels[wish.category]}
                     </span>
-                    <button
-                      onClick={() => onDeleteWish(wish.id)}
-                      className="p-1.5 rounded-full hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors"
-                      title={language === 'en' ? "Delete this wish" : "清除此心愿"}
-                      id={`delete-wish-${wish.id}`}
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => setManualEditWish(wish)}
+                        className="p-1.5 rounded-full hover:bg-pink-50 text-[#8e6d72] hover:text-[#6d5055] transition-colors"
+                        title={language === 'en' ? "Manually edit and record wish details" : "手动修改与记录心愿细节"}
+                        id={`manual-edit-wish-${wish.id}`}
+                      >
+                        <Edit3 className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => onDeleteWish(wish.id)}
+                        className="p-1.5 rounded-full hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors"
+                        title={language === 'en' ? "Delete this wish" : "清除此心愿"}
+                        id={`delete-wish-${wish.id}`}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
 
-                  <h3 className="font-serif font-bold text-base text-[#4a3a3a] leading-snug tracking-wide group-hover:text-[#8e6d72] transition-colors">
-                    {wish.title}
+                  <h3 className="font-serif font-bold text-base text-[#4a3a3a] leading-snug tracking-wide group-hover:text-[#8e6d72] transition-colors flex items-center justify-between gap-2">
+                    <span>{wish.title}</span>
                   </h3>
 
-                  <div className="relative">
-                    <div className={`text-xs text-[#6d5b5e] mt-2 leading-relaxed font-sans bg-white/30 p-2.5 rounded-xl border border-white/20 transition-all duration-300 overflow-y-auto custom-scrollbar ${isDetailsExpanded ? 'max-h-[250px]' : 'max-h-[85px]'}`}>
+                  <div className="relative mt-2">
+                    <div className={`text-xs text-[#6d5b5e] leading-relaxed font-sans bg-white/30 p-2.5 rounded-xl border border-white/20 transition-all duration-300 overflow-y-auto custom-scrollbar ${isDetailsExpanded ? 'max-h-[250px]' : 'max-h-[85px]'}`}>
                       {wish.details || (language === 'en' ? '（No initial description written yet...）' : '（未写下初始描述，等待直接显化...）')}
                     </div>
-                    {wish.details && wish.details.length > 80 && (
+                    <div className="flex items-center justify-between mt-1">
+                      {wish.details && wish.details.length > 80 ? (
+                        <button
+                          type="button"
+                          onClick={() => setExpandedDetailsMap(prev => ({ ...prev, [wish.id]: !isDetailsExpanded }))}
+                          className="text-[10px] text-[#8e6d72] hover:underline font-semibold flex items-center gap-0.5 ml-1"
+                        >
+                          {isDetailsExpanded ? (language === 'en' ? 'Collapse' : '收起描述') : (language === 'en' ? 'Show full description' : '展开全部描述')}
+                        </button>
+                      ) : <span />}
                       <button
                         type="button"
-                        onClick={() => setExpandedDetailsMap(prev => ({ ...prev, [wish.id]: !isDetailsExpanded }))}
-                        className="text-[10px] text-[#8e6d72] hover:underline font-semibold mt-1 flex items-center gap-0.5 ml-1"
+                        onClick={() => setManualEditWish(wish)}
+                        className="text-[10px] text-[#8e6d72] hover:underline font-semibold flex items-center gap-0.5 ml-auto cursor-pointer"
+                        title={language === 'en' ? 'Edit description' : '手动修改描述'}
                       >
-                        {isDetailsExpanded ? (language === 'en' ? 'Collapse' : '收起描述') : (language === 'en' ? 'Show full description' : '展开全部描述')}
+                        <Edit3 className="w-2.5 h-2.5" />
+                        <span>{language === 'en' ? 'Edit' : '修改描述'}</span>
                       </button>
-                    )}
+                    </div>
                   </div>
 
                   {/* Enhanced Details */}
@@ -734,12 +759,21 @@ export default function Wishlist({
                 <div className="mt-4 pt-3.5 border-t border-white/50 flex items-center justify-between gap-2 flex-wrap">
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <button
+                      onClick={() => setManualEditWish(wish)}
+                      className="text-[10.5px] font-bold px-3 py-1.5 rounded-full border border-[#8e6d72]/30 bg-white/70 text-[#8e6d72] hover:bg-white hover:scale-[1.02] transition-all flex items-center gap-1 cursor-pointer shadow-2xs"
+                      title={language === 'en' ? 'Manually edit and record all details' : '手动输入、修改并记录心愿细节'}
+                    >
+                      <Edit3 className="w-3 h-3 text-[#8e6d72]" />
+                      <span>{language === 'en' ? '✍️ Manual Edit' : '✍️ 手动修改记录'}</span>
+                    </button>
+
+                    <button
                       onClick={() => handleOpenChannelingForWish(wish)}
                       className="text-[10.5px] font-bold px-3 py-1.5 rounded-full border border-pink-300/40 bg-pink-50/50 text-pink-700 hover:bg-pink-100/70 hover:scale-[1.02] transition-all flex items-center gap-1 cursor-pointer shadow-2xs"
                       title={language === 'en' ? 'AI Sensory Channeling: Sense visual, acoustic, aroma, tactile & worthiness' : 'AI 五感全息感应：感应视觉、声场、气味、体感与配得誓言'}
                     >
                       <Wand2 className="w-3 h-3 text-pink-600" />
-                      <span>{language === 'en' ? '🔮 AI Sensory Channeling' : '🔮 AI 辅助感应细节'}</span>
+                      <span>{language === 'en' ? '🔮 AI Channeling' : '🔮 AI 辅助感应'}</span>
                     </button>
 
                     <button
@@ -778,6 +812,17 @@ export default function Wishlist({
           })
         )}
       </div>
+
+      {/* Manual Edit & Record Wish Details Modal */}
+      {manualEditWish && (
+        <ManualEditWishModal
+          isOpen={Boolean(manualEditWish)}
+          onClose={() => setManualEditWish(null)}
+          wish={manualEditWish}
+          language={language}
+          onSave={onUpdateWish}
+        />
+      )}
 
       {/* AI Sensory Channeling & Auto-Scribe Modal */}
       {channelingModalOpen && channelingTarget && (

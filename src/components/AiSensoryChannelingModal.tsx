@@ -441,65 +441,117 @@ export default function AiSensoryChannelingModal({
                     </span>
                   </div>
 
-                  {/* 5 Dimensional Breakdown Cards */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {sensoryResults.visual && (
-                      <div className="p-3.5 rounded-2xl bg-white/70 border border-white/60 shadow-xs space-y-1">
-                        <div className="flex items-center gap-1.5 text-xs font-bold text-[#8e6d72]">
-                          <Eye className="w-3.5 h-3.5 text-amber-500" />
-                          <span>{language === 'en' ? 'Visual Scenery & Light' : '👁️ 视觉光影景象'}</span>
-                        </div>
-                        <p className="text-xs text-[#6d5b5e] leading-relaxed italic">{sensoryResults.visual}</p>
-                      </div>
-                    )}
+                  {/* 5 Dimensional Breakdown Cards (Directly Editable by User) */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10.5px] font-bold text-[#8e6d72] uppercase tracking-wider">
+                        {language === 'en' ? '✍️ 5D Sensory Cards (Directly Editable by Hand):' : '✍️ 五感维度细节卡（支持直接手动输入/修改与记录）：'}
+                      </span>
+                      <span className="text-[9.5px] text-[#b49196] italic">
+                        {language === 'en' ? 'You can freely modify any card below' : '您可以自由修改下方任何卡片的文字'}
+                      </span>
+                    </div>
 
-                    {sensoryResults.acoustic && (
-                      <div className="p-3.5 rounded-2xl bg-white/70 border border-white/60 shadow-xs space-y-1">
-                        <div className="flex items-center gap-1.5 text-xs font-bold text-[#8e6d72]">
-                          <Ear className="w-3.5 h-3.5 text-purple-500" />
-                          <span>{language === 'en' ? 'Acoustic Resonance' : '👂 声场律动回响'}</span>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {sensoryResults.visual !== undefined && (
+                        <div className="p-3 rounded-2xl bg-white/70 border border-white/60 shadow-xs space-y-1.5">
+                          <div className="flex items-center justify-between text-xs font-bold text-[#8e6d72]">
+                            <span className="flex items-center gap-1.5">
+                              <Eye className="w-3.5 h-3.5 text-amber-500" />
+                              <span>{language === 'en' ? 'Visual Scenery & Light' : '👁️ 视觉光影景象'}</span>
+                            </span>
+                          </div>
+                          <textarea
+                            value={sensoryResults.visual}
+                            onChange={(e) => setSensoryResults(prev => ({ ...prev, visual: e.target.value }))}
+                            placeholder={language === 'en' ? 'Enter visual details...' : '手动输入视觉光影细节...'}
+                            rows={3}
+                            className="w-full text-xs text-[#4a3a3a] leading-relaxed bg-white/70 p-2 rounded-xl border border-white/60 focus:ring-1 focus:ring-[#8e6d72] focus:outline-none resize-none font-sans"
+                          />
                         </div>
-                        <p className="text-xs text-[#6d5b5e] leading-relaxed italic">{sensoryResults.acoustic}</p>
-                      </div>
-                    )}
+                      )}
 
-                    {sensoryResults.aroma && (
-                      <div className="p-3.5 rounded-2xl bg-white/70 border border-white/60 shadow-xs space-y-1">
-                        <div className="flex items-center gap-1.5 text-xs font-bold text-[#8e6d72]">
-                          <Flower2 className="w-3.5 h-3.5 text-pink-500" />
-                          <span>{language === 'en' ? 'Aroma & Micro-climate' : '👃 香气与温度感知'}</span>
+                      {sensoryResults.acoustic !== undefined && (
+                        <div className="p-3 rounded-2xl bg-white/70 border border-white/60 shadow-xs space-y-1.5">
+                          <div className="flex items-center justify-between text-xs font-bold text-[#8e6d72]">
+                            <span className="flex items-center gap-1.5">
+                              <Ear className="w-3.5 h-3.5 text-purple-500" />
+                              <span>{language === 'en' ? 'Acoustic Resonance' : '👂 声场律动回响'}</span>
+                            </span>
+                          </div>
+                          <textarea
+                            value={sensoryResults.acoustic}
+                            onChange={(e) => setSensoryResults(prev => ({ ...prev, acoustic: e.target.value }))}
+                            placeholder={language === 'en' ? 'Enter sound details...' : '手动输入声场律动细节...'}
+                            rows={3}
+                            className="w-full text-xs text-[#4a3a3a] leading-relaxed bg-white/70 p-2 rounded-xl border border-white/60 focus:ring-1 focus:ring-[#8e6d72] focus:outline-none resize-none font-sans"
+                          />
                         </div>
-                        <p className="text-xs text-[#6d5b5e] leading-relaxed italic">{sensoryResults.aroma}</p>
-                      </div>
-                    )}
+                      )}
 
-                    {sensoryResults.tactile && (
-                      <div className="p-3.5 rounded-2xl bg-white/70 border border-white/60 shadow-xs space-y-1">
-                        <div className="flex items-center gap-1.5 text-xs font-bold text-[#8e6d72]">
-                          <HeartHandshake className="w-3.5 h-3.5 text-rose-500" />
-                          <span>{language === 'en' ? 'Somatic Tactile & Relaxation' : '🤲 触觉与身心放松'}</span>
+                      {sensoryResults.aroma !== undefined && (
+                        <div className="p-3 rounded-2xl bg-white/70 border border-white/60 shadow-xs space-y-1.5">
+                          <div className="flex items-center justify-between text-xs font-bold text-[#8e6d72]">
+                            <span className="flex items-center gap-1.5">
+                              <Flower2 className="w-3.5 h-3.5 text-pink-500" />
+                              <span>{language === 'en' ? 'Aroma & Micro-climate' : '👃 香气与温度感知'}</span>
+                            </span>
+                          </div>
+                          <textarea
+                            value={sensoryResults.aroma}
+                            onChange={(e) => setSensoryResults(prev => ({ ...prev, aroma: e.target.value }))}
+                            placeholder={language === 'en' ? 'Enter aroma & temp details...' : '手动输入香气与温度感知...'}
+                            rows={3}
+                            className="w-full text-xs text-[#4a3a3a] leading-relaxed bg-white/70 p-2 rounded-xl border border-white/60 focus:ring-1 focus:ring-[#8e6d72] focus:outline-none resize-none font-sans"
+                          />
                         </div>
-                        <p className="text-xs text-[#6d5b5e] leading-relaxed italic">{sensoryResults.tactile}</p>
-                      </div>
-                    )}
+                      )}
 
-                    {sensoryResults.worthiness && (
-                      <div className="p-3.5 rounded-2xl bg-gradient-to-r from-amber-500/10 to-pink-500/10 border border-amber-300/40 shadow-xs space-y-1 col-span-1 md:col-span-2">
-                        <div className="flex items-center gap-1.5 text-xs font-bold text-amber-800">
-                          <Gem className="w-3.5 h-3.5 text-amber-600" />
-                          <span>{language === 'en' ? 'Divine Affirmation of Worthiness' : '💎 潜意识高配得感誓言'}</span>
+                      {sensoryResults.tactile !== undefined && (
+                        <div className="p-3 rounded-2xl bg-white/70 border border-white/60 shadow-xs space-y-1.5">
+                          <div className="flex items-center justify-between text-xs font-bold text-[#8e6d72]">
+                            <span className="flex items-center gap-1.5">
+                              <HeartHandshake className="w-3.5 h-3.5 text-rose-500" />
+                              <span>{language === 'en' ? 'Somatic Tactile & Relaxation' : '🤲 触觉与身心放松'}</span>
+                            </span>
+                          </div>
+                          <textarea
+                            value={sensoryResults.tactile}
+                            onChange={(e) => setSensoryResults(prev => ({ ...prev, tactile: e.target.value }))}
+                            placeholder={language === 'en' ? 'Enter tactile details...' : '手动输入触觉与身心放松感受...'}
+                            rows={3}
+                            className="w-full text-xs text-[#4a3a3a] leading-relaxed bg-white/70 p-2 rounded-xl border border-white/60 focus:ring-1 focus:ring-[#8e6d72] focus:outline-none resize-none font-sans"
+                          />
                         </div>
-                        <p className="text-xs text-amber-900 leading-relaxed font-bold italic">{sensoryResults.worthiness}</p>
-                      </div>
-                    )}
+                      )}
+
+                      {sensoryResults.worthiness !== undefined && (
+                        <div className="p-3 rounded-2xl bg-gradient-to-r from-amber-500/10 to-pink-500/10 border border-amber-300/40 shadow-xs space-y-1.5 col-span-1 md:col-span-2">
+                          <div className="flex items-center justify-between text-xs font-bold text-amber-800">
+                            <span className="flex items-center gap-1.5">
+                              <Gem className="w-3.5 h-3.5 text-amber-600" />
+                              <span>{language === 'en' ? 'Divine Affirmation of Worthiness' : '💎 潜意识高配得感誓言'}</span>
+                            </span>
+                          </div>
+                          <textarea
+                            value={sensoryResults.worthiness}
+                            onChange={(e) => setSensoryResults(prev => ({ ...prev, worthiness: e.target.value }))}
+                            placeholder={language === 'en' ? 'Enter worthiness affirmation...' : '手动输入潜意识高配得感誓言...'}
+                            rows={2}
+                            className="w-full text-xs font-bold text-amber-900 leading-relaxed bg-white/80 p-2 rounded-xl border border-amber-200 focus:ring-1 focus:ring-amber-500 focus:outline-none resize-none font-sans"
+                          />
+                        </div>
+                      )}
+                    </div>
                   </div>
 
-                  {/* Auto-Written Full Narrative Preview */}
+                  {/* Auto-Written Full Narrative Preview (Editable Textarea) */}
                   {autoNarrativeZh && (
                     <div className="p-4 rounded-2xl bg-white/80 border border-[#8e6d72]/20 space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-[#8e6d72]">
-                          {language === 'en' ? '📜 Auto-Written Manifestation Script:' : '📜 一键自动书写显化画卷文本：'}
+                        <span className="text-xs font-bold text-[#8e6d72] flex items-center gap-1.5">
+                          <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                          <span>{language === 'en' ? '📜 Auto-Written Manifestation Script (Editable):' : '📜 显化画卷自动书写文本（可直接手动编辑微调）：'}</span>
                         </span>
                         <button
                           type="button"
@@ -514,9 +566,12 @@ export default function AiSensoryChannelingModal({
                           <span>{language === 'en' ? 'Copy Text' : '复制文本'}</span>
                         </button>
                       </div>
-                      <div className="text-xs text-[#4a3a3a] leading-relaxed font-sans whitespace-pre-line bg-white/60 p-3 rounded-xl border border-white/60 max-h-48 overflow-y-auto custom-scrollbar">
-                        {autoNarrativeZh}
-                      </div>
+                      <textarea
+                        value={autoNarrativeZh}
+                        onChange={(e) => setAutoNarrativeZh(e.target.value)}
+                        rows={6}
+                        className="w-full text-xs text-[#4a3a3a] leading-relaxed font-sans bg-white/70 p-3.5 rounded-xl border border-white/60 focus:ring-2 focus:ring-[#8e6d72]/30 focus:outline-none resize-none custom-scrollbar"
+                      />
                     </div>
                   )}
 
