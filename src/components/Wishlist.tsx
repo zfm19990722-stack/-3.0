@@ -1,6 +1,6 @@
 import { useState, FormEvent } from 'react';
 import { Wish } from '../types';
-import { Sparkles, Heart, DollarSign, Sparkle, Briefcase, Sofa, Plus, Trash2, Eye, EyeOff, Edit3, Save, X, ChevronDown, ChevronUp, Trash, Wand2, Mic, Radio, Compass } from 'lucide-react';
+import { Sparkles, Heart, DollarSign, Sparkle, Briefcase, Sofa, Plus, Trash2, Eye, EyeOff, Edit3, Save, X, ChevronDown, ChevronUp, Trash, Wand2, Radio, Compass } from 'lucide-react';
 import AiSensoryChannelingModal from './AiSensoryChannelingModal';
 import ManualEditWishModal from './ManualEditWishModal';
 
@@ -379,14 +379,6 @@ export default function Wishlist({
                 >
                   <Wand2 className="w-3 h-3 text-pink-600 animate-pulse" />
                   <span>{language === 'en' ? '🔮 AI Sensory Channeling Studio' : '🔮 AI 辅助五感感应工坊'}</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={handleOpenChannelingForNewWish}
-                  className="text-[10px] font-bold text-[#8e6d72] hover:text-[#8e6d72]/80 flex items-center gap-1 bg-white/70 hover:bg-white px-2.5 py-1 rounded-lg border border-[#8e6d72]/15 transition-all hover:scale-105 active:scale-95 shadow-xs cursor-pointer"
-                >
-                  <Mic className="w-3 h-3 text-rose-500" />
-                  <span>{language === 'en' ? '🎙️ Voice Auto-Scribe' : '🎙️ 语音自动书写'}</span>
                 </button>
                 <button
                   type="button"
