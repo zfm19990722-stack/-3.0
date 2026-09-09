@@ -920,22 +920,69 @@ export default function AudioPlayer({
     setIsPlaying(true);
   };
 
-  // File upload logic
+  // File upload logic with multi-file support
   const handleFileUpload = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
 
-    const fileUrl = URL.createObjectURL(file);
-    const newTrack: MusicTrack = {
-      id: `custom-file-${Date.now()}`,
-      name: `🎵 ${file.name.replace(/\.[^/.]+$/, '')}`,
-      url: fileUrl,
-      isCustom: true,
-    };
+    let firstAddedTrack: MusicTrack | null = null;
+    Array.from(files).forEach((file, index) => {
+      const fileUrl = URL.createObjectURL(file);
+      const cleanName = file.name.replace(/\.[^/.]+$/, '');
+      const newTrack: MusicTrack = {
+        id: `custom-file-${Date.now()}-${index}`,
+        name: `🎙️ ${cleanName}`,
+        nameEn: `🎙️ ${cleanName}`,
+        url: fileUrl,
+        isCustom: true,
+        summary: language === 'en' ? 'Custom uploaded high-fidelity audio' : '用户本地原声录音文件',
+      };
+      onAddCustomTrack(newTrack);
+      if (index === 0) {
+        firstAddedTrack = newTrack;
+      }
+    });
 
-    onAddCustomTrack(newTrack);
-    onTrackChange(newTrack);
-    setIsPlaying(true);
+    if (firstAddedTrack) {
+      onTrackChange(firstAddedTrack);
+      setIsPlaying(true);
+    }
+    showToast(language === 'en' ? `🎉 Imported ${files.length} recording(s)!` : `🎉 成功导入 ${files.length} 个本地音频/录音！`);
+    setShowAddForm(false);
+  };
+
+  // Browser Native Speech Synthesis for instant voice narration
+  const [isSpeakingText, setIsSpeakingText] = useState(false);
+  const toggleSpeechAffirmation = (text: string) => {
+    if (!('speechSynthesis' in window)) {
+      showToast(language === 'en' ? 'Speech synthesis not supported in this browser' : '当前浏览器不支持语音合成');
+      return;
+    }
+
+    if (isSpeakingText) {
+      window.speechSynthesis.cancel();
+      setIsSpeakingText(false);
+      return;
+    }
+
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'en-US';
+    utterance.rate = 0.88; // Gentle, relaxing meditation pacing
+    utterance.pitch = 1.05; // Soothing warm tone
+
+    // Try to find a soft English female voice
+    const voices = window.speechSynthesis.getVoices();
+    const englishVoice = voices.find((v) => (v.name.includes('Samantha') || v.name.includes('Karen') || v.name.includes('Zira') || v.name.includes('Female') || v.lang.startsWith('en')));
+    if (englishVoice) {
+      utterance.voice = englishVoice;
+    }
+
+    utterance.onend = () => setIsSpeakingText(false);
+    utterance.onerror = () => setIsSpeakingText(false);
+
+    window.speechSynthesis.speak(utterance);
+    setIsSpeakingText(true);
   };
 
   return (
@@ -1008,7 +1055,7 @@ export default function AudioPlayer({
       {activeTab === 'tracks' && (
         <div className="space-y-4 animate-fadeIn">
           {/* Main Track Grid */}
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {tracks.map((track) => (
               <button
                 key={track.id}
@@ -1018,14 +1065,18 @@ export default function AudioPlayer({
                 }}
                 className={`p-3 rounded-xl text-left text-xs transition-all duration-300 flex flex-col justify-between border ${
                   currentTrack.id === track.id
-                    ? 'bg-white/85 border-white text-[#8e6d72] shadow-sm font-bold scale-[1.01]'
+                    ? 'bg-white/90 border-white text-[#8e6d72] shadow-sm font-bold scale-[1.01]'
                     : 'bg-white/20 border-white/20 text-[#4a3a3a] hover:bg-white/40'
                 }`}
                 id={`track-select-${track.id}`}
               >
-                <span className="truncate w-full block font-medium">{track.name}</span>
+                <span className="truncate w-full block font-medium">
+                  {language === 'en' ? (track.nameEn || track.name) : track.name}
+                </span>
                 <span className="text-[8.5px] text-[#b49196] uppercase font-mono tracking-wider mt-1.5 font-bold block">
-                  {track.id === 'princess-synth' || track.id.startsWith('custom-synth-')
+                  {track.transcript
+                    ? (language === 'en' ? '🎙️ Affirmation Voice' : '🎙️ 原声箴言录音')
+                    : track.id === 'princess-synth' || track.id.startsWith('custom-synth-')
                     ? (language === 'en' ? '✨ Web Synth' : '✨ Web 智能合成')
                     : (language === 'en' ? '🎵 Audio Stream' : '🎵 音频通道')}
                 </span>
@@ -1033,12 +1084,49 @@ export default function AudioPlayer({
             ))}
           </div>
 
+          {/* Affirmation Script for current track */}
+          {currentTrack.transcript && (
+            <div className="p-3.5 rounded-2xl bg-white/40 border border-white/60 space-y-2 text-left animate-fadeIn">
+              <div className="flex items-center justify-between">
+                <span className="text-[10.5px] font-bold text-[#8e6d72] uppercase tracking-wide flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-pink-400" />
+                  {language === 'en' ? 'Spoken Affirmation Script' : '原声冥想箴言文稿'}
+                </span>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => toggleSpeechAffirmation(currentTrack.transcript || '')}
+                    className={`text-[9.5px] px-2.5 py-1 rounded-full font-medium transition-all flex items-center gap-1 border shadow-sm ${
+                      isSpeakingText
+                        ? 'bg-pink-500 text-white border-pink-600 animate-pulse'
+                        : 'bg-white/80 text-[#8e6d72] border-pink-200 hover:bg-white'
+                    }`}
+                    title={language === 'en' ? 'Live Voice Narration' : '朗读此段箴言'}
+                  >
+                    <Volume2 className="w-3 h-3" />
+                    <span>{isSpeakingText ? (language === 'en' ? 'Stop Voice' : '停止朗读') : (language === 'en' ? 'Read Aloud' : '朗读箴言')}</span>
+                  </button>
+                  <span className="text-[9px] px-2 py-0.5 rounded-full bg-pink-500/10 text-pink-700 font-medium">
+                    {language === 'en' ? 'High Fidelity' : '高清原声'}
+                  </span>
+                </div>
+              </div>
+              <p className="text-xs text-[#4a3a3a] leading-relaxed font-serif italic bg-white/40 p-2.5 rounded-xl border border-white/40 shadow-inner">
+                "{currentTrack.transcript}"
+              </p>
+              {currentTrack.transcriptZh && (
+                <p className="text-[11px] text-[#6d5b5e] leading-relaxed px-1">
+                  {currentTrack.transcriptZh}
+                </p>
+              )}
+            </div>
+          )}
+
           {/* Custom Track Import Modal */}
           {showAddForm && (
             <div className="p-4 rounded-[20px] border border-white/60 bg-white/40 space-y-3 animate-fadeIn">
               <div className="flex items-center justify-between pb-1.5 border-b border-[#8e6d72]/10">
                 <span className="text-[11px] font-bold text-[#8e6d72] uppercase tracking-wide">
-                  {language === 'en' ? 'Add External Music Link' : '添加外部音乐链接'}
+                  {language === 'en' ? 'Import Original Audio Recordings' : '导入您的原声录音文件'}
                 </span>
                 <button onClick={() => setShowAddForm(false)} className="text-[#8e6d72] hover:text-black">
                   <X className="w-3.5 h-3.5" />
@@ -1048,18 +1136,24 @@ export default function AudioPlayer({
               {/* Upload File */}
               <div className="space-y-1">
                 <span className="text-[9px] font-bold text-[#8e6d72] block">
-                  {language === 'en' ? 'Method 1: Upload Local Audio' : '方法一: 上传本地音频'}
+                  {language === 'en' ? 'Method 1: Batch Upload Your Audio Files (MP3 / WAV / M4A)' : '方法一: 批量上传您的原声录音文件 (支持多选 / MP3 / WAV)'}
                 </span>
                 <div className="relative">
                   <input
                     type="file"
                     accept="audio/*"
+                    multiple
                     onChange={handleFileUpload}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                   />
-                  <div className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border border-dashed border-[#b49196]/40 hover:border-[#8e6d72] bg-white/45 text-xs text-[#8e6d72] font-semibold transition-all">
-                    <Upload className="w-3.5 h-3.5" />
-                    <span>{language === 'en' ? 'Select MP3 or WAV file' : '选择 MP3 或 WAV 音乐'}</span>
+                  <div className="flex flex-col items-center justify-center gap-1.5 py-3 px-3 rounded-xl border border-dashed border-[#b49196]/60 hover:border-[#8e6d72] bg-white/60 text-xs text-[#8e6d72] font-semibold transition-all text-center cursor-pointer shadow-sm">
+                    <div className="flex items-center gap-1.5">
+                      <Upload className="w-4 h-4 text-pink-500" />
+                      <span>{language === 'en' ? 'Select or Drag Audio Files (Multi-Select Supported)' : '点击选择或拖入本地录音文件 (支持按住 Ctrl/Shift 多选 10 首)'}</span>
+                    </div>
+                    <span className="text-[10px] text-[#b49196] font-normal">
+                      {language === 'en' ? 'Direct local playback with 100% original quality' : '直接加载本地原始录音，100% 还原人声音质，无任何改动'}
+                    </span>
                   </div>
                 </div>
               </div>

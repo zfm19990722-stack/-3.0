@@ -11,6 +11,7 @@ import AbundanceWisdomPortalCard from './components/AbundanceWisdomPortalCard';
 import ImmersiveMeditationPortalCard from './components/ImmersiveMeditationPortalCard';
 import { ChakraVisualizer } from './components/ChakraVisualizer';
 import { BreathingRingWithParticles } from './components/BreathingRingWithParticles';
+import { UPLOADED_AFFIRMATION_AUDIOS } from './data/affirmationAudios';
 import {
   Sparkles,
   Heart,
@@ -100,6 +101,16 @@ export const DEFAULT_UNIVERSAL_WISH: Wish = {
 };
 
 const PREBUILT_MUSIC: MusicTrack[] = [
+  ...UPLOADED_AFFIRMATION_AUDIOS.map((item) => ({
+    id: item.id,
+    name: item.titleZh,
+    nameEn: item.titleEn,
+    url: item.url,
+    category: item.category,
+    transcript: item.transcript,
+    transcriptZh: item.transcriptZh,
+    summary: item.summary,
+  })),
   { id: 'princess-synth', name: '✨ 圣洁公主琴音 (Web 实时合成)', nameEn: '✨ Sacred Princess Chords (Web Synth)', url: '' },
   { id: 'track-rose', name: '🎵 玫瑰古堡钢琴曲 (舒适冥想)', nameEn: '🎵 Rose Castle Piano (Comfort Meditation)', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3' },
   { id: 'track-ambient', name: '🎵 水晶风铃之歌 (空灵声场)', nameEn: '🎵 Crystal Chimes Symphony (Ethereal Sound)', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3' },
@@ -160,14 +171,13 @@ export default function App() {
   
   // Breathing presets
   const breathingPatterns = [
-    { id: 'classic-4-4-4', name: language === 'en' ? 'Classic Balance' : '经典舒缓呼吸', code: '4-4-4', type: 'classic', inhale: 4, holdIn: 4, exhale: 4, holdOut: 0, desc: language === 'en' ? 'Balance body & mind, stabilize field' : '平衡身心，安稳场域' },
+    { id: 'sohum', name: language === 'en' ? 'SoHum Resonance' : 'SoHum 谐振呼吸', code: '1分6次->1分5次', type: 'mantra', inhale: 5, holdIn: 0, exhale: 5, holdOut: 0, desc: language === 'en' ? 'Dr. Jan: 1 min 6 breaths (5s So / 5s Hum) -> 1 min 5 breaths (6s So / 6s Hum)' : '杨定一博士推荐：第1分钟6次(5s So吸/5s Hum呼)，第2分钟5次(6s So吸/6s Hum呼)，深层同频宇宙谐振' },
     { id: 'box-4-4-4-4', name: language === 'en' ? 'Box Breathing' : '方盒平衡呼吸', code: '4-4-4-4', type: 'box', inhale: 4, holdIn: 4, exhale: 4, holdOut: 4, desc: language === 'en' ? 'Symmetrical clarity, calm racing thoughts' : '均衡清明，安定思绪' },
     { id: 'box-4-6-4-6', name: language === 'en' ? 'Deep Relaxation' : '方盒深层呼吸', code: '4-6-4-6', type: 'box', inhale: 4, holdIn: 6, exhale: 4, holdOut: 6, desc: language === 'en' ? 'Deep release, let go of pressure' : '深沉放松，放空压力' },
     { id: 'box-4-8-4-8', name: language === 'en' ? 'Transcendental Flow' : '方盒超频呼吸', code: '4-8-4-8', type: 'box', inhale: 4, holdIn: 8, exhale: 4, holdOut: 8, desc: language === 'en' ? 'Ignite potential, raise consciousness' : '激发潜能，意识升华' },
     { id: 'rebirthing', name: language === 'en' ? 'Rebirthing Breath' : '重生呼吸法', code: '2-0-2-0', type: 'circular', inhale: 2, holdIn: 0, exhale: 2, holdOut: 0, desc: language === 'en' ? 'Continuous circular flow, release subconscious blockages' : '连贯循环呼吸，不带停顿，释放深层创伤与潜意识束缚' },
-    { id: 'sohum', name: language === 'en' ? 'SOHUM Resonance' : 'SoHum 律动呼吸', code: '1分6次->1分5次', type: 'mantra', inhale: 5, holdIn: 0, exhale: 5, holdOut: 0, desc: language === 'en' ? 'Dr. Jan: 1 min 6 breaths (5s So / 5s Hum) -> 1 min 5 breaths (6s So / 6s Hum)' : '杨定一博士推荐：第1分钟6次(5s So吸/5s Hum呼)，第2分钟5次(6s So吸/6s Hum呼)，深层同频宇宙律动' },
   ];
-  const [selectedPatternId, setSelectedPatternId] = useState<string>('classic-4-4-4');
+  const [selectedPatternId, setSelectedPatternId] = useState<string>('sohum');
   const [breathingText, setBreathingText] = useState<string>('吸气...');
   const [breathingPhase, setBreathingPhase] = useState<'inhale' | 'holdIn' | 'exhale' | 'holdOut'>('inhale');
 
@@ -691,43 +701,85 @@ export default function App() {
         osc2.stop(now + 0.2);
 
       } else if (phase === 'exhale') {
-        // --- EXHALE: Deep Meditative Drum Beat (打鼓的声音) ---
-        const drumOsc = ctx.createOscillator();
-        const drumGain = ctx.createGain();
-        const lowpassFilter = ctx.createBiquadFilter();
+        // --- EXHALE: Deep, Grounding & Powerful Meditative Temple Drum (厚重大鼓/排浊呼气鼓鸣) ---
+        // Multi-layered acoustic synthesis: Strike Attack + Wood/Leather Body + Deep Earth Sub + Warm Punch EQ
+        const drumMasterGain = ctx.createGain();
 
-        drumOsc.type = 'sine';
-        // Pitch sweep (starts at 160Hz and drops to 48Hz rapidly to simulate drum skin stretch)
-        drumOsc.frequency.setValueAtTime(160, now);
-        drumOsc.frequency.exponentialRampToValueAtTime(48, now + 0.16);
+        // 1. Leather Membrane & Beater Strike Transient (清晰有力的鼓皮/击槌瞬态打击感，确保各设备清晰听见)
+        const strikeOsc = ctx.createOscillator();
+        const strikeGain = ctx.createGain();
+        strikeOsc.type = 'triangle';
+        strikeOsc.frequency.setValueAtTime(460, now);
+        strikeOsc.frequency.exponentialRampToValueAtTime(160, now + 0.045);
+        strikeGain.gain.setValueAtTime(0, now);
+        strikeGain.gain.linearRampToValueAtTime(0.42, now + 0.003); // Quick, punchy attack
+        strikeGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.065);
+        strikeOsc.connect(strikeGain);
+        strikeGain.connect(drumMasterGain);
+        strikeOsc.start(now);
+        strikeOsc.stop(now + 0.08);
 
-        // Low mid harmonic for deep hand drum punch
+        // 2. Main Drum Body & Leather Skin Tension Sweep (深沉饱满的鼓腔回响)
+        const bodyOsc = ctx.createOscillator();
+        const bodyGain = ctx.createGain();
+        bodyOsc.type = 'sine';
+        // Pitch sweep from 220Hz downward to 58Hz to emulate large leather membrane resonance
+        bodyOsc.frequency.setValueAtTime(220, now);
+        bodyOsc.frequency.exponentialRampToValueAtTime(58, now + 0.18);
+        bodyGain.gain.setValueAtTime(0, now);
+        bodyGain.gain.linearRampToValueAtTime(0.75, now + 0.008);
+        bodyGain.gain.exponentialRampToValueAtTime(0.0001, now + 2.2); // Rich, long reverberating decay
+        bodyOsc.connect(bodyGain);
+        bodyGain.connect(drumMasterGain);
+        bodyOsc.start(now);
+        bodyOsc.stop(now + 2.3);
+
+        // 3. Warm Harmonic Mid-Body (大地木质与中低频丰满度)
         const harmonicOsc = ctx.createOscillator();
         const harmonicGain = ctx.createGain();
         harmonicOsc.type = 'triangle';
-        harmonicOsc.frequency.setValueAtTime(110, now);
-        harmonicOsc.frequency.exponentialRampToValueAtTime(55, now + 0.16);
-
-        harmonicGain.gain.setValueAtTime(0.05, now);
-        harmonicGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.4);
-
-        lowpassFilter.type = 'lowpass';
-        lowpassFilter.frequency.setValueAtTime(160, now); // Dark warm acoustic resonance
-
-        drumGain.gain.setValueAtTime(0, now);
-        drumGain.gain.linearRampToValueAtTime(0.35, now + 0.01); // Fast punchy strike
-        drumGain.gain.exponentialRampToValueAtTime(0.0001, now + 1.8); // Beautiful sub bass ring
-
-        drumOsc.connect(lowpassFilter);
-        harmonicOsc.connect(lowpassFilter);
-        
-        lowpassFilter.connect(drumGain);
-        drumGain.connect(ctx.destination);
-
-        drumOsc.start(now);
+        harmonicOsc.frequency.setValueAtTime(140, now);
+        harmonicOsc.frequency.exponentialRampToValueAtTime(68, now + 0.22);
+        harmonicGain.gain.setValueAtTime(0, now);
+        harmonicGain.gain.linearRampToValueAtTime(0.38, now + 0.01);
+        harmonicGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.85);
+        harmonicOsc.connect(harmonicGain);
+        harmonicGain.connect(drumMasterGain);
         harmonicOsc.start(now);
-        drumOsc.stop(now + 2.0);
-        harmonicOsc.stop(now + 2.0);
+        harmonicOsc.stop(now + 0.9);
+
+        // 4. Sub-Bass Earth Grounding (深层大地低频振荡)
+        const subOsc = ctx.createOscillator();
+        const subGain = ctx.createGain();
+        subOsc.type = 'sine';
+        subOsc.frequency.setValueAtTime(65, now);
+        subOsc.frequency.exponentialRampToValueAtTime(45, now + 0.4);
+        subGain.gain.setValueAtTime(0, now);
+        subGain.gain.linearRampToValueAtTime(0.55, now + 0.02);
+        subGain.gain.exponentialRampToValueAtTime(0.0001, now + 2.0);
+        subOsc.connect(subGain);
+        subGain.connect(drumMasterGain);
+        subOsc.start(now);
+        subOsc.stop(now + 2.1);
+
+        // 5. Acoustic Filter & Punch Resonance Shaping (低通与温暖中低频提升)
+        const lowpass = ctx.createBiquadFilter();
+        lowpass.type = 'lowpass';
+        lowpass.frequency.setValueAtTime(520, now); // Open up to 520Hz for rich body and tactile punch
+        lowpass.Q.setValueAtTime(1.5, now);
+
+        const punchEQ = ctx.createBiquadFilter();
+        punchEQ.type = 'peaking';
+        punchEQ.frequency.setValueAtTime(130, now);
+        punchEQ.Q.setValueAtTime(1.2, now);
+        punchEQ.gain.setValueAtTime(4.5, now); // +4.5dB boost on the punchy chest thump
+
+        drumMasterGain.gain.setValueAtTime(0.92, now); // Emphasized, prominent master presence
+        drumMasterGain.gain.exponentialRampToValueAtTime(0.0001, now + 2.4);
+
+        drumMasterGain.connect(lowpass);
+        lowpass.connect(punchEQ);
+        punchEQ.connect(ctx.destination);
       }
     } catch (err) {
       console.error('Failed to play phase transition sound:', err);
@@ -1742,7 +1794,7 @@ export default function App() {
               <span className={`text-[10px] uppercase font-bold tracking-widest block text-center ${isBgDark ? 'text-pink-200' : 'text-[#8e6d72]'}`}>
                 {language === 'en' ? '🧘 Select Breathing Rhythm' : '🧘 冥想呼吸律动选择 (Breathing Patterns)'}
               </span>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-1.5 p-1 rounded-2xl border backdrop-blur-md bg-white/20 border-white/10">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-1.5 p-1 rounded-2xl border backdrop-blur-md bg-white/20 border-white/10">
                 {breathingPatterns.map((pat) => (
                   <button
                     key={pat.id}

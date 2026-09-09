@@ -1,5 +1,6 @@
 import express from "express";
 import path from "path";
+import fs from "fs";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI, Type } from "@google/genai";
 import dotenv from "dotenv";
@@ -701,6 +702,12 @@ async function startServer() {
       res.status(500).json({ error: error.message || "Speech synthesis failed." });
     }
   });
+
+  // Serve all uploaded audio assets statically
+  const audioDirPath = path.join(process.cwd(), 'public', 'audio');
+  if (fs.existsSync(audioDirPath)) {
+    app.use('/audio', express.static(audioDirPath));
+  }
 
   // 3. Mount Vite server in development
   if (process.env.NODE_ENV !== "production") {

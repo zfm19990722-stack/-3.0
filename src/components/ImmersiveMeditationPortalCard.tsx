@@ -43,15 +43,15 @@ export default function ImmersiveMeditationPortalCard({
           {/* Description */}
           <p className="text-xs text-[#6d5b5e] leading-relaxed">
             {isEn
-              ? "Enter the deep meditative realm instantly without requiring a specific wish. Pre-loaded with Universal Cosmic Abundance guidance, So-Hum & Box breathing rhythms, 7-Chakra interactive alignment, Solfeggio frequencies, and customizable AI narration."
-              : "无需填写或选择特定愿望，一键直接进入深度沉浸式冥想殿堂：内置【宇宙源头纯净丰盛】引导心法、So-Hum 阶段律动/4-7-8 呼吸光环、七脉轮能量同频共振、索尔菲吉奥 396~963Hz 频率发生器与 4 种皇室治愈配音。"}
+              ? "Enter the deep meditative realm instantly without requiring a specific wish. Pre-loaded with Universal Cosmic Abundance guidance, So-Hum staged resonance & Box breathing, 7-Chakra interactive alignment, Solfeggio frequencies, and customizable AI narration."
+              : "无需填写或选择特定愿望，一键直接进入深度沉浸式冥想殿堂：内置【宇宙源头纯净丰盛】引导心法、So-Hum 阶段谐振/方盒呼吸光环、七脉轮能量同频共振、索尔菲吉奥 396~963Hz 频率发生器与 4 种皇室治愈配音。"}
           </p>
 
           {/* Highlights */}
           <div className="flex flex-wrap gap-2 pt-1">
             <span className="text-[11px] font-medium text-[#8e6d72] bg-white/80 px-2.5 py-1 rounded-xl border border-pink-200/50 flex items-center gap-1 shadow-2xs">
               <Wind className="w-3 h-3 text-pink-500" />
-              <span>{isEn ? '6+ Breathing Modes' : '6大呼吸律动'}</span>
+              <span>{isEn ? '5 Breathing Modes' : '5大呼吸法'}</span>
             </span>
             <span className="text-[11px] font-medium text-[#8e6d72] bg-white/80 px-2.5 py-1 rounded-xl border border-pink-200/50 flex items-center gap-1 shadow-2xs">
               <Eye className="w-3 h-3 text-purple-500" />
