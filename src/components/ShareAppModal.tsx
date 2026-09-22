@@ -129,16 +129,27 @@ export default function ShareAppModal({
 
         {/* Header */}
         <div className="text-center mb-6">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-tr from-pink-100 to-amber-100 text-[#8e6d72] mb-3 shadow-inner">
-            <Share2 className="w-6 h-6" />
+          <div className="relative inline-block mb-3">
+            <div className="absolute -inset-1.5 bg-gradient-to-tr from-amber-300/40 via-pink-300/40 to-purple-300/30 rounded-full blur-xs" />
+            <img
+              src="/logo.png"
+              alt="Lumière Manifest Logo"
+              referrerPolicy="no-referrer"
+              className="relative w-16 h-16 rounded-full object-cover border-2 border-white shadow-lg mx-auto"
+            />
           </div>
-          <h2 className="font-serif text-2xl font-bold text-[#8e6d72]">
-            {isEn ? 'Share & Synchronize with Others' : '分享与同步给他人使用'}
-          </h2>
-          <p className="text-xs text-[#b49196] mt-1 font-medium">
+          <div className="flex items-center justify-center gap-2 mb-1">
+            <h2 className="font-serif text-2xl font-bold text-[#8e6d72]">
+              Lumière Manifest
+            </h2>
+            <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-pink-100 text-pink-800 border border-pink-200">
+              AMND
+            </span>
+          </div>
+          <p className="text-xs text-[#b49196] font-medium">
             {isEn
-              ? 'Send the app link or export your wishboard data for friends & family'
-              : '复制公开链接或打包心愿数据，让好友与家人随时随地在任何设备上开启显化'}
+              ? 'Share your Royal Manifestation Sanctuary with friends & loved ones'
+              : '分享您的专属公主风奢华显化小屋，随时随地在任何设备上开启同频'}
           </p>
         </div>
 

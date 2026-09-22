@@ -926,7 +926,7 @@ export default function AudioPlayer({
     if (!files || files.length === 0) return;
 
     let firstAddedTrack: MusicTrack | null = null;
-    Array.from(files).forEach((file, index) => {
+    Array.from(files).forEach((file: File, index) => {
       const fileUrl = URL.createObjectURL(file);
       const cleanName = file.name.replace(/\.[^/.]+$/, '');
       const newTrack: MusicTrack = {

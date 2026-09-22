@@ -1153,12 +1153,37 @@ export default function App() {
       <VisualizationBackground type={visualBg} intensity={3} saturation={bgSaturation} brightness={bgBrightness} blur={bgBlur} />
 
       {/* Header Bar */}
-      <header className="sticky top-0 z-40 bg-white/20 backdrop-blur-xl border-b border-white/40 py-5 px-6 md:px-12 flex flex-col md:flex-row items-center justify-between gap-4">
-        <div>
-          <h1 className="font-serif text-3xl tracking-tight text-[#8e6d72]">Lumière Manifest</h1>
-          <p className="text-xs uppercase tracking-[0.2em] text-[#b49196] font-semibold mt-1">
-            {language === 'en' ? 'My Royal Sanctuary • Regal Manifestation' : 'My Royal Sanctuary • 公主风奢华显化'}
-          </p>
+      <header className="sticky top-0 z-40 bg-white/25 backdrop-blur-xl border-b border-white/40 py-4 px-5 md:px-10 flex flex-col md:flex-row items-center justify-between gap-4 shadow-xs">
+        <div 
+          onClick={() => {
+            setCurrentView('main');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+          className="flex items-center gap-3 cursor-pointer group"
+          id="app-brand-header"
+        >
+          <div className="relative shrink-0">
+            <div className="absolute -inset-1 bg-gradient-to-tr from-amber-300/40 via-pink-300/40 to-purple-300/30 rounded-full blur-xs group-hover:blur-sm transition-all" />
+            <img
+              src="/logo.png"
+              alt="Lumière Manifest Logo"
+              referrerPolicy="no-referrer"
+              className="relative w-12 h-12 md:w-13 md:h-13 rounded-full object-cover border-2 border-white/90 shadow-md transition-transform duration-500 group-hover:scale-105"
+            />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="font-serif text-2xl md:text-3xl tracking-tight text-[#8e6d72] font-bold">
+                Lumière Manifest
+              </h1>
+              <span className="hidden sm:inline-block text-[9.5px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-100/90 to-pink-100/90 text-amber-900 border border-amber-200/60 shadow-2xs">
+                AMND · Royal Sanctuary
+              </span>
+            </div>
+            <p className="text-xs uppercase tracking-[0.2em] text-[#b49196] font-semibold mt-0.5">
+              {language === 'en' ? 'My Royal Sanctuary • Regal Manifestation' : 'My Royal Sanctuary • 公主风奢华显化'}
+            </p>
+          </div>
         </div>
 
         {/* Background Visualizer Picker & Welcome */}
@@ -1429,14 +1454,25 @@ export default function App() {
         
         {/* Intro Alert card */}
         {showIntroduction && (
-          <div className="mb-6 p-5 rounded-[24px] bg-white/30 backdrop-blur-xl border border-white/40 shadow-xl shadow-pink-100/10 flex items-start gap-3 relative animate-fadeIn">
-            <div className="p-2 rounded-xl bg-white/50 text-[#8e6d72] shrink-0 border border-white">
-              <Info className="w-4 h-4" />
+          <div className="mb-6 p-5 sm:p-6 rounded-[28px] bg-white/35 backdrop-blur-xl border border-white/50 shadow-xl shadow-pink-100/10 flex items-start gap-4 relative animate-fadeIn" id="welcome-intro-card">
+            <div className="relative shrink-0 hidden sm:block">
+              <div className="absolute -inset-1 bg-gradient-to-tr from-amber-300/40 to-pink-300/40 rounded-2xl blur-xs" />
+              <img
+                src="/logo.png"
+                alt="Lumière Manifest Logo"
+                referrerPolicy="no-referrer"
+                className="relative w-14 h-14 rounded-2xl object-cover border-2 border-white/90 shadow-md"
+              />
             </div>
             <div className="text-xs text-[#6d5b5e] leading-relaxed pr-6">
-              <p className="font-serif font-semibold text-lg text-[#8e6d72] mb-1">
-                {language === 'en' ? 'Welcome to Lumière Manifest Sanctuary ✨' : '欢迎来到 Lumière Manifest 奢华显化磁场 ✨'}
-              </p>
+              <div className="flex items-center gap-2 mb-1">
+                <p className="font-serif font-bold text-lg text-[#8e6d72]">
+                  {language === 'en' ? 'Welcome to Lumière Manifest Sanctuary ✨' : '欢迎来到 Lumière Manifest 奢华显化磁场 ✨'}
+                </p>
+                <span className="text-[9px] font-mono uppercase bg-pink-100 text-pink-800 px-2 py-0.5 rounded-full font-bold">
+                  AMND Royal
+                </span>
+              </div>
               {language === 'en' ? (
                 <>
                   This is your exclusive sanctuary of deep relaxation and manifestation. Click <strong className="text-[#8e6d72]">"✨ Activate Visualization Details"</strong> on any wish, and the Gemini AI will immediately weave sensory details filled with colors, textures, and aromas. Coupled with the <strong className="text-[#8e6d72]">"Subconscious TTS Voice Guidance"</strong>, let abundance and beauty flow seamlessly into your life.
@@ -1449,7 +1485,7 @@ export default function App() {
             </div>
             <button
               onClick={() => setShowIntroduction(false)}
-              className="absolute top-4 right-4 text-[#8e6d72] hover:text-black transition-colors"
+              className="absolute top-4 right-4 text-[#8e6d72] hover:text-black transition-colors cursor-pointer"
               id="close-intro-btn"
             >
               <X className="w-4 h-4" />
@@ -1594,10 +1630,18 @@ export default function App() {
 
           {/* Top Bar inside focus session */}
           <div className="flex items-center justify-between w-full relative z-10">
-            <div className={`flex items-center space-x-2 ${isBgDark ? 'text-white' : 'text-[#5c3e43]'}`}>
-              <span className="text-xl">🏰</span>
+            <div className={`flex items-center space-x-3 ${isBgDark ? 'text-white' : 'text-[#5c3e43]'}`}>
+              <div className="relative shrink-0">
+                <div className="absolute -inset-1 bg-gradient-to-tr from-amber-300/40 via-pink-300/40 to-purple-300/30 rounded-full blur-xs animate-pulse" />
+                <img
+                  src="/logo.png"
+                  alt="Lumière Manifest Logo"
+                  referrerPolicy="no-referrer"
+                  className="relative w-9 h-9 md:w-10 md:h-10 rounded-full object-cover border border-amber-300/60 shadow-md"
+                />
+              </div>
               <div className="text-left">
-                <span className={`text-[10px] uppercase font-mono tracking-widest block font-bold ${isBgDark ? 'text-amber-200' : 'text-[#8e6d72]'}`}>Active Manifestation</span>
+                <span className={`text-[10px] uppercase font-mono tracking-widest block font-bold ${isBgDark ? 'text-amber-200' : 'text-[#8e6d72]'}`}>Lumière Manifest • Active Sanctuary</span>
                 <span className={`text-xs font-semibold font-serif ${isBgDark ? 'text-white/95' : 'text-[#4a2e31]'}`}>
                   {language === 'en' ? 'Deep Focus Manifestation Session...' : '正在进行深度专注显化中...'}
                 </span>
@@ -2542,15 +2586,34 @@ export default function App() {
       />
 
       {/* Footer credits */}
-      <footer className="text-center py-12 text-xs font-mono tracking-wider border-t border-white/30 mt-12 bg-white/15 backdrop-blur-md text-[#8e6d72]">
-        <p className="font-serif text-sm font-bold">
-          {language === 'en' ? '🦢 LUMIÈRE MANIFEST • Princess Royal Luxury Manifestation Oasis' : '🦢 LUMIÈRE MANIFEST • 公主风奢华显化小屋'}
-        </p>
-        <p className="mt-1.5 text-[10px] text-[#b49196]/80 font-semibold uppercase tracking-widest">
-          {language === 'en' 
-            ? 'Powered by Gemini Intelligent Acoustics TTS & Generative Subconscious Mind' 
-            : 'Powered by Gemini Intelligent Acoustics TTS & Generative Subconscious Mind'}
-        </p>
+      <footer className="text-center py-12 px-4 text-xs font-mono tracking-wider border-t border-white/35 mt-12 bg-white/20 backdrop-blur-md text-[#8e6d72]">
+        <div className="max-w-md mx-auto flex flex-col items-center justify-center space-y-3">
+          <div className="relative">
+            <div className="absolute -inset-1 bg-gradient-to-tr from-amber-200/40 to-pink-200/40 rounded-full blur-xs" />
+            <img
+              src="/logo.png"
+              alt="Lumière Manifest Emblem"
+              referrerPolicy="no-referrer"
+              className="relative w-12 h-12 rounded-full object-cover border-2 border-white/90 shadow-md mx-auto"
+            />
+          </div>
+          <div>
+            <p className="font-serif text-base font-bold text-[#8e6d72]">
+              Lumière Manifest · My Royal Sanctuary
+            </p>
+            <p className="text-[11px] text-[#b49196] font-sans font-medium mt-0.5">
+              {language === 'en' ? '3.1Amanda‘s Regal Manifestation & Mindfulness Sanctuary' : '3.1Amanda‘s 公主风奢华显化与正念静心殿堂'}
+            </p>
+          </div>
+          <p className="text-[10px] text-[#8e6d72]/70 font-sans italic max-w-sm leading-relaxed">
+            {language === 'en' 
+              ? '“In the background silence, all abundance is already complete within you.”' 
+              : '“在静默的背景中，你早已拥有一切，无需证明，无需争夺。”'}
+          </p>
+          <p className="text-[9.5px] text-[#b49196]/80 font-semibold uppercase tracking-widest pt-1 border-t border-[#8e6d72]/15 w-full">
+            Powered by Gemini Intelligent Acoustics TTS & Generative Subconscious Mind
+          </p>
+        </div>
       </footer>
     </div>
   );
