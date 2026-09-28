@@ -14,24 +14,15 @@ import {
   Link2,
   Upload,
   Volume2,
-  Mic,
   Square,
   Download,
   Save,
   Sparkles,
-  Trash2,
-  Headphones,
-  Activity,
   Sliders,
-  Check,
-  VolumeX,
   X,
-  Clock,
-  ChevronRight,
-  Waves,
-  TreePine,
-  CloudRain,
-  Wind,
+  Radio,
+  Disc3,
+  Headphones,
 } from 'lucide-react';
 
 interface AudioPlayerProps {
@@ -39,22 +30,11 @@ interface AudioPlayerProps {
   onTrackChange: (track: MusicTrack) => void;
   tracks: MusicTrack[];
   onAddCustomTrack: (track: MusicTrack) => void;
-  voiceTone: 'deep-female' | 'royal-lady' | 'magnetic-male' | 'grounding-male';
-  onVoiceToneChange: (tone: 'deep-female' | 'royal-lady' | 'magnetic-male' | 'grounding-male') => void;
   isPlaying: boolean;
   setIsPlaying: (playing: boolean) => void;
   volume: number;
   setVolume: (volume: number) => void;
-  activeWishSession?: any; // Automatically triggers looping personal voice affirmation if configured
   language?: 'zh' | 'en';
-}
-
-interface SavedVoice {
-  id: string;
-  name: string;
-  duration: number; // in seconds
-  createdAt: string;
-  audioBase64: string; // Base64 data URL for local persistence
 }
 
 export default function AudioPlayer({
@@ -62,19 +42,16 @@ export default function AudioPlayer({
   onTrackChange,
   tracks,
   onAddCustomTrack,
-  voiceTone,
-  onVoiceToneChange,
   isPlaying,
   setIsPlaying,
   volume,
   setVolume,
-  activeWishSession,
   language = 'zh',
 }: AudioPlayerProps) {
-  // Navigation tabs
-  const [activeTab, setActiveTab] = useState<'tracks' | 'composer' | 'voice'>('tracks');
+  // Navigation tabs: Pure Music Selection vs. Smart Solfeggio Composer
+  const [activeTab, setActiveTab] = useState<'tracks' | 'composer'>('tracks');
 
-  // Toast notification state for non-blocking feedback
+  // Toast notification state
   const [toastMsg, setToastMsg] = useState<string | null>(null);
 
   const showToast = (msg: string) => {
@@ -83,6 +60,8 @@ export default function AudioPlayer({
       setToastMsg((prev) => (prev === msg ? null : prev));
     }, 3200);
   };
+
+  // Custom audio URL and file upload form state
   const [customUrl, setCustomUrl] = useState('');
   const [customName, setCustomName] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
@@ -92,24 +71,14 @@ export default function AudioPlayer({
   const [composerWave, setComposerWave] = useState<OscillatorType>('sine');
   const [composerBeat, setComposerBeat] = useState<'none' | 'theta' | 'alpha' | 'delta'>('theta');
   const [composerNature, setComposerNature] = useState<NatureSoundType>('ocean');
-  const [composerNatureVol, setComposerNatureVol] = useState<number>(0.65);
+  const [composerNatureVol, setComposerNatureVol] = useState<number>(0.55);
   const [composerName, setComposerName] = useState<string>('');
   const [isLiveComposing, setIsLiveComposing] = useState<boolean>(false);
   const [isRecordingComposer, setIsRecordingComposer] = useState<boolean>(false);
   const [recordingProgress, setRecordingProgress] = useState<number>(0);
 
-  // Personal Voice Studio states
-  const [customVoices, setCustomVoices] = useState<SavedVoice[]>([]);
-  const [isRecordingVoice, setIsRecordingVoice] = useState<boolean>(false);
-  const [voiceRecordName, setVoiceRecordName] = useState<string>('');
-  const [voiceRecordSeconds, setVoiceRecordSeconds] = useState<number>(0);
-  const [selectedVoiceMantraId, setSelectedVoiceMantraId] = useState<string | null>(null);
-  const [isPlayingVoicePreview, setIsPlayingVoicePreview] = useState<string | null>(null);
-
   // Audio elements & node references
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const voiceAudioRef = useRef<HTMLAudioElement | null>(null); // For looping mantra in active session
-  const previewAudioRef = useRef<HTMLAudioElement | null>(null); // For playing local preview in list
 
   // Synth AudioContext elements
   const synthIntervalRef = useRef<number | null>(null);
@@ -117,30 +86,7 @@ export default function AudioPlayer({
   const mainGainRef = useRef<GainNode | null>(null);
   const natureSoundscapeHandleRef = useRef<SoundscapeHandle | null>(null);
   const activeOscillatorsRef = useRef<OscillatorNode[]>([]);
-  const activeGainNodesRef = useRef<GainNode[]>([]);
   const activeSourceNodesRef = useRef<AudioBufferSourceNode[]>([]);
-
-  // Mic recording references
-  const voiceMediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const voiceAudioChunksRef = useRef<Blob[]>([]);
-  const voiceTimerRef = useRef<number | null>(null);
-
-  // Load archived voices on mount
-  useEffect(() => {
-    const loaded = localStorage.getItem('lumiere_saved_voices');
-    if (loaded) {
-      try {
-        const parsed = JSON.parse(loaded);
-        setCustomVoices(parsed);
-        // Default select first voice if available
-        if (parsed.length > 0) {
-          setSelectedVoiceMantraId(parsed[0].id);
-        }
-      } catch (e) {
-        console.error('Error loading saved voices:', e);
-      }
-    }
-  }, []);
 
   // Standard audio initialization
   useEffect(() => {
@@ -151,24 +97,28 @@ export default function AudioPlayer({
     return () => {
       audio.pause();
       stopSynth();
-      if (voiceAudioRef.current) {
-        voiceAudioRef.current.pause();
-      }
-      if (previewAudioRef.current) {
-        previewAudioRef.current.pause();
-      }
-      if (voiceTimerRef.current) {
-        clearInterval(voiceTimerRef.current);
-      }
     };
   }, []);
+
+  // Helper: Parse Synthesizer settings from saved custom preset string
+  const parseSynthUrl = (url: string) => {
+    if (!url.startsWith('synth:')) return null;
+    const params = new URLSearchParams(url.substring(6));
+    return {
+      freq: parseFloat(params.get('freq') || '528'),
+      wave: (params.get('wave') || 'sine') as OscillatorType,
+      beat: (params.get('beat') || 'theta') as 'none' | 'theta' | 'alpha' | 'delta',
+      soundscape: (params.get('soundscape') || 'ocean') as NatureSoundType,
+      natureVol: parseFloat(params.get('natureVol') || '0.55'),
+    };
+  };
 
   // Sync active track source and play/pause state
   useEffect(() => {
     if (!audioRef.current) return;
 
     // If active track is a synthesized preset
-    if (currentTrack.id === 'princess-synth' || currentTrack.id.startsWith('custom-synth-')) {
+    if (currentTrack.id === 'princess-synth' || currentTrack.id.startsWith('custom-synth-') || currentTrack.url.startsWith('synth:')) {
       audioRef.current.pause();
       if (isPlaying) {
         startSynth();
@@ -178,7 +128,7 @@ export default function AudioPlayer({
       return;
     }
 
-    // Standard static MP3 track
+    // Standard static MP3 / audio track
     stopSynth();
     audioRef.current.src = currentTrack.url;
     audioRef.current.volume = volume;
@@ -203,55 +153,15 @@ export default function AudioPlayer({
     }
   }, [volume]);
 
-  // Loop custom affirmation recording inside the active wish focus session automatically!
-  useEffect(() => {
-    if (!voiceAudioRef.current) {
-      voiceAudioRef.current = new Audio();
-      voiceAudioRef.current.loop = true;
-    }
-
-    if (activeWishSession && selectedVoiceMantraId && isPlaying) {
-      const selectedVoice = customVoices.find((v) => v.id === selectedVoiceMantraId);
-      if (selectedVoice) {
-        voiceAudioRef.current.src = selectedVoice.audioBase64;
-        voiceAudioRef.current.volume = volume * 0.75; // Balanced with background music
-        voiceAudioRef.current.play().catch((err) => {
-          console.warn('Personal mantra loop failed to start:', err);
-        });
-      }
-    } else {
-      voiceAudioRef.current.pause();
-    }
-
-    return () => {
-      if (voiceAudioRef.current) {
-        voiceAudioRef.current.pause();
-      }
-    };
-  }, [activeWishSession, selectedVoiceMantraId, isPlaying, customVoices, volume]);
-
-  // Helper: Parse Synthesizer settings from saved custom preset string
-  const parseSynthUrl = (url: string) => {
-    if (!url.startsWith('synth:')) return null;
-    const params = new URLSearchParams(url.substring(6));
-    return {
-      freq: parseFloat(params.get('freq') || '528'),
-      wave: (params.get('wave') || 'sine') as OscillatorType,
-      beat: (params.get('beat') || 'theta') as 'none' | 'theta' | 'alpha' | 'delta',
-      soundscape: (params.get('soundscape') || 'ocean') as NatureSoundType,
-      natureVol: parseFloat(params.get('natureVol') || '0.65'),
-    };
-  };
-
   // Live procedural synthesis using Web Audio API
   const startSynth = () => {
     let baseHz = 528;
     let waveShape: OscillatorType = 'sine';
     let beatType: 'none' | 'theta' | 'alpha' | 'delta' = 'theta';
     let natureType: NatureSoundType = 'ocean';
-    let natureVol = 0.65;
+    let natureVol = 0.55;
 
-    if (currentTrack.id.startsWith('custom-synth-')) {
+    if (currentTrack.url.startsWith('synth:')) {
       const parsed = parseSynthUrl(currentTrack.url);
       if (parsed) {
         baseHz = parsed.freq;
@@ -261,12 +171,11 @@ export default function AudioPlayer({
         natureVol = parsed.natureVol;
       }
     } else if (currentTrack.id === 'princess-synth') {
-      // Celestial default parameters
       baseHz = 432;
       waveShape = 'sine';
       beatType = 'theta';
       natureType = 'ocean';
-      natureVol = 0.65;
+      natureVol = 0.55;
     }
 
     runProceduralSynth(baseHz, waveShape, beatType, natureType, natureVol);
@@ -313,7 +222,7 @@ export default function AudioPlayer({
     mainGainRef.current = null;
   };
 
-  // Real-time live parameter updating: when playing in composer tab, immediately morph sound
+  // Real-time live parameter updating in composer tab
   const handleUpdateComposerSetting = (
     newHz = composerHz,
     newWave = composerWave,
@@ -326,7 +235,7 @@ export default function AudioPlayer({
     }
   };
 
-  // Real-time change of nature soundscape without restarting tonal oscillators
+  // Real-time change of nature soundscape
   const handleSelectNature = (nat: NatureSoundType) => {
     setComposerNature(nat);
     if (isLiveComposing && audioCtxRef.current && mainGainRef.current) {
@@ -351,7 +260,7 @@ export default function AudioPlayer({
     }
   };
 
-  // Run the synthesizer engine with parameterized nodes
+  // Run the peaceful synthesizer engine
   const runProceduralSynth = (
     baseHz: number,
     waveShape: OscillatorType,
@@ -359,7 +268,6 @@ export default function AudioPlayer({
     natureType: NatureSoundType,
     natureVol = composerNatureVol
   ) => {
-    // Stop any existing synthesis cleanly
     if (synthIntervalRef.current) {
       clearTimeout(synthIntervalRef.current);
       synthIntervalRef.current = null;
@@ -391,26 +299,26 @@ export default function AudioPlayer({
     }
 
     const mainGain = ctx.createGain();
-    mainGain.gain.setValueAtTime(volume > 0 ? volume : 0.7, ctx.currentTime);
+    mainGain.gain.setValueAtTime(volume > 0 ? volume : 0.6, ctx.currentTime);
     mainGain.connect(ctx.destination);
     mainGainRef.current = mainGain;
 
-    // Ethereal Feedback Delay Network
+    // Ethereal Feedback Delay Network for expansive meditation space
     const delayNode = ctx.createDelay(3.0);
     const delayFeedback = ctx.createGain();
     const delayFilter = ctx.createBiquadFilter();
 
     delayNode.delayTime.setValueAtTime(1.2, ctx.currentTime);
-    delayFeedback.gain.setValueAtTime(0.55, ctx.currentTime);
+    delayFeedback.gain.setValueAtTime(0.5, ctx.currentTime);
     delayFilter.type = 'lowpass';
-    delayFilter.frequency.setValueAtTime(800, ctx.currentTime);
+    delayFilter.frequency.setValueAtTime(750, ctx.currentTime);
 
     delayNode.connect(delayFilter);
     delayFilter.connect(delayFeedback);
     delayFeedback.connect(delayNode);
     delayNode.connect(mainGain);
 
-    // A. Soft base ambient pad
+    // Soft serene base pad
     const playDrone = (freq: number, type: OscillatorType, level: number) => {
       const osc1 = ctx.createOscillator();
       osc1.type = type;
@@ -419,12 +327,12 @@ export default function AudioPlayer({
       const osc2 = ctx.createOscillator();
       osc2.type = type;
       osc2.frequency.setValueAtTime(freq, ctx.currentTime);
-      osc2.detune.setValueAtTime(-12, ctx.currentTime);
+      osc2.detune.setValueAtTime(-10, ctx.currentTime);
 
       const osc3 = ctx.createOscillator();
       osc3.type = type;
       osc3.frequency.setValueAtTime(freq, ctx.currentTime);
-      osc3.detune.setValueAtTime(12, ctx.currentTime);
+      osc3.detune.setValueAtTime(10, ctx.currentTime);
 
       const filter = ctx.createBiquadFilter();
       filter.type = 'lowpass';
@@ -439,7 +347,7 @@ export default function AudioPlayer({
       const lfo = ctx.createOscillator();
       lfo.frequency.setValueAtTime(0.1, ctx.currentTime);
       const lfoGain = ctx.createGain();
-      lfoGain.gain.setValueAtTime(level * 0.15, ctx.currentTime);
+      lfoGain.gain.setValueAtTime(level * 0.12, ctx.currentTime);
 
       lfo.connect(lfoGain);
       lfoGain.connect(oscGain.gain);
@@ -451,7 +359,7 @@ export default function AudioPlayer({
       oscGain.connect(mainGain);
 
       const droneDelaySend = ctx.createGain();
-      droneDelaySend.gain.setValueAtTime(0.22, ctx.currentTime);
+      droneDelaySend.gain.setValueAtTime(0.2, ctx.currentTime);
       oscGain.connect(droneDelaySend);
       droneDelaySend.connect(delayNode);
 
@@ -463,33 +371,33 @@ export default function AudioPlayer({
       activeOscillatorsRef.current.push(osc1, osc2, osc3, lfo);
     };
 
-    // Synthesize harmonious chord frequencies
-    playDrone(baseHz / 2, waveShape, 0.55);
+    // Harmonic Chord Tones
+    playDrone(baseHz / 2, waveShape, 0.5);
     playDrone(baseHz, waveShape, 0.35);
-    playDrone(baseHz * 1.5, 'sine', 0.25);
+    playDrone(baseHz * 1.5, 'sine', 0.22);
 
-    // B. Scientific Binaural Brainwave Beats
+    // Scientific Binaural Beats
     let beatFreq = 0;
     if (beatType === 'theta') beatFreq = 4;
     else if (beatType === 'alpha') beatFreq = 8;
     else if (beatType === 'delta') beatFreq = 2;
 
     if (beatFreq > 0) {
-      const carrier = 150;
+      const carrier = 144;
 
       const oscL = ctx.createOscillator();
       oscL.type = 'sine';
       oscL.frequency.setValueAtTime(carrier, ctx.currentTime);
       const pannerL = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
       const gainL = ctx.createGain();
-      gainL.gain.setValueAtTime(0.18, ctx.currentTime);
+      gainL.gain.setValueAtTime(0.16, ctx.currentTime);
 
       const oscR = ctx.createOscillator();
       oscR.type = 'sine';
       oscR.frequency.setValueAtTime(carrier + beatFreq, ctx.currentTime);
       const pannerR = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
       const gainR = ctx.createGain();
-      gainR.gain.setValueAtTime(0.18, ctx.currentTime);
+      gainR.gain.setValueAtTime(0.16, ctx.currentTime);
 
       if (pannerL && pannerR) {
         pannerL.pan.setValueAtTime(-1, ctx.currentTime);
@@ -514,10 +422,10 @@ export default function AudioPlayer({
       activeOscillatorsRef.current.push(oscL, oscR);
     }
 
-    // C. High-Fidelity Natural Soundscapes (Pink/Brown noise, dynamic LFOs & generative acoustics)
+    // High-Fidelity Natural Soundscapes
     natureSoundscapeHandleRef.current = setupNatureSoundscape(ctx, mainGain, natureType, natureVol);
 
-    // D. Soft sparkling Solfeggio chimes
+    // Soft pentatonic Solfeggio chimes
     const pentatonicScale = [1, 1.25, 1.5, 1.875, 2, 2.5, 3];
     const playChimeNote = () => {
       if (!audioCtxRef.current) return;
@@ -532,55 +440,45 @@ export default function AudioPlayer({
       const osc2 = ctx.createOscillator();
       osc2.type = waveShape === 'sine' ? 'sine' : 'triangle';
       osc2.frequency.setValueAtTime(freq, t);
-      osc2.detune.setValueAtTime(8, t);
-
-      const osc3 = ctx.createOscillator();
-      osc3.type = waveShape === 'sine' ? 'sine' : 'triangle';
-      osc3.frequency.setValueAtTime(freq, t);
-      osc3.detune.setValueAtTime(-8, t);
+      osc2.detune.setValueAtTime(6, t);
 
       const filter = ctx.createBiquadFilter();
       filter.type = 'lowpass';
-      filter.frequency.setValueAtTime(1000, t);
+      filter.frequency.setValueAtTime(950, t);
 
       const chimeGain = ctx.createGain();
-      const peakVolume = 0.08;
-      const sustainVolume = peakVolume * 0.35;
+      const peakVolume = 0.07;
+      const sustainVolume = peakVolume * 0.3;
       
       chimeGain.gain.setValueAtTime(0, t);
       chimeGain.gain.linearRampToValueAtTime(peakVolume, t + 0.15);
       chimeGain.gain.linearRampToValueAtTime(sustainVolume, t + 0.55);
-      const releaseStart = t + 1.25;
+      const releaseStart = t + 1.2;
       chimeGain.gain.setValueAtTime(sustainVolume, releaseStart);
       chimeGain.gain.exponentialRampToValueAtTime(0.0001, releaseStart + 4.5);
 
       osc1.connect(filter);
       osc2.connect(filter);
-      osc3.connect(filter);
       filter.connect(chimeGain);
       chimeGain.connect(mainGain);
 
       const chimeDelaySend = ctx.createGain();
-      chimeDelaySend.gain.setValueAtTime(0.65, t);
+      chimeDelaySend.gain.setValueAtTime(0.6, t);
       chimeGain.connect(chimeDelaySend);
       chimeDelaySend.connect(delayNode);
 
       osc1.start(t);
       osc2.start(t);
-      osc3.start(t);
       osc1.stop(t + 6);
       osc2.stop(t + 6);
-      osc3.stop(t + 6);
 
-      activeOscillatorsRef.current.push(osc1, osc2, osc3);
+      activeOscillatorsRef.current.push(osc1, osc2);
     };
 
-    // Play initial chime
     playChimeNote();
 
-    // Re-schedule chime interval loops
     const chimeLoop = () => {
-      const nextTime = Math.random() * 1800 + 1800;
+      const nextTime = Math.random() * 2000 + 2000;
       synthIntervalRef.current = window.setTimeout(() => {
         playChimeNote();
         chimeLoop();
@@ -589,31 +487,29 @@ export default function AudioPlayer({
     chimeLoop();
   };
 
-  // Render, record, and instantly download the procedural composition
+  // Render and download procedural composition
   const handleRecordComposer = async () => {
     if (isRecordingComposer) return;
     setIsRecordingComposer(true);
-    setRecordingProgress(12); // Record a premium 12-second high-fidelity looping file
+    setRecordingProgress(12);
 
     const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
     const ctx = new AudioContextClass();
     const dest = ctx.createMediaStreamDestination();
 
-    // Create a rendering gain node connected directly to recorder destination
     const renderingGain = ctx.createGain();
     renderingGain.gain.setValueAtTime(0.85, ctx.currentTime);
     renderingGain.connect(dest);
-    renderingGain.connect(ctx.destination); // Play locally so user can monitor
+    renderingGain.connect(ctx.destination);
 
-    // Add rendering delay feedback loop
     const renderingDelayNode = ctx.createDelay(3.0);
     const renderingDelayFeedback = ctx.createGain();
     const renderingDelayFilter = ctx.createBiquadFilter();
 
     renderingDelayNode.delayTime.setValueAtTime(1.2, ctx.currentTime);
-    renderingDelayFeedback.gain.setValueAtTime(0.55, ctx.currentTime);
+    renderingDelayFeedback.gain.setValueAtTime(0.5, ctx.currentTime);
     renderingDelayFilter.type = 'lowpass';
-    renderingDelayFilter.frequency.setValueAtTime(800, ctx.currentTime);
+    renderingDelayFilter.frequency.setValueAtTime(750, ctx.currentTime);
 
     renderingDelayNode.connect(renderingDelayFilter);
     renderingDelayFilter.connect(renderingDelayFeedback);
@@ -628,12 +524,7 @@ export default function AudioPlayer({
       const osc2 = ctx.createOscillator();
       osc2.type = type;
       osc2.frequency.setValueAtTime(freq, ctx.currentTime);
-      osc2.detune.setValueAtTime(-12, ctx.currentTime);
-
-      const osc3 = ctx.createOscillator();
-      osc3.type = type;
-      osc3.frequency.setValueAtTime(freq, ctx.currentTime);
-      osc3.detune.setValueAtTime(12, ctx.currentTime);
+      osc2.detune.setValueAtTime(-10, ctx.currentTime);
 
       const filter = ctx.createBiquadFilter();
       filter.type = 'lowpass';
@@ -642,34 +533,29 @@ export default function AudioPlayer({
       const oscGain = ctx.createGain();
       const t = ctx.currentTime;
       oscGain.gain.setValueAtTime(0, t);
-      oscGain.gain.linearRampToValueAtTime(level * 0.4, t + 2.0); // Soft Attack
-      oscGain.gain.linearRampToValueAtTime(level * 0.35, t + 3.0); // Decay to Sustain
+      oscGain.gain.linearRampToValueAtTime(level * 0.4, t + 2.0);
+      oscGain.gain.linearRampToValueAtTime(level * 0.35, t + 3.0);
 
       osc1.connect(filter);
       osc2.connect(filter);
-      osc3.connect(filter);
       filter.connect(oscGain);
       oscGain.connect(renderingGain);
 
-      // Route 22% of rendering drone to delay
       const droneDelaySend = ctx.createGain();
-      droneDelaySend.gain.setValueAtTime(0.22, ctx.currentTime);
+      droneDelaySend.gain.setValueAtTime(0.2, ctx.currentTime);
       oscGain.connect(droneDelaySend);
       droneDelaySend.connect(renderingDelayNode);
 
       osc1.start();
       osc2.start();
-      osc3.start();
 
-      return [osc1, osc2, osc3];
+      return [osc1, osc2];
     };
 
     const renderedOscs: OscillatorNode[] = [];
-    renderedOscs.push(...playRecordingDrone(composerHz / 2, composerWave, 0.6));
-    renderedOscs.push(...playRecordingDrone(composerHz, composerWave, 0.4));
-    renderedOscs.push(...playRecordingDrone(composerHz * 1.5, 'sine', 0.25));
+    renderedOscs.push(...playRecordingDrone(composerHz / 2, composerWave, 0.55));
+    renderedOscs.push(...playRecordingDrone(composerHz, composerWave, 0.35));
 
-    // Continuous chime notes throughout the duration
     const pentatonicScale = [1, 1.25, 1.5, 1.875, 2, 2.5, 3];
     const chimesInterval = setInterval(() => {
       const ratio = pentatonicScale[Math.floor(Math.random() * pentatonicScale.length)];
@@ -679,59 +565,37 @@ export default function AudioPlayer({
       osc1.type = composerWave === 'sine' ? 'sine' : 'triangle';
       osc1.frequency.setValueAtTime(freq, ctx.currentTime);
 
-      const osc2 = ctx.createOscillator();
-      osc2.type = composerWave === 'sine' ? 'sine' : 'triangle';
-      osc2.frequency.setValueAtTime(freq, ctx.currentTime);
-      osc2.detune.setValueAtTime(8, ctx.currentTime);
-
-      const osc3 = ctx.createOscillator();
-      osc3.type = composerWave === 'sine' ? 'sine' : 'triangle';
-      osc3.frequency.setValueAtTime(freq, ctx.currentTime);
-      osc3.detune.setValueAtTime(-8, ctx.currentTime);
-
       const filter = ctx.createBiquadFilter();
       filter.type = 'lowpass';
-      filter.frequency.setValueAtTime(1100, ctx.currentTime);
+      filter.frequency.setValueAtTime(1000, ctx.currentTime);
 
       const gain = ctx.createGain();
       const t = ctx.currentTime;
-      const peakVolume = 0.12;
+      const peakVolume = 0.1;
       const sustainVolume = peakVolume * 0.3;
 
       gain.gain.setValueAtTime(0, t);
-      // Attack
       gain.gain.linearRampToValueAtTime(peakVolume, t + 0.15);
-      // Decay to Sustain
       gain.gain.linearRampToValueAtTime(sustainVolume, t + 0.55);
-      // Release
       const releaseStart = t + 1.05;
       gain.gain.setValueAtTime(sustainVolume, releaseStart);
       gain.gain.exponentialRampToValueAtTime(0.0001, releaseStart + 2.0);
 
       osc1.connect(filter);
-      osc2.connect(filter);
-      osc3.connect(filter);
       filter.connect(gain);
       gain.connect(renderingGain);
 
-      // Route 65% of recorded chime to rendering delay
       const chimeDelaySend = ctx.createGain();
-      chimeDelaySend.gain.setValueAtTime(0.65, t);
+      chimeDelaySend.gain.setValueAtTime(0.6, t);
       gain.connect(chimeDelaySend);
       chimeDelaySend.connect(renderingDelayNode);
 
-      osc1.start();
-      osc2.start();
-      osc3.start();
+      osc1.start(t);
       osc1.stop(t + 3.2);
-      osc2.stop(t + 3.2);
-      osc3.stop(t + 3.2);
-    }, 1200);
+    }, 1300);
 
-    // Natural background soundscape synthesis attached to rendering pipe
     const recSoundscapeHandle = setupNatureSoundscape(ctx, renderingGain, composerNature, composerNatureVol);
 
-    // MediaRecorder on the Web Audio stream destination
     const chunks: Blob[] = [];
     const mediaRecorder = new MediaRecorder(dest.stream);
     mediaRecorder.ondataavailable = (e) => {
@@ -755,14 +619,13 @@ export default function AudioPlayer({
       const dlUrl = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = dlUrl;
-      a.download = `${composerName.trim() || '我的定制神圣赫兹波'}_${composerHz}Hz_冥想曲.webm`;
+      a.download = `${composerName.trim() || '静心神圣赫兹纯音乐'}_${composerHz}Hz.webm`;
       a.click();
       setIsRecordingComposer(false);
     };
 
     mediaRecorder.start();
 
-    // Countdown timer for progress bar
     const progressInterval = setInterval(() => {
       setRecordingProgress((p) => {
         if (p <= 1) {
@@ -776,127 +639,22 @@ export default function AudioPlayer({
 
   // Save current dynamic composer configuration as a permanent preset track
   const handleSaveComposerPreset = () => {
-    const name = composerName.trim() || `定制 ${composerHz}Hz 宇宙共振曲`;
+    const name = composerName.trim() || `定制 ${composerHz}Hz 静心纯音乐`;
     const newTrack: MusicTrack = {
       id: `custom-synth-${Date.now()}`,
       name: `🎹 ${name}`,
+      nameEn: `🎹 ${name}`,
       url: `synth:freq=${composerHz}&wave=${composerWave}&beat=${composerBeat}&soundscape=${composerNature}&natureVol=${composerNatureVol}`,
       isCustom: true,
+      frequencyBadge: `✨ ${composerHz}Hz 纯乐`,
+      summary: language === 'en' ? 'Custom algorithmic pure meditation track' : '用户智能编曲定制纯音乐',
     };
 
     onAddCustomTrack(newTrack);
     onTrackChange(newTrack);
     setComposerName('');
     setIsPlaying(true);
-    showToast(language === 'en' ? `✨ Saved "${name}" to tracks!` : `✨「${name}」已成功保存至您的冥想背景曲库！`);
-  };
-
-  // Record your own voice affirmations using microphone
-  const startRecordingVoice = async () => {
-    if (isRecordingVoice) return;
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
-      voiceMediaRecorderRef.current = mediaRecorder;
-      voiceAudioChunksRef.current = [];
-
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          voiceAudioChunksRef.current.push(event.data);
-        }
-      };
-
-      mediaRecorder.onstop = () => {
-        const audioBlob = new Blob(voiceAudioChunksRef.current, { type: 'audio/webm' });
-
-        // Turn off mic light by releasing tracks
-        stream.getTracks().forEach((track) => track.stop());
-
-        // Read audio and persist as high-performance Base64
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          const base64data = reader.result as string;
-          const newVoice: SavedVoice = {
-            id: `voice-${Date.now()}`,
-            name: voiceRecordName.trim() || `我的声波肯定句 ${customVoices.length + 1}`,
-            duration: voiceRecordSeconds,
-            createdAt: new Date().toLocaleDateString('zh-CN'),
-            audioBase64: base64data,
-          };
-          const updated = [...customVoices, newVoice];
-          setCustomVoices(updated);
-          localStorage.setItem('lumiere_saved_voices', JSON.stringify(updated));
-          setVoiceRecordName('');
-          if (updated.length === 1) {
-            setSelectedVoiceMantraId(newVoice.id);
-          }
-          showToast(language === 'en' ? '🎙️ Voice affirmation saved successfully!' : '🎙️ 亲口声波肯定句录制并建档成功！');
-        };
-        reader.readAsDataURL(audioBlob);
-      };
-
-      mediaRecorder.start();
-      setIsRecordingVoice(true);
-      setVoiceRecordSeconds(0);
-
-      voiceTimerRef.current = window.setInterval(() => {
-        setVoiceRecordSeconds((s) => s + 1);
-      }, 1000);
-    } catch (err) {
-      console.error('Failed to get mic access:', err);
-      showToast(language === 'en' ? '⚠️ Please allow microphone permission in your browser.' : '⚠️ 请在浏览器中允许麦克风权限以录制亲口肯定句。');
-    }
-  };
-
-  const stopRecordingVoice = () => {
-    if (!isRecordingVoice || !voiceMediaRecorderRef.current) return;
-    if (voiceTimerRef.current) {
-      clearInterval(voiceTimerRef.current);
-      voiceTimerRef.current = null;
-    }
-    voiceMediaRecorderRef.current.stop();
-    setIsRecordingVoice(false);
-  };
-
-  // Playback preview of recorded affirmations
-  const playVoicePreview = (voice: SavedVoice) => {
-    if (isPlayingVoicePreview === voice.id) {
-      if (previewAudioRef.current) {
-        previewAudioRef.current.pause();
-      }
-      setIsPlayingVoicePreview(null);
-    } else {
-      if (previewAudioRef.current) {
-        previewAudioRef.current.pause();
-      }
-      const audio = new Audio(voice.audioBase64);
-      previewAudioRef.current = audio;
-      audio.onended = () => {
-        setIsPlayingVoicePreview(null);
-      };
-      setIsPlayingVoicePreview(voice.id);
-      audio.volume = volume;
-      audio.play().catch((err) => console.log('Preview playback failed:', err));
-    }
-  };
-
-  // Download recorded voice affirm file
-  const downloadVoiceClip = (voice: SavedVoice) => {
-    const a = document.createElement('a');
-    a.href = voice.audioBase64;
-    a.download = `${voice.name}.webm`;
-    a.click();
-  };
-
-  // Delete recorded voice affirm file
-  const deleteVoiceClip = (id: string) => {
-    const updated = customVoices.filter((v) => v.id !== id);
-    setCustomVoices(updated);
-    localStorage.setItem('lumiere_saved_voices', JSON.stringify(updated));
-    if (selectedVoiceMantraId === id) {
-      setSelectedVoiceMantraId(updated.length > 0 ? updated[0].id : null);
-    }
-    showToast(language === 'en' ? '🗑️ Affirmation recording deleted.' : '🗑️ 声波肯定句已删除。');
+    showToast(language === 'en' ? `✨ Saved "${name}" to pure music tracks!` : `✨「${name}」已成功保存至您的静心纯音乐曲库！`);
   };
 
   // Custom music URL submit handler
@@ -904,12 +662,15 @@ export default function AudioPlayer({
     e.preventDefault();
     if (!customUrl) return;
 
-    const name = customName || `自定义导入曲目 ${tracks.length + 1}`;
+    const name = customName || `自定义静心曲目 ${tracks.length + 1}`;
     const newTrack: MusicTrack = {
       id: `custom-${Date.now()}`,
       name: `🌸 ${name}`,
+      nameEn: `🌸 ${name}`,
       url: customUrl,
       isCustom: true,
+      frequencyBadge: '🎵 外部音频',
+      summary: language === 'en' ? 'Custom pure audio stream' : '用户自定义导入纯音乐',
     };
 
     onAddCustomTrack(newTrack);
@@ -918,9 +679,10 @@ export default function AudioPlayer({
     setCustomName('');
     setShowAddForm(false);
     setIsPlaying(true);
+    showToast(language === 'en' ? '✨ Custom music URL imported successfully!' : '✨ 成功导入自定义网络纯音乐！');
   };
 
-  // File upload logic with multi-file support
+  // File upload logic for pure calming MP3/WAV tracks
   const handleFileUpload = (e: ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
@@ -931,11 +693,12 @@ export default function AudioPlayer({
       const cleanName = file.name.replace(/\.[^/.]+$/, '');
       const newTrack: MusicTrack = {
         id: `custom-file-${Date.now()}-${index}`,
-        name: `🎙️ ${cleanName}`,
-        nameEn: `🎙️ ${cleanName}`,
+        name: `🎵 ${cleanName}`,
+        nameEn: `🎵 ${cleanName}`,
         url: fileUrl,
         isCustom: true,
-        summary: language === 'en' ? 'Custom uploaded high-fidelity audio' : '用户本地原声录音文件',
+        frequencyBadge: '📁 本地纯乐',
+        summary: language === 'en' ? 'Local pure meditation audio file' : '用户本地高保真静心纯音乐',
       };
       onAddCustomTrack(newTrack);
       if (index === 0) {
@@ -947,42 +710,8 @@ export default function AudioPlayer({
       onTrackChange(firstAddedTrack);
       setIsPlaying(true);
     }
-    showToast(language === 'en' ? `🎉 Imported ${files.length} recording(s)!` : `🎉 成功导入 ${files.length} 个本地音频/录音！`);
+    showToast(language === 'en' ? `🎉 Imported ${files.length} pure music file(s)!` : `🎉 成功导入 ${files.length} 首本地静心纯音乐！`);
     setShowAddForm(false);
-  };
-
-  // Browser Native Speech Synthesis for instant voice narration
-  const [isSpeakingText, setIsSpeakingText] = useState(false);
-  const toggleSpeechAffirmation = (text: string) => {
-    if (!('speechSynthesis' in window)) {
-      showToast(language === 'en' ? 'Speech synthesis not supported in this browser' : '当前浏览器不支持语音合成');
-      return;
-    }
-
-    if (isSpeakingText) {
-      window.speechSynthesis.cancel();
-      setIsSpeakingText(false);
-      return;
-    }
-
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'en-US';
-    utterance.rate = 0.88; // Gentle, relaxing meditation pacing
-    utterance.pitch = 1.05; // Soothing warm tone
-
-    // Try to find a soft English female voice
-    const voices = window.speechSynthesis.getVoices();
-    const englishVoice = voices.find((v) => (v.name.includes('Samantha') || v.name.includes('Karen') || v.name.includes('Zira') || v.name.includes('Female') || v.lang.startsWith('en')));
-    if (englishVoice) {
-      utterance.voice = englishVoice;
-    }
-
-    utterance.onend = () => setIsSpeakingText(false);
-    utterance.onerror = () => setIsSpeakingText(false);
-
-    window.speechSynthesis.speak(utterance);
-    setIsSpeakingText(true);
   };
 
   return (
@@ -997,12 +726,13 @@ export default function AudioPlayer({
           <span>{toastMsg}</span>
         </div>
       )}
+
       {/* Header Tabs Navigation */}
       <div className="flex items-center justify-between border-b border-[#8e6d72]/15 pb-3.5 mb-4 flex-wrap gap-2">
         <div className="flex gap-1 bg-white/30 p-1 rounded-full border border-white/40 shadow-inner">
           <button
             onClick={() => setActiveTab('tracks')}
-            className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1 ${
+            className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
               activeTab === 'tracks'
                 ? 'bg-white text-[#8e6d72] shadow-sm font-bold'
                 : 'text-[#8e6d72]/70 hover:bg-white/10'
@@ -1010,11 +740,11 @@ export default function AudioPlayer({
             id="tab-tracks"
           >
             <Music className="w-3.5 h-3.5" />
-            <span>{language === 'en' ? 'Music' : '音乐精选'}</span>
+            <span>{language === 'en' ? 'Pure Music' : '静心纯音乐'}</span>
           </button>
           <button
             onClick={() => setActiveTab('composer')}
-            className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1 ${
+            className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
               activeTab === 'composer'
                 ? 'bg-white text-[#8e6d72] shadow-sm font-bold'
                 : 'text-[#8e6d72]/70 hover:bg-white/10'
@@ -1022,40 +752,28 @@ export default function AudioPlayer({
             id="tab-composer"
           >
             <Sliders className="w-3.5 h-3.5" />
-            <span>{language === 'en' ? 'Composer' : '智能编曲器'}</span>
+            <span>{language === 'en' ? 'Solfeggio Composer' : '智能赫兹编曲'}</span>
             <span className="w-1.5 h-1.5 rounded-full bg-pink-400"></span>
-          </button>
-          <button
-            onClick={() => setActiveTab('voice')}
-            className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1 ${
-              activeTab === 'voice'
-                ? 'bg-white text-[#8e6d72] shadow-sm font-bold'
-                : 'text-[#8e6d72]/70 hover:bg-white/10'
-            }`}
-            id="tab-voice"
-          >
-            <Mic className="w-3.5 h-3.5" />
-            <span>{language === 'en' ? 'Voice Studio' : '我的声音馆'}</span>
           </button>
         </div>
 
         {activeTab === 'tracks' && (
           <button
             onClick={() => setShowAddForm(!showAddForm)}
-            className="text-[10px] text-[#8e6d72] font-bold px-2.5 py-1.5 rounded-full bg-white/50 hover:bg-white/80 border border-white/60 transition-all flex items-center gap-1 shadow-sm"
+            className="text-[10.5px] text-[#8e6d72] font-bold px-3 py-1.5 rounded-full bg-white/60 hover:bg-white/90 border border-white/70 transition-all flex items-center gap-1.5 shadow-sm cursor-pointer"
             id="btn-add-music"
           >
             <Plus className="w-3.5 h-3.5" />
-            {language === 'en' ? 'Import Custom' : '导入自定义'}
+            <span>{language === 'en' ? 'Import Music' : '导入纯音乐'}</span>
           </button>
         )}
       </div>
 
-      {/* TAB 1: MUSIC SELECTION */}
+      {/* TAB 1: PURE MEDITATION MUSIC SELECTION */}
       {activeTab === 'tracks' && (
         <div className="space-y-4 animate-fadeIn">
           {/* Main Track Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-[360px] overflow-y-auto pr-1 custom-scrollbar">
             {tracks.map((track) => (
               <button
                 key={track.id}
@@ -1063,80 +781,76 @@ export default function AudioPlayer({
                   onTrackChange(track);
                   setIsPlaying(true);
                 }}
-                className={`p-3 rounded-xl text-left text-xs transition-all duration-300 flex flex-col justify-between border ${
+                className={`p-3 rounded-2xl text-left text-xs transition-all duration-300 flex flex-col justify-between border cursor-pointer ${
                   currentTrack.id === track.id
-                    ? 'bg-white/90 border-white text-[#8e6d72] shadow-sm font-bold scale-[1.01]'
-                    : 'bg-white/20 border-white/20 text-[#4a3a3a] hover:bg-white/40'
+                    ? 'bg-white/95 border-pink-300 text-[#8e6d72] shadow-md font-bold scale-[1.01] ring-1 ring-pink-300/40'
+                    : 'bg-white/30 border-white/30 text-[#4a3a3a] hover:bg-white/50'
                 }`}
                 id={`track-select-${track.id}`}
               >
-                <span className="truncate w-full block font-medium">
-                  {language === 'en' ? (track.nameEn || track.name) : track.name}
-                </span>
-                <span className="text-[8.5px] text-[#b49196] uppercase font-mono tracking-wider mt-1.5 font-bold block">
-                  {track.transcript
-                    ? (language === 'en' ? '🎙️ Affirmation Voice' : '🎙️ 原声箴言录音')
-                    : track.id === 'princess-synth' || track.id.startsWith('custom-synth-')
-                    ? (language === 'en' ? '✨ Web Synth' : '✨ Web 智能合成')
-                    : (language === 'en' ? '🎵 Audio Stream' : '🎵 音频通道')}
-                </span>
+                <div className="flex items-start justify-between gap-1.5 w-full">
+                  <span className="font-semibold leading-snug line-clamp-2">
+                    {language === 'en' ? (track.nameEn || track.name) : track.name}
+                  </span>
+                  {currentTrack.id === track.id && isPlaying && (
+                    <span className="flex items-center gap-0.5 shrink-0 mt-0.5">
+                      <span className="w-1 h-3 bg-pink-500 rounded-full animate-pulse" />
+                      <span className="w-1 h-2 bg-pink-400 rounded-full animate-bounce" />
+                      <span className="w-1 h-3.5 bg-pink-600 rounded-full animate-pulse" />
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center justify-between mt-2 pt-1 border-t border-pink-100/40">
+                  <span className="text-[9px] text-[#b49196] font-mono tracking-wider font-bold">
+                    {track.frequencyBadge || (track.url.startsWith('synth:') ? '✨ 索尔菲吉奥纯乐' : '🎵 静心原声')}
+                  </span>
+                  {track.summary && (
+                    <span className="text-[8.5px] text-[#8e6d72]/70 truncate max-w-[120px]">
+                      {track.summary}
+                    </span>
+                  )}
+                </div>
               </button>
             ))}
           </div>
 
-          {/* Affirmation Script for current track */}
-          {currentTrack.transcript && (
-            <div className="p-3.5 rounded-2xl bg-white/40 border border-white/60 space-y-2 text-left animate-fadeIn">
-              <div className="flex items-center justify-between">
-                <span className="text-[10.5px] font-bold text-[#8e6d72] uppercase tracking-wide flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-pink-400" />
-                  {language === 'en' ? 'Spoken Affirmation Script' : '原声冥想箴言文稿'}
-                </span>
-                <div className="flex items-center gap-1.5">
-                  <button
-                    onClick={() => toggleSpeechAffirmation(currentTrack.transcript || '')}
-                    className={`text-[9.5px] px-2.5 py-1 rounded-full font-medium transition-all flex items-center gap-1 border shadow-sm ${
-                      isSpeakingText
-                        ? 'bg-pink-500 text-white border-pink-600 animate-pulse'
-                        : 'bg-white/80 text-[#8e6d72] border-pink-200 hover:bg-white'
-                    }`}
-                    title={language === 'en' ? 'Live Voice Narration' : '朗读此段箴言'}
-                  >
-                    <Volume2 className="w-3 h-3" />
-                    <span>{isSpeakingText ? (language === 'en' ? 'Stop Voice' : '停止朗读') : (language === 'en' ? 'Read Aloud' : '朗读箴言')}</span>
-                  </button>
-                  <span className="text-[9px] px-2 py-0.5 rounded-full bg-pink-500/10 text-pink-700 font-medium">
-                    {language === 'en' ? 'High Fidelity' : '高清原声'}
-                  </span>
-                </div>
+          {/* Current Track Info Banner */}
+          <div className="p-3.5 rounded-2xl bg-white/40 border border-white/60 flex items-center justify-between text-left animate-fadeIn">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-pink-100/80 text-pink-700 flex items-center justify-center font-bold">
+                <Disc3 className="w-4 h-4 animate-spin" style={{ animationDuration: '6s' }} />
               </div>
-              <p className="text-xs text-[#4a3a3a] leading-relaxed font-serif italic bg-white/40 p-2.5 rounded-xl border border-white/40 shadow-inner">
-                "{currentTrack.transcript}"
-              </p>
-              {currentTrack.transcriptZh && (
-                <p className="text-[11px] text-[#6d5b5e] leading-relaxed px-1">
-                  {currentTrack.transcriptZh}
-                </p>
-              )}
+              <div>
+                <span className="text-[9.5px] uppercase tracking-wider text-[#b49196] font-bold block">
+                  {language === 'en' ? 'Currently Playing Pure Tone' : '当前正在播放的静心纯音乐'}
+                </span>
+                <span className="text-xs font-bold text-[#8e6d72]">
+                  {language === 'en' ? (currentTrack.nameEn || currentTrack.name) : currentTrack.name}
+                </span>
+              </div>
             </div>
-          )}
+            <span className="px-2.5 py-1 rounded-full bg-pink-500/10 text-pink-700 text-[9.5px] font-bold">
+              {language === 'en' ? '100% Pure Sound' : '100% 纯净静心'}
+            </span>
+          </div>
 
           {/* Custom Track Import Modal */}
           {showAddForm && (
-            <div className="p-4 rounded-[20px] border border-white/60 bg-white/40 space-y-3 animate-fadeIn">
-              <div className="flex items-center justify-between pb-1.5 border-b border-[#8e6d72]/10">
-                <span className="text-[11px] font-bold text-[#8e6d72] uppercase tracking-wide">
-                  {language === 'en' ? 'Import Original Audio Recordings' : '导入您的原声录音文件'}
+            <div className="p-4 rounded-[24px] border border-white/70 bg-white/60 backdrop-blur-md space-y-3 animate-fadeIn shadow-lg">
+              <div className="flex items-center justify-between pb-1.5 border-b border-[#8e6d72]/15">
+                <span className="text-[11px] font-bold text-[#8e6d72] uppercase tracking-wide flex items-center gap-1.5">
+                  <Upload className="w-3.5 h-3.5 text-pink-500" />
+                  <span>{language === 'en' ? 'Import Pure Meditation Audio' : '导入您的静心纯音乐文件 / 音频流'}</span>
                 </span>
-                <button onClick={() => setShowAddForm(false)} className="text-[#8e6d72] hover:text-black">
+                <button onClick={() => setShowAddForm(false)} className="text-[#8e6d72] hover:text-black cursor-pointer p-1">
                   <X className="w-3.5 h-3.5" />
                 </button>
               </div>
 
               {/* Upload File */}
               <div className="space-y-1">
-                <span className="text-[9px] font-bold text-[#8e6d72] block">
-                  {language === 'en' ? 'Method 1: Batch Upload Your Audio Files (MP3 / WAV / M4A)' : '方法一: 批量上传您的原声录音文件 (支持多选 / MP3 / WAV)'}
+                <span className="text-[9.5px] font-bold text-[#8e6d72] block">
+                  {language === 'en' ? 'Method 1: Batch Upload Pure Audio Files (MP3 / WAV / M4A)' : '方法一: 批量上传本地纯音乐文件 (支持多选 / MP3 / WAV / FLAC)'}
                 </span>
                 <div className="relative">
                   <input
@@ -1146,123 +860,91 @@ export default function AudioPlayer({
                     onChange={handleFileUpload}
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                   />
-                  <div className="flex flex-col items-center justify-center gap-1.5 py-3 px-3 rounded-xl border border-dashed border-[#b49196]/60 hover:border-[#8e6d72] bg-white/60 text-xs text-[#8e6d72] font-semibold transition-all text-center cursor-pointer shadow-sm">
+                  <div className="flex flex-col items-center justify-center gap-1.5 py-3 px-3 rounded-xl border border-dashed border-[#b49196]/60 hover:border-[#8e6d72] bg-white/70 text-xs text-[#8e6d72] font-semibold transition-all text-center cursor-pointer shadow-xs">
                     <div className="flex items-center gap-1.5">
                       <Upload className="w-4 h-4 text-pink-500" />
-                      <span>{language === 'en' ? 'Select or Drag Audio Files (Multi-Select Supported)' : '点击选择或拖入本地录音文件 (支持按住 Ctrl/Shift 多选 10 首)'}</span>
+                      <span>{language === 'en' ? 'Click or Drag Audio Files Here' : '点击选择或拖入本地静心纯音乐 (支持多选)'}</span>
                     </div>
-                    <span className="text-[10px] text-[#b49196] font-normal">
-                      {language === 'en' ? 'Direct local playback with 100% original quality' : '直接加载本地原始录音，100% 还原人声音质，无任何改动'}
+                    <span className="text-[9.5px] text-[#b49196] font-normal">
+                      {language === 'en' ? 'Local playback with 100% original lossless quality' : '本地无损播放，随时随地享受静谧纯乐'}
                     </span>
                   </div>
                 </div>
               </div>
 
-              <div className="flex items-center justify-center text-[8.5px] text-[#b49196] font-mono font-bold">OR</div>
+              <div className="flex items-center justify-center text-[9px] text-[#b49196] font-mono font-bold">OR</div>
 
               {/* Form Input URL */}
               <form onSubmit={handleAddUrl} className="space-y-2.5">
                 <div className="space-y-1">
-                  <span className="text-[9px] font-bold text-[#8e6d72] block">
-                    {language === 'en' ? 'Method 2: Enter MP3 URL' : '方法二: 输入网络 MP3 链接'}
+                  <span className="text-[9.5px] font-bold text-[#8e6d72] block">
+                    {language === 'en' ? 'Method 2: Enter MP3 Audio URL' : '方法二: 输入网络纯音乐 MP3 直链'}
                   </span>
                   <div className="relative">
                     <Link2 className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
                     <input
                       type="url"
-                      placeholder="https://example.com/sound.mp3"
+                      placeholder="https://example.com/pure_meditation.mp3"
                       value={customUrl}
                       onChange={(e) => setCustomUrl(e.target.value)}
-                      className="w-full text-xs pl-8.5 pr-2.5 py-2 rounded-xl border border-white/50 bg-white/45 focus:outline-none focus:ring-1 focus:ring-[#8e6d72]/30"
+                      className="w-full text-xs pl-8.5 pr-2.5 py-2 rounded-xl border border-white/60 bg-white/70 focus:outline-none focus:ring-1 focus:ring-[#8e6d72]/30"
                     />
                   </div>
                 </div>
 
                 <input
                   type="text"
-                  placeholder={language === 'en' ? 'Name this custom track (Optional)' : '给此定制曲目命名 (可选)'}
+                  placeholder={language === 'en' ? 'Name this custom track (Optional)' : '给此纯乐曲目命名 (可选)'}
                   value={customName}
                   onChange={(e) => setCustomName(e.target.value)}
-                  className="w-full text-xs px-3 py-2 rounded-xl border border-white/50 bg-white/45 focus:outline-none focus:ring-1 focus:ring-[#8e6d72]/30"
+                  className="w-full text-xs px-3 py-2 rounded-xl border border-white/60 bg-white/70 focus:outline-none focus:ring-1 focus:ring-[#8e6d72]/30"
                 />
 
                 <button
                   type="submit"
                   disabled={!customUrl}
-                  className="w-full py-2 rounded-xl bg-[#8e6d72] hover:bg-[#8e6d72]/90 text-white font-bold text-xs shadow transition-all disabled:opacity-40"
+                  className="w-full py-2.5 rounded-xl bg-[#8e6d72] hover:bg-[#8e6d72]/90 text-white font-bold text-xs shadow-md transition-all disabled:opacity-40 cursor-pointer"
                 >
-                  {language === 'en' ? 'Confirm Import' : '确认导入曲目'}
+                  {language === 'en' ? 'Confirm Import' : '确认导入纯音乐'}
                 </button>
               </form>
             </div>
           )}
-
-          {/* TTS Tone Choices */}
-          <div className="pt-2 border-t border-[#8e6d72]/10">
-            <label className="text-[10px] uppercase tracking-widest text-[#8e6d72] font-bold block mb-2">
-              {language === 'en' ? '🗣️ Affirmation Narration Tone' : '🗣️ 智能朗读配音风格 (Affirmation Narration Tone)'}
-            </label>
-            <div className="grid grid-cols-2 gap-2">
-              {[
-                { id: 'deep-female', name: '静谧深沉女声', nameEn: 'Serene Deep Female', desc: 'Serene Deep', emoji: '🪐' },
-                { id: 'royal-lady', name: '温婉贵族女声', nameEn: 'Royal Elegant Female', desc: 'Royal Elegant', emoji: '👑' },
-                { id: 'magnetic-male', name: '古雅磁性男声', nameEn: 'Magnetic Deep Male', desc: 'Magnetic Deep', emoji: '🌌' },
-                { id: 'grounding-male', name: '低频疗愈男声', nameEn: 'Grounding Low Male', desc: 'Grounding Low', emoji: '🧘' },
-              ].map((tone) => (
-                <button
-                  key={tone.id}
-                  onClick={() => onVoiceToneChange(tone.id as any)}
-                  className={`p-2 rounded-xl text-center text-xs transition-all duration-300 flex flex-col items-center justify-center border ${
-                    voiceTone === tone.id
-                      ? 'bg-white/85 border-white text-[#8e6d72] shadow-sm font-semibold'
-                      : 'bg-white/20 border-white/20 text-[#4a3a3a]/80 hover:bg-white/40'
-                  }`}
-                  id={`tone-select-${tone.id}`}
-                >
-                  <span className="text-sm mb-0.5">{tone.emoji}</span>
-                  <span className="font-bold text-[10.5px] block">
-                    {language === 'en' ? tone.nameEn : tone.name}
-                  </span>
-                  <span className="text-[7.5px] text-[#b49196] font-mono block">{tone.desc}</span>
-                </button>
-              ))}
-            </div>
-          </div>
         </div>
       )}
 
-      {/* TAB 2: COSMIC SOLFEGGIO COMPOSER */}
+      {/* TAB 2: COSMIC SOLFEGGIO COMPOSER (PURE INSTRUMENTAL SYNTHESIZER) */}
       {activeTab === 'composer' && (
         <div className="space-y-4 animate-fadeIn text-left">
           {/* Top description */}
-          <div className="bg-[#ffe4e9]/30 rounded-2xl p-3 border border-[#8e6d72]/10">
+          <div className="bg-[#ffe4e9]/40 rounded-2xl p-3.5 border border-[#8e6d72]/15">
             <p className="text-[11px] text-[#6d5b5e] leading-relaxed">
               {language === 'en' ? (
                 <>
-                  <strong>🎹 Cosmic Synthesizer</strong>: Design custom brainwave resonances with precision Web Audio algorithms. Click [Start Synthesis] to preview, [Save as Preset] or [Record & Download].
+                  <strong>🎹 Pure Solfeggio Synthesizer</strong>: Real-time procedural sound engine generating pristine harmonic tones, soothing nature acoustics, and binaural brainwave frequencies. Completely pure instrumental music without any vocal interruptions.
                 </>
               ) : (
                 <>
-                  <strong>🎹 宇宙频率合成引擎</strong>：通过高精度 Web Audio 原声算法，设计专属您的脑电波共鸣。点击【开始实时演奏】预览，调整后可以【保存为预设】加入音乐精选，或【录音并下载】。
+                  <strong>🎹 宇宙神圣赫兹纯乐合成引擎</strong>：通过高精度 Web Audio 纯算法实时生成神圣索尔菲吉奥和弦、西藏金钵、皇家竖琴及高保真大自然环境音。<strong>100% 纯净静心声乐，无任何机械人声干扰。</strong>
                 </>
               )}
             </p>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-3.5">
             {/* 1. Base Frequency */}
             <div>
               <span className="text-[10px] uppercase font-bold tracking-wider text-[#8e6d72] block mb-1.5">
-                {language === 'en' ? '🌸 Choose Solfeggio Frequency' : '🌸 选择神圣赫兹频率 (Solfeggio Frequencies)'}
+                {language === 'en' ? '🌸 Solfeggio Pure Frequency' : '🌸 索尔菲吉奥神圣频率 (Solfeggio Pure Frequencies)'}
               </span>
               <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
                 {[
-                  { hz: 396, name: '消除恐惧', nameEn: 'Release Fear' },
-                  { hz: 432, name: '宇宙共振', nameEn: 'Cosmic Unity' },
-                  { hz: 528, name: '奇迹显化', nameEn: 'Manifest' },
-                  { hz: 639, name: '爱与连接', nameEn: 'Love & Connect' },
-                  { hz: 741, name: '清理解毒', nameEn: 'Cleanse' },
-                  { hz: 963, name: '神圣顶轮', nameEn: 'Divine Crown' },
+                  { hz: 396, name: '根轮消除恐惧', nameEn: 'Release Fear' },
+                  { hz: 432, name: '宇宙自然谐振', nameEn: 'Cosmic Unity' },
+                  { hz: 528, name: 'DNA奇迹显化', nameEn: 'DNA Manifest' },
+                  { hz: 639, name: '心轮爱与连接', nameEn: 'Heart Love' },
+                  { hz: 741, name: '直觉启迪净化', nameEn: 'Cleanse' },
+                  { hz: 963, name: '顶轮神圣合一', nameEn: 'Divine Crown' },
                 ].map((item) => (
                   <button
                     key={item.hz}
@@ -1270,13 +952,13 @@ export default function AudioPlayer({
                       setComposerHz(item.hz);
                       handleUpdateComposerSetting(item.hz, composerWave, composerBeat, composerNature);
                     }}
-                    className={`py-2 px-1 rounded-xl text-center border transition-all ${
+                    className={`py-2 px-1 rounded-xl text-center border transition-all cursor-pointer ${
                       composerHz === item.hz
                         ? 'bg-white border-[#8e6d72] text-[#8e6d72] shadow-sm font-bold scale-[1.03]'
                         : 'bg-white/20 border-white/20 text-[#4a3a3a] hover:bg-white/40'
                     }`}
                   >
-                    <div className="text-[10px] font-bold font-mono">{item.hz}Hz</div>
+                    <div className="text-[10.5px] font-bold font-mono">{item.hz}Hz</div>
                     <div className="text-[8px] text-[#b49196] scale-90 origin-center truncate">
                       {language === 'en' ? item.nameEn : item.name}
                     </div>
@@ -1289,7 +971,7 @@ export default function AudioPlayer({
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <span className="text-[10px] uppercase font-bold tracking-wider text-[#8e6d72] block mb-1">
-                  {language === 'en' ? '🎻 Timbre Shape' : '🎻 乐器合唱音色 (Timbre Shape)'}
+                  {language === 'en' ? '🎻 Instrument Timbre' : '🎻 纯乐器音色 (Instrument Timbre)'}
                 </span>
                 <select
                   value={composerWave}
@@ -1298,17 +980,17 @@ export default function AudioPlayer({
                     setComposerWave(wave);
                     handleUpdateComposerSetting(composerHz, wave, composerBeat, composerNature);
                   }}
-                  className="w-full text-xs px-2.5 py-2 rounded-xl border border-white/60 bg-white/50 text-[#4a3a3a] focus:outline-none focus:ring-1 focus:ring-[#8e6d72]/30"
+                  className="w-full text-xs px-2.5 py-2 rounded-xl border border-white/60 bg-white/60 text-[#4a3a3a] focus:outline-none focus:ring-1 focus:ring-[#8e6d72]/30"
                 >
-                  <option value="sine">{language === 'en' ? '🎐 Tibetan Bowl (Sine)' : '🎐 空灵藏传金钵 (Sine)'}</option>
-                  <option value="triangle">{language === 'en' ? '🌸 Royal Harp (Triangle)' : '🌸 皇家竖琴古筝 (Triangle)'}</option>
-                  <option value="sawtooth">{language === 'en' ? '🌌 Cosmic Pad' : '🌌 神圣太空合唱 (Pad)'}</option>
+                  <option value="sine">{language === 'en' ? '🎐 Tibetan Singing Bowl (Sine)' : '🎐 空灵藏传金钵 (Sine)'}</option>
+                  <option value="triangle">{language === 'en' ? '🌸 Royal Crystal Harp (Triangle)' : '🌸 皇家水晶竖琴 (Triangle)'}</option>
+                  <option value="sawtooth">{language === 'en' ? '🌌 Cosmic Ambient Pad' : '🌌 浩瀚太空氛围和弦 (Pad)'}</option>
                 </select>
               </div>
 
               <div>
                 <span className="text-[10px] uppercase font-bold tracking-wider text-[#8e6d72] block mb-1">
-                  {language === 'en' ? '🧘 Binaural Beat' : '🧘 脑波注入 (Binaural Beat)'}
+                  {language === 'en' ? '🧘 Brainwave Resonance' : '🧘 深度脑波 (Binaural Beat)'}
                 </span>
                 <select
                   value={composerBeat}
@@ -1317,12 +999,12 @@ export default function AudioPlayer({
                     setComposerBeat(beat);
                     handleUpdateComposerSetting(composerHz, composerWave, beat, composerNature);
                   }}
-                  className="w-full text-xs px-2.5 py-2 rounded-xl border border-white/60 bg-white/50 text-[#4a3a3a] focus:outline-none focus:ring-1 focus:ring-[#8e6d72]/30"
+                  className="w-full text-xs px-2.5 py-2 rounded-xl border border-white/60 bg-white/60 text-[#4a3a3a] focus:outline-none focus:ring-1 focus:ring-[#8e6d72]/30"
                 >
-                  <option value="theta">{language === 'en' ? '🧠 Theta 4Hz (Subconscious)' : '🧠 Theta 4Hz (潜意识显化)'}</option>
-                  <option value="alpha">{language === 'en' ? '🍃 Alpha 8Hz (Deep Relax)' : '🍃 Alpha 8Hz (深度放松)'}</option>
-                  <option value="delta">{language === 'en' ? '😴 Delta 2Hz (Deep Sleep)' : '😴 Delta 2Hz (辅助无梦眠)'}</option>
-                  <option value="none">{language === 'en' ? '🚫 No Resonance' : '🚫 无脑波共鸣'}</option>
+                  <option value="theta">{language === 'en' ? '🧠 Theta 4Hz (Subconscious Calm)' : '🧠 Theta 4Hz (潜意识深度静心)'}</option>
+                  <option value="alpha">{language === 'en' ? '🍃 Alpha 8Hz (Relaxed Focus)' : '🍃 Alpha 8Hz (澄澈清明放松)'}</option>
+                  <option value="delta">{language === 'en' ? '😴 Delta 2Hz (Deep Healing Sleep)' : '😴 Delta 2Hz (深层疗愈修护)'}</option>
+                  <option value="none">{language === 'en' ? '🚫 No Binaural Beat' : '🚫 无脑波共鸣'}</option>
                 </select>
               </div>
             </div>
@@ -1331,7 +1013,7 @@ export default function AudioPlayer({
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-[10px] uppercase font-bold tracking-wider text-[#8e6d72] block">
-                  {language === 'en' ? '🌿 Organic Nature Soundscapes' : '🌿 模拟高保真大自然环境音浪 (Organic Soundscapes)'}
+                  {language === 'en' ? '🌿 Organic Nature Soundscapes' : '🌿 模拟高保真大自然环境纯乐 (Nature Soundscapes)'}
                 </span>
                 <div className="flex items-center gap-1.5 text-[10px] text-[#8e6d72]">
                   <span>{language === 'en' ? 'Nature Vol:' : '环境音量:'}</span>
@@ -1356,7 +1038,7 @@ export default function AudioPlayer({
                       key={item.id}
                       type="button"
                       onClick={() => handleSelectNature(item.id)}
-                      className={`p-2.5 rounded-xl border text-left transition-all ${
+                      className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
                         isSelected
                           ? 'bg-white border-[#8e6d72] text-[#8e6d72] shadow-sm font-semibold ring-1 ring-[#8e6d72]/30'
                           : 'bg-white/20 border-white/20 text-[#4a3a3a] hover:bg-white/40'
@@ -1378,10 +1060,10 @@ export default function AudioPlayer({
             <div className="pt-2.5 border-t border-[#8e6d72]/10 space-y-2">
               <input
                 type="text"
-                placeholder={language === 'en' ? 'Name this custom mix (e.g. Dream Repair...)' : '给这首冥想曲起个名字 (如：夜间修复波...)'}
+                placeholder={language === 'en' ? 'Name this custom pure track (e.g. 528Hz Ocean Zen...)' : '给这首静心纯乐起个名字 (如：528Hz 潮汐静心曲...)'}
                 value={composerName}
                 onChange={(e) => setComposerName(e.target.value)}
-                className="w-full text-xs px-3.5 py-2.5 rounded-xl border border-white/60 bg-white/45 placeholder-[#b49196]/80 text-[#4a3a3a] focus:outline-none focus:ring-2 focus:ring-[#8e6d72]/15"
+                className="w-full text-xs px-3.5 py-2.5 rounded-xl border border-white/60 bg-white/50 placeholder-[#b49196]/80 text-[#4a3a3a] focus:outline-none focus:ring-2 focus:ring-[#8e6d72]/15"
               />
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
@@ -1389,10 +1071,10 @@ export default function AudioPlayer({
                 <button
                   type="button"
                   onClick={handleSaveComposerPreset}
-                  className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-white hover:bg-white/80 text-[#8e6d72] border border-[#8e6d72]/30 font-semibold text-xs shadow-sm transition-all"
+                  className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-white hover:bg-white/90 text-[#8e6d72] border border-[#8e6d72]/30 font-semibold text-xs shadow-sm transition-all cursor-pointer"
                 >
                   <Save className="w-3.5 h-3.5" />
-                  <span>{language === 'en' ? 'Save Preset' : '存至背景音馆'}</span>
+                  <span>{language === 'en' ? 'Save to Pure Tracks' : '存入静心曲库'}</span>
                 </button>
 
                 {/* Instant recording download */}
@@ -1400,7 +1082,7 @@ export default function AudioPlayer({
                   type="button"
                   onClick={handleRecordComposer}
                   disabled={isRecordingComposer}
-                  className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-pink-50 hover:bg-pink-100 text-pink-700 border border-pink-200 font-semibold text-xs shadow-sm transition-all disabled:opacity-50"
+                  className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-pink-50 hover:bg-pink-100 text-pink-700 border border-pink-200 font-semibold text-xs shadow-sm transition-all disabled:opacity-50 cursor-pointer"
                 >
                   {isRecordingComposer ? (
                     <>
@@ -1410,7 +1092,7 @@ export default function AudioPlayer({
                   ) : (
                     <>
                       <Download className="w-3.5 h-3.5" />
-                      <span>{language === 'en' ? 'Record & Download' : '录音并下载音乐'}</span>
+                      <span>{language === 'en' ? 'Export Audio File' : '导出纯音乐音频'}</span>
                     </>
                   )}
                 </button>
@@ -1428,215 +1110,26 @@ export default function AudioPlayer({
                       runProceduralSynth(composerHz, composerWave, composerBeat, composerNature, composerNatureVol);
                     }
                   }}
-                  className={`flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-white font-semibold text-xs shadow transition-all ${
+                  className={`flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-white font-semibold text-xs shadow-md transition-all cursor-pointer ${
                     isLiveComposing
                       ? 'bg-rose-500 hover:bg-rose-600 animate-pulse'
                       : 'bg-[#8e6d72] hover:bg-[#8e6d72]/90'
                   }`}
                 >
                   {isLiveComposing ? <Square className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
-                  <span>{isLiveComposing ? (language === 'en' ? 'Stop Live Playing' : '停止实时演奏') : (language === 'en' ? 'Start Live Playing' : '开始实时演奏')}</span>
+                  <span>{isLiveComposing ? (language === 'en' ? 'Stop Synth' : '停止演奏') : (language === 'en' ? 'Live Play' : '实时试听演奏')}</span>
                 </button>
               </div>
             </div>
           </div>
-        </div>
-      )}
-
-      {/* TAB 3: PERSONAL VOICE STUDIO */}
-      {activeTab === 'voice' && (
-        <div className="space-y-4 animate-fadeIn text-left">
-          {/* Instructions */}
-          <div className="bg-[#ffe4e9]/30 rounded-2xl p-3 border border-[#8e6d72]/10">
-            <p className="text-[11px] text-[#6d5b5e] leading-relaxed">
-              {language === 'en' ? (
-                <>
-                  <strong>🎙️ Personal Voice Studio</strong>: Record yourself reading your wishes or affirmations aloud. Once enabled, your voice will loop during the meditation countdown alongside background tracks to reach your subconscious!
-                </>
-              ) : (
-                <>
-                  <strong>🎙️ 我的声线肯定句馆</strong>：在这里亲口朗读您的心愿或显化口令（如：<em>“我有无尽的财富、健康的身体与包容一切的爱”</em>），app将为您录音建档。开启下方设置后，<strong>您录制的亲口声音将在全屏冥想倒计时中自动循环播放</strong>，配合背景梵音直击您的深层潜意识！
-                </>
-              )}
-            </p>
-          </div>
-
-          {/* Voice recorder box */}
-          <div className="bg-white/30 rounded-2xl p-3.5 border border-white/60 space-y-2.5">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] uppercase font-bold tracking-wider text-[#8e6d72] flex items-center gap-1">
-                <Activity className="w-3.5 h-3.5 text-pink-400 animate-pulse" />
-                <span>{language === 'en' ? 'Record Voice Affirmation' : '录制我的神圣声音 (Record Voice Affirmation)'}</span>
-              </span>
-              {isRecordingVoice && (
-                <span className="text-[10px] font-bold text-red-500 font-mono flex items-center gap-1 animate-pulse">
-                  <span className="w-2 h-2 rounded-full bg-red-500"></span>
-                  <span>RECORDING {voiceRecordSeconds}s</span>
-                </span>
-              )}
-            </div>
-
-            <div className="flex gap-2">
-              <input
-                type="text"
-                placeholder={language === 'en' ? 'Give your recording an empowering name...' : '给您录音肯定句取个能量名字 (例如：我的富足配得感)'}
-                value={voiceRecordName}
-                disabled={isRecordingVoice}
-                onChange={(e) => setVoiceRecordName(e.target.value)}
-                className="flex-1 text-xs px-3.5 py-2 rounded-xl border border-white/60 bg-white/50 text-[#4a3a3a] placeholder-[#b49196]/80 focus:outline-none focus:ring-1 focus:ring-[#8e6d72]/30 disabled:opacity-60"
-              />
-
-              {isRecordingVoice ? (
-                <button
-                  type="button"
-                  onClick={stopRecordingVoice}
-                  className="px-4 py-2 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold flex items-center gap-1 animate-pulse shadow-md"
-                >
-                  <Square className="w-3.5 h-3.5 fill-current" />
-                  <span>{language === 'en' ? 'Stop' : '停止'}</span>
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={startRecordingVoice}
-                  className="px-4 py-2 rounded-xl bg-[#8e6d72] hover:bg-[#8e6d72]/90 text-white text-xs font-bold flex items-center gap-1 shadow"
-                >
-                  <Mic className="w-3.5 h-3.5" />
-                  <span>{language === 'en' ? 'Record' : '录音'}</span>
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Saved Voices Library */}
-          <div className="space-y-2">
-            <span className="text-[10px] uppercase font-bold tracking-wider text-[#8e6d72] block">
-              {language === 'en' ? '📁 My Voice Archive' : '📁 我的建档声波库 (My Voice Archive)'}
-            </span>
-
-            {customVoices.length === 0 ? (
-              <div className="py-6 text-center border border-dashed border-white/30 rounded-2xl bg-white/10">
-                <span className="text-2xl block mb-1">🎧</span>
-                <span className="text-[10.5px] text-[#b49196] font-medium">
-                  {language === 'en' ? 'No recordings yet. Record a short clip to align with your inner self.' : '尚无录制音频。录制一小段来开启您的灵魂共振吧。'}
-                </span>
-              </div>
-            ) : (
-              <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
-                {customVoices.map((voice) => (
-                  <div
-                    key={voice.id}
-                    className={`flex items-center justify-between p-2.5 rounded-xl border transition-all ${
-                      selectedVoiceMantraId === voice.id
-                        ? 'bg-white/80 border-[#8e6d72]/30 shadow-sm'
-                        : 'bg-white/20 border-white/10 hover:bg-white/40'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2 flex-1 min-w-0">
-                      <button
-                        onClick={() => setSelectedVoiceMantraId(voice.id)}
-                        className={`p-1.5 rounded-full transition-all ${
-                          selectedVoiceMantraId === voice.id
-                            ? 'bg-[#8e6d72] text-white shadow-inner'
-                            : 'bg-white/50 text-[#8e6d72]/60 hover:text-[#8e6d72]'
-                        }`}
-                        title={language === 'en' ? 'Use in Meditation' : '设为冥想背景伴奏'}
-                      >
-                        <Check className="w-3 h-3" />
-                      </button>
-
-                      <div className="text-left min-w-0">
-                        <p className="text-[11.5px] font-bold text-[#4a3a3a] truncate">{voice.name}</p>
-                        <div className="flex items-center gap-1.5 text-[8.5px] text-[#b49196] font-mono mt-0.5">
-                          <span className="flex items-center gap-0.5">
-                            <Clock className="w-2.5 h-2.5" />
-                            {voice.duration}{language === 'en' ? 's' : '秒'}
-                          </span>
-                          <span>•</span>
-                          <span>{voice.createdAt}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-1">
-                      {/* Play Preview */}
-                      <button
-                        onClick={() => playVoicePreview(voice)}
-                        className={`p-1.5 rounded-full border transition-all ${
-                          isPlayingVoicePreview === voice.id
-                            ? 'bg-rose-500 text-white border-transparent animate-pulse'
-                            : 'bg-white/60 border-white/80 text-[#8e6d72] hover:bg-white'
-                        }`}
-                        title={language === 'en' ? 'Preview' : '播放预览'}
-                      >
-                        {isPlayingVoicePreview === voice.id ? (
-                          <Pause className="w-3 h-3" />
-                        ) : (
-                          <Play className="w-3 h-3 fill-current" />
-                        )}
-                      </button>
-
-                      {/* Download */}
-                      <button
-                        onClick={() => downloadVoiceClip(voice)}
-                        className="p-1.5 rounded-full border bg-white/60 border-white/80 text-[#8e6d72]/80 hover:text-[#8e6d72] hover:bg-white transition-all"
-                        title={language === 'en' ? 'Download' : '下载录音'}
-                      >
-                        <Download className="w-3 h-3" />
-                      </button>
-
-                      {/* Delete */}
-                      <button
-                        onClick={() => deleteVoiceClip(voice.id)}
-                        className="p-1.5 rounded-full border bg-white/40 border-transparent text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all"
-                        title={language === 'en' ? 'Delete' : '删除肯定句'}
-                      >
-                        <Trash2 className="w-3 h-3" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Interactive Meditation loop configuration toggle */}
-          {customVoices.length > 0 && (
-            <div className="bg-[#ffe4e9]/20 border border-[#8e6d72]/15 rounded-2xl p-3 flex items-start gap-2 pt-2.5 shadow-inner">
-              <input
-                type="checkbox"
-                id="checkbox-loop-mantra"
-                checked={selectedVoiceMantraId !== null}
-                onChange={(e) => {
-                  if (e.target.checked && customVoices.length > 0) {
-                    setSelectedVoiceMantraId(customVoices[0].id);
-                  } else {
-                    setSelectedVoiceMantraId(null);
-                  }
-                }}
-                className="mt-1 accent-[#8e6d72] cursor-pointer"
-              />
-              <div className="text-left">
-                <label
-                  htmlFor="checkbox-loop-mantra"
-                  className="text-[10.5px] font-bold text-[#8e6d72] block cursor-pointer"
-                >
-                  {language === 'en' ? '✨ Subconscious Loop: Play your voice during meditation' : '✨ 潜意识神意灌顶：在全屏冥想专注时，循环播放选中的亲口录音'}
-                </label>
-                <p className="text-[9px] text-[#6d5b5e] mt-0.5 leading-relaxed">
-                  {language === 'en' ? 'Once enabled, your recorded audio will loop softly in the background. Hearing your own voice repeating desires is highly effective.' : '勾选后，当您启动全屏专注显化沙龙，本段音频将作为专属心愿指令，与背景音乐叠加柔和循环。听自己的声线念肯定句，潜意识最不易产生抗拒。'}
-                </p>
-              </div>
-            </div>
-          )}
         </div>
       )}
 
       {/* FOOTER Master Audio Status Bar */}
-      <div className="flex items-center gap-4 py-2.5 px-3.5 mt-4 rounded-2xl bg-white/45 border border-white/50 shadow-sm text-left">
+      <div className="flex items-center gap-4 py-2.5 px-3.5 mt-4 rounded-2xl bg-white/50 border border-white/60 shadow-sm text-left">
         <button
           onClick={() => setIsPlaying(!isPlaying)}
-          className="p-3.5 rounded-full bg-[#8e6d72] hover:bg-[#8e6d72]/90 text-white shadow-md shadow-[#8e6d72]/10 hover:scale-105 active:scale-95 transition-all duration-200"
+          className="p-3.5 rounded-full bg-[#8e6d72] hover:bg-[#8e6d72]/90 text-white shadow-md shadow-[#8e6d72]/20 hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer"
           id="music-play-pause-btn"
           aria-label={isPlaying ? (language === 'en' ? 'Pause' : '暂停') : (language === 'en' ? 'Play' : '播放')}
         >
@@ -1649,14 +1142,14 @@ export default function AudioPlayer({
 
         <div className="flex-1 min-w-0">
           <p className="text-xs font-bold text-[#4a3a3a] truncate">
-            {activeTab === 'composer' ? (language === 'en' ? `Composing: ${composerHz}Hz resonance` : `正在定制: ${composerHz}Hz 脑波振动`) : currentTrack.name}
+            {activeTab === 'composer' ? (language === 'en' ? `Solfeggio Synth: ${composerHz}Hz pure tone` : `正在实时定制: ${composerHz}Hz 神圣纯音`) : currentTrack.name}
           </p>
           <p className="text-[9.5px] text-[#b49196] font-medium mt-0.5">
             {isPlaying
               ? isLiveComposing
-                ? (language === 'en' ? '✨ Perfect brainwave resonance active...' : '✨ 智能赫兹声波完美共振中...')
-                : (language === 'en' ? '🌸 Playing sacred ambient meditation track...' : '🌸 正在播放神圣冥想氛围音乐...')
-              : (language === 'en' ? '🍵 Awaiting your manifestation journey...' : '🍵 静候您的显化旅程...')}
+                ? (language === 'en' ? '✨ Pure harmonic frequency active...' : '✨ 神圣赫兹纯音乐共振中...')
+                : (language === 'en' ? '🌸 Playing serene meditation pure music...' : '🌸 正在播放静心纯音乐...')
+              : (language === 'en' ? '🍵 Awaiting your serene meditation journey...' : '🍵 随时点击开启静心纯音乐...')}
           </p>
         </div>
 
@@ -1670,7 +1163,7 @@ export default function AudioPlayer({
             step="0.05"
             value={volume}
             onChange={(e) => setVolume(parseFloat(e.target.value))}
-            className="w-16 h-1 bg-[#8e6d72]/10 rounded-lg appearance-none cursor-pointer accent-[#8e6d72]"
+            className="w-16 h-1 bg-[#8e6d72]/20 rounded-lg appearance-none cursor-pointer accent-[#8e6d72]"
             id="music-volume"
           />
         </div>

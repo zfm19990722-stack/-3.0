@@ -11,7 +11,7 @@ import AbundanceWisdomPortalCard from './components/AbundanceWisdomPortalCard';
 import ImmersiveMeditationPortalCard from './components/ImmersiveMeditationPortalCard';
 import { ChakraVisualizer } from './components/ChakraVisualizer';
 import { BreathingRingWithParticles } from './components/BreathingRingWithParticles';
-import { UPLOADED_AFFIRMATION_AUDIOS } from './data/affirmationAudios';
+import { PURE_MEDITATION_TRACKS } from './data/affirmationAudios';
 import {
   Sparkles,
   Heart,
@@ -101,19 +101,15 @@ export const DEFAULT_UNIVERSAL_WISH: Wish = {
 };
 
 const PREBUILT_MUSIC: MusicTrack[] = [
-  ...UPLOADED_AFFIRMATION_AUDIOS.map((item) => ({
+  ...PURE_MEDITATION_TRACKS.map((item) => ({
     id: item.id,
-    name: item.titleZh,
-    nameEn: item.titleEn,
+    name: item.name,
+    nameEn: item.nameEn,
     url: item.url,
     category: item.category,
-    transcript: item.transcript,
-    transcriptZh: item.transcriptZh,
     summary: item.summary,
+    frequencyBadge: item.frequencyBadge,
   })),
-  { id: 'princess-synth', name: '✨ 圣洁公主琴音 (Web 实时合成)', nameEn: '✨ Sacred Princess Chords (Web Synth)', url: '' },
-  { id: 'track-rose', name: '🎵 玫瑰古堡钢琴曲 (舒适冥想)', nameEn: '🎵 Rose Castle Piano (Comfort Meditation)', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3' },
-  { id: 'track-ambient', name: '🎵 水晶风铃之歌 (空灵声场)', nameEn: '🎵 Crystal Chimes Symphony (Ethereal Sound)', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3' },
 ];
 
 interface SentenceSegment {
@@ -1475,11 +1471,11 @@ export default function App() {
               </div>
               {language === 'en' ? (
                 <>
-                  This is your exclusive sanctuary of deep relaxation and manifestation. Click <strong className="text-[#8e6d72]">"✨ Activate Visualization Details"</strong> on any wish, and the Gemini AI will immediately weave sensory details filled with colors, textures, and aromas. Coupled with the <strong className="text-[#8e6d72]">"Subconscious TTS Voice Guidance"</strong>, let abundance and beauty flow seamlessly into your life.
+                  This is your exclusive sanctuary of deep relaxation and manifestation. Click <strong className="text-[#8e6d72]">"✨ Activate Visualization Details"</strong> on any wish, and the Gemini AI will immediately weave sensory details filled with colors, textures, and aromas. Coupled with the <strong className="text-[#8e6d72]">"Pure Meditation Music & Solfeggio Frequencies"</strong>, let abundance and beauty flow seamlessly into your life.
                 </>
               ) : (
                 <>
-                  这是一个专属于您的舒缓疗愈殿堂。点击心愿中的 <strong className="text-[#8e6d72]">“✨ 激活具体显化细节”</strong>，Gemini 智能算法将为您实时编织饱含色彩、温度与香氛的可视化细节。配合 <strong className="text-[#8e6d72]">“深沉女声朗读”</strong> 浸润潜意识，让丰盛与美丽自如地流向您的生命。
+                  这是一个专属于您的舒缓疗愈殿堂。点击心愿中的 <strong className="text-[#8e6d72]">“✨ 激活具体显化细节”</strong>，Gemini 智能算法将为您实时编织饱含色彩、温度与香氛的可视化细节。配合 <strong className="text-[#8e6d72]">“静心纯音乐与神圣赫兹波”</strong> 浸润潜意识，让丰盛与美丽自如地流向您的生命。
                 </>
               )}
             </div>
@@ -1498,7 +1494,6 @@ export default function App() {
           <div className="space-y-6 animate-fadeIn" id="standalone-abundance-wisdom-view">
             <AbundanceWisdomSpace
               language={language}
-              onSpeak={handleSpeakText}
               onAddCustomWish={(title, details, category) => {
                 handleAddWish({ title, details, category });
               }}
@@ -1551,25 +1546,19 @@ export default function App() {
               {/* Daily Affirmation */}
               <AffirmationCard
                 language={language}
-                onSpeak={handleSpeakText}
-                isSpeaking={isSpeaking}
-                onStopSpeaking={handleStopSpeaking}
               />
 
-              {/* Customized Meditation Tracks */}
+              {/* Customized Pure Meditation Tracks */}
               <AudioPlayer
                 language={language}
                 currentTrack={currentTrack}
                 onTrackChange={setCurrentTrack}
                 tracks={tracks}
                 onAddCustomTrack={handleAddCustomTrack}
-                voiceTone={voiceTone}
-                onVoiceToneChange={setVoiceTone}
                 isPlaying={isMusicPlaying}
                 setIsPlaying={setIsMusicPlaying}
                 volume={musicVolume}
                 setVolume={setMusicVolume}
-                activeWishSession={activeWishSession}
               />
 
               {/* Quick guidance tips */}
@@ -1587,7 +1576,7 @@ export default function App() {
                       </li>
                       <li className="flex items-start gap-2">
                         <span className="text-[#8e6d72] font-bold shrink-0">2.</span>
-                        <span>Turn on the immersive music and enter full-screen meditation, following the deep voice to guide your subconsciousness.</span>
+                        <span>Turn on the pure calming meditation music and enter full-screen sanctuary, synchronizing with So-Hum and Box breathing.</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <span className="text-[#8e6d72] font-bold shrink-0">3.</span>
@@ -1602,7 +1591,7 @@ export default function App() {
                       </li>
                       <li className="flex items-start gap-2">
                         <span className="text-[#8e6d72] font-bold shrink-0">2.</span>
-                        <span>开启沉浸式音乐，进入全屏冥想，跟随着呼唤潜意识的深沉女声进行丰盛暗示注入。</span>
+                        <span>开启静心纯音乐与神圣赫兹波，进入全屏冥想空间，跟随 So-Hum 或方盒呼吸节律进入深度安住。</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <span className="text-[#8e6d72] font-bold shrink-0">3.</span>
@@ -2134,233 +2123,140 @@ export default function App() {
                 )}
               </div>
               
-              <div className={`p-4 md:p-6 rounded-[28px] backdrop-blur-xl shadow-2xl text-left max-h-[160px] md:max-h-[260px] lg:max-h-[340px] overflow-y-auto custom-scrollbar border transition-all duration-1000 ${
+              <div className={`p-4 md:p-6 rounded-[28px] backdrop-blur-xl shadow-2xl text-left max-h-[160px] md:max-h-[240px] overflow-y-auto custom-scrollbar border transition-all duration-1000 ${
                 isBgDark 
                   ? 'bg-black/25 border-white/15' 
                   : 'bg-white/70 border-[#8e6d72]/20 shadow-pink-100/10'
               }`}>
-                {/* Subtle Interactive Instruction */}
-                <div className={`text-[10px] tracking-wider mb-2.5 font-bold flex items-center gap-1.5 opacity-85 ${isBgDark ? 'text-pink-200' : 'text-[#8e6d72]'}`}>
+                {/* Subtle Spiritual Essence Indicator */}
+                <div className={`text-[10px] tracking-wider mb-2 font-bold flex items-center gap-1.5 opacity-85 ${isBgDark ? 'text-pink-200' : 'text-[#8e6d72]'}`}>
+                  <Sparkles className="w-3.5 h-3.5 text-pink-400" />
                   <span>
                     {language === 'en' 
-                      ? '💡 Tip: Click any sentence below to start narration from that sentence' 
-                      : '💡 交互提示：点击下方文字中的任意句子，即可从该句开始定位朗读'}
+                      ? '✨ Cosmic Abundance Contemplation • Mindful Quiet Reflection' 
+                      : '✨ 宇宙源头纯净丰盛心法 • 静心默读与意境共鸣'}
                   </span>
                 </div>
 
                 <p className={`text-xs md:text-sm leading-relaxed tracking-wider font-sans indent-6 transition-colors duration-1000 whitespace-pre-wrap ${
                   isBgDark ? 'text-pink-50/90' : 'text-[#5c3e43] font-medium'
                 }`}>
-                  {(() => {
-                    const fullText = activeSessionLang === 'zh'
-                      ? (activeWishSession.visualizationDetails || activeWishSession.details)
-                      : (activeWishSession.visualizationDetailsEn || (language === 'en' ? '[Please click "Re-sensitize Luxury Details" in the card to activate English scenario]' : '【请在愿望卡片中，点击“重新感应奢华细节”以激活专属英文沉浸式场景】'));
-
-                    const segments = getSentenceSegments(fullText);
-                    return segments.map((segment, index) => {
-                      const isSelected = isSpeaking && speakingStartIndex === segment.startIndex;
-                      return (
-                        <span
-                          key={index}
-                          onClick={() => {
-                            setSpeakingStartIndex(segment.startIndex);
-                            handleSpeakText(segment.fullTextFromHere);
-                          }}
-                          className={`cursor-pointer rounded px-0.5 transition-all duration-300 ${
-                            isSelected
-                              ? 'bg-pink-500/25 dark:bg-pink-400/25 text-pink-700 dark:text-pink-100 ring-1 ring-pink-400/40 font-bold shadow-sm'
-                              : isBgDark
-                                ? 'hover:bg-white/10 hover:text-white'
-                                : 'hover:bg-[#8e6d72]/10 hover:text-[#5c3e43]'
-                          }`}
-                          title={language === 'en' ? '🖱️ Click to start narration from here' : '🖱️ 点击从此句开始定位朗读'}
-                        >
-                          {isSelected && (
-                            <span className="inline-flex items-center text-pink-500 dark:text-pink-300 mr-1 animate-pulse">
-                              🔊
-                            </span>
-                          )}
-                          {segment.text}
-                        </span>
-                      );
-                    });
-                  })()}
+                  {activeSessionLang === 'zh'
+                    ? (activeWishSession.visualizationDetails || activeWishSession.details)
+                    : (activeWishSession.visualizationDetailsEn || (language === 'en' ? '[Please click "Re-sensitize Luxury Details" in the card to activate English scenario]' : '【请在愿望卡片中，点击“重新感应奢华细节”以激活专属英文沉浸式场景】'))
+                  }
                 </p>
               </div>
             </div>
 
-            {/* Speaking voice status & Tone Adjustment Controls */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-3xl">
-              {/* Speaking voice status & Tone Adjustment Controls */}
-              <div className="flex flex-col items-center space-y-3 bg-white/15 dark:bg-black/25 backdrop-blur-md p-4 rounded-[24px] border border-white/15 w-full shadow-lg">
-                <div className="flex items-center justify-between w-full border-b border-white/10 pb-1.5">
-                  <span className={`text-[10px] uppercase font-bold tracking-widest ${isBgDark ? 'text-pink-200' : 'text-[#8e6d72]'}`}>
-                    {language === 'en' ? '🗣️ Narration Voice Control' : '🗣️ 智能显化配音调节 (Narration Voice)'}
-                  </span>
-                  {isSpeakingLoading && (
-                    <span className="text-[9.5px] text-pink-400 font-bold animate-pulse flex items-center gap-1">
-                      <span className="w-1 h-1 rounded-full bg-pink-400 animate-ping"></span>
-                      {language === 'en' ? 'Loading voice...' : '正在载入中...'}
-                    </span>
-                  )}
-                </div>
-                
-                <div className="grid grid-cols-2 gap-1.5 w-full">
-                  {[
-                    { id: 'deep-female', name: language === 'en' ? 'Serene Deep Female 🪐' : '静谧深沉女声 🪐', desc: 'Serene Deep' },
-                    { id: 'royal-lady', name: language === 'en' ? 'Gentle Elegant Lady 👑' : '温婉贵族女声 👑', desc: 'Royal Elegant' },
-                    { id: 'magnetic-male', name: language === 'en' ? 'Magnetic Ancient Male 🌌' : '古雅磁性男声 🌌', desc: 'Magnetic Deep' },
-                    { id: 'grounding-male', name: language === 'en' ? 'Healing Grounding Male 🧘' : '低频疗愈男声 🧘', desc: 'Grounding Low' },
-                  ].map((tone) => (
-                    <button
-                      key={tone.id}
-                      onClick={async () => {
-                        setVoiceTone(tone.id as any);
-                        // If speaking, immediately cross-fade and speak with the new tone
-                        const textToRead = activeSessionLang === 'zh'
-                          ? (activeWishSession.visualizationDetails || activeWishSession.details)
-                          : (activeWishSession.visualizationDetailsEn || activeWishSession.visualizationDetails || activeWishSession.details);
-                        if ((isSpeaking || isSpeakingLoading) && textToRead) {
-                          handleSpeakText(textToRead, tone.id as any);
-                        }
-                      }}
-                      className={`py-1.5 rounded-xl text-center text-[10.5px] transition-all duration-300 border flex flex-col items-center justify-center ${
-                        voiceTone === tone.id
-                          ? 'bg-white text-[#8e6d72] border-white shadow-sm font-bold scale-[1.02]'
-                          : isBgDark
-                            ? 'bg-white/5 border-white/10 text-white/80 hover:bg-white/10'
-                            : 'bg-white/40 border-[#8e6d72]/10 text-[#4a3a3a] hover:bg-white/60'
-                      }`}
-                      id={`immersive-tone-${tone.id}`}
-                    >
-                      <span className="font-semibold">{tone.name}</span>
-                      <span className="text-[7.5px] opacity-70 font-mono tracking-wider">{tone.desc}</span>
-                    </button>
-                  ))}
-                </div>
+            {/* 🌌 冥想静心纯音乐 & 频率声波控制中心 */}
+            <div className="w-full max-w-3xl">
+              <div className={`flex flex-col space-y-3 p-5 rounded-[28px] border shadow-xl text-left justify-between backdrop-blur-md transition-all ${
+                isBgDark ? 'bg-black/35 border-white/15 text-white' : 'bg-white/70 border-[#8e6d72]/20 text-[#4a3a3a]'
+              }`} id="immersive-acoustics-panel">
+                <div className="flex items-center justify-between w-full border-b border-white/10 pb-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">🌌</span>
+                    <div>
+                      <span className={`text-xs uppercase font-bold tracking-widest block ${isBgDark ? 'text-pink-200' : 'text-[#8e6d72]'}`}>
+                        {language === 'en' ? 'Meditation Pure Acoustics' : '冥想静心纯音乐 & 频率声场 (Pure Acoustics)'}
+                      </span>
+                      <span className="text-[9.5px] opacity-75">
+                        {language === 'en' ? '100% Pure instrumental serenity without voiceover' : '100% 纯净静心纯乐，无任何机械人声打扰'}
+                      </span>
+                    </div>
+                  </div>
 
-                <div className="flex items-center gap-2.5 w-full pt-1">
                   <button
-                    onClick={() => {
-                      const textToRead = activeSessionLang === 'zh'
-                        ? (activeWishSession.visualizationDetails || activeWishSession.details)
-                        : (activeWishSession.visualizationDetailsEn || activeWishSession.visualizationDetails || activeWishSession.details);
-                      if (isSpeaking || isSpeakingLoading) {
-                        handleStopSpeaking();
-                      } else if (textToRead) {
-                        handleSpeakText(textToRead);
-                      }
-                    }}
-                    disabled={isSpeakingLoading}
-                    className={`flex-1 py-2.5 rounded-xl font-bold shadow-md transition-all flex items-center justify-center gap-2 text-xs cursor-pointer ${
-                      isSpeaking 
-                        ? 'bg-rose-500 hover:bg-rose-600 text-white animate-pulse' 
-                        : isSpeakingLoading
-                          ? 'bg-[#8e6d72]/40 text-white/50 cursor-not-allowed'
-                          : isBgDark 
-                            ? 'bg-white/15 text-white hover:bg-white/25 border border-white/20' 
-                            : 'bg-[#8e6d72] text-white hover:bg-[#8e6d72]/90 border border-transparent'
+                    type="button"
+                    onClick={() => setIsBackgroundAudioEnabled(!isBackgroundAudioEnabled)}
+                    className={`px-3 py-1.5 text-[10.5px] font-bold rounded-full border transition-all flex items-center gap-1.5 cursor-pointer hover:scale-[1.03] active:scale-95 shadow-xs ${
+                      isBackgroundAudioEnabled
+                        ? isBgDark
+                          ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
+                          : 'bg-emerald-500/20 text-emerald-800 border-emerald-500/30'
+                        : isBgDark
+                          ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                          : 'bg-rose-500/15 text-rose-800 border-rose-500/30'
                     }`}
-                    id="immersive-tts-toggle-btn"
+                    title={isBackgroundAudioEnabled ? (language === 'en' ? "Mute background" : "静音背景音") : (language === 'en' ? "Enable background" : "开启背景音")}
+                    id="master-background-audio-toggle"
                   >
-                    {isSpeaking ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                    <span className={`w-2 h-2 rounded-full ${isBackgroundAudioEnabled ? 'bg-emerald-400 animate-pulse' : 'bg-rose-500'}`}></span>
                     <span>
-                      {isSpeaking 
-                        ? (language === 'en' ? 'Mute Voice Narration' : '静音语音朗读') 
-                        : isSpeakingLoading 
-                          ? (language === 'en' ? 'Preparing voice waves...' : '声波准备中...') 
-                          : (language === 'en' ? 'Play Voice Narration' : '播放深沉女声朗读')}
+                      {language === 'en' 
+                        ? `Acoustics: ${isBackgroundAudioEnabled ? 'ON' : 'MUTED'}` 
+                        : `纯音乐: ${isBackgroundAudioEnabled ? '已开启' : '已静音'}`}
                     </span>
                   </button>
                 </div>
-              </div>
 
-              {/* 🌌 冥想背景声波控制 */}
-              <div className="flex flex-col space-y-3 bg-white/15 dark:bg-black/25 backdrop-blur-md p-4 rounded-[24px] border border-white/15 w-full shadow-lg text-left justify-between">
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between w-full border-b border-white/10 pb-1.5">
-                    <span className={`text-[10px] uppercase font-bold tracking-widest ${isBgDark ? 'text-pink-200' : 'text-[#8e6d72]'}`}>
-                      {language === 'en' ? '🌌 Meditation Background Acoustics' : '🌌 冥想背景声波设置 (Acoustics)'}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setIsBackgroundAudioEnabled(!isBackgroundAudioEnabled)}
-                      className={`px-2.5 py-1 text-[10px] font-bold rounded-xl border transition-all flex items-center gap-1.5 cursor-pointer hover:scale-[1.03] active:scale-95 ${
-                        isBackgroundAudioEnabled
-                          ? isBgDark
-                            ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30'
-                            : 'bg-emerald-500/15 text-emerald-800 border-emerald-500/20'
-                          : isBgDark
-                            ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
-                            : 'bg-rose-500/10 text-rose-800 border-rose-500/20'
-                      }`}
-                      title={isBackgroundAudioEnabled ? (language === 'en' ? "Mute background" : "静音背景音") : (language === 'en' ? "Enable background" : "开启背景音")}
-                      id="master-background-audio-toggle"
-                    >
-                      <span className={`w-1.5 h-1.5 rounded-full ${isBackgroundAudioEnabled ? 'bg-emerald-400 animate-pulse' : 'bg-rose-500'}`}></span>
-                      <span>
-                        {language === 'en' 
-                          ? `Acoustics: ${isBackgroundAudioEnabled ? 'ON' : 'MUTED'}` 
-                          : `背景音: ${isBackgroundAudioEnabled ? '开启' : '静音'}`}
-                      </span>
-                    </button>
-                  </div>
-
-                  {!isBackgroundAudioEnabled && (
-                    <div className={`p-2 rounded-xl text-[9.5px] leading-relaxed transition-all animate-fadeIn ${
-                      isBgDark ? 'bg-rose-500/10 text-rose-200/90 border border-rose-500/20' : 'bg-rose-500/5 text-rose-900/90 border border-rose-500/10'
-                    }`}>
-                      {language === 'en' 
-                        ? '✨ Background audio is currently muted in this breathing phase. Toggle ON to immerse in environment ambient sounds or Solfeggio frequency waves.'
-                        : '✨ 背景音已在当前呼吸环节中静音。开启后即可沉浸于“纯粹环境音”或“频率引导音”，进入深层显化磁场。'}
-                    </div>
-                  )}
-
-                  <div className={`grid grid-cols-2 p-0.5 rounded-xl border backdrop-blur-md ${
-                    isBgDark ? 'bg-white/10 border-white/15' : 'bg-white/80 border-[#8e6d72]/25'
+                {!isBackgroundAudioEnabled && (
+                  <div className={`p-2.5 rounded-xl text-[10px] leading-relaxed transition-all animate-fadeIn ${
+                    isBgDark ? 'bg-rose-500/10 text-rose-200/90 border border-rose-500/20' : 'bg-rose-500/5 text-rose-900/90 border border-rose-500/10'
                   }`}>
-                    <button
-                      type="button"
-                      onClick={() => setMeditationSoundType('ambient')}
-                      className={`py-1.5 rounded-lg text-[10.5px] font-bold transition-all cursor-pointer ${
-                        meditationSoundType === 'ambient'
-                          ? isBgDark ? 'bg-white text-[#8e6d72] shadow-sm font-extrabold' : 'bg-[#8e6d72] text-white shadow-sm font-extrabold'
-                          : isBgDark ? 'text-white/70 hover:text-white' : 'text-[#8e6d72]/80 hover:text-[#8e6d72]'
-                      }`}
-                    >
-                      {language === 'en' ? '🎵 Ambient Sound' : '🎵 纯粹环境音'}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setMeditationSoundType('solfeggio')}
-                      className={`py-1.5 rounded-lg text-[10.5px] font-bold transition-all cursor-pointer ${
-                        meditationSoundType === 'solfeggio'
-                          ? isBgDark ? 'bg-white text-[#8e6d72] shadow-sm font-extrabold' : 'bg-[#8e6d72] text-white shadow-sm font-extrabold'
-                          : isBgDark ? 'text-white/70 hover:text-white' : 'text-[#8e6d72]/80 hover:text-[#8e6d72]'
-                      }`}
-                    >
-                      {language === 'en' ? '🧠 Solfeggio Frequency' : '🧠 频率引导音'}
-                    </button>
+                    {language === 'en' 
+                      ? '✨ Pure music is currently muted. Toggle ON to immerse in calming meditation soundscapes or Solfeggio frequencies.'
+                      : '✨ 背景音已静音。点击右上角“纯音乐：已静音”即可随时开启纯净背景声场或神圣赫兹波。'}
                   </div>
+                )}
 
-                  {meditationSoundType === 'ambient' ? (
-                    <div className="space-y-1 bg-white/5 dark:bg-black/10 p-2.5 rounded-xl border border-white/5">
-                      <div className="flex items-center justify-between text-[10.5px] font-semibold">
-                        <span className={isBgDark ? 'text-white/80' : 'text-[#4a3a3a]'}>
-                          {language === 'en' ? 'Ambient Volume' : '环境伴奏音量'}
-                        </span>
-                        <span className="font-mono text-[10px]">{Math.round(musicVolume * 100)}%</span>
-                      </div>
+                {/* Switcher: Pure Tracks vs. Solfeggio Generator */}
+                <div className={`grid grid-cols-2 p-1 rounded-2xl border backdrop-blur-md ${
+                  isBgDark ? 'bg-white/10 border-white/15' : 'bg-white/80 border-[#8e6d72]/20'
+                }`}>
+                  <button
+                    type="button"
+                    onClick={() => setMeditationSoundType('ambient')}
+                    className={`py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                      meditationSoundType === 'ambient'
+                        ? isBgDark ? 'bg-white text-[#8e6d72] shadow-sm font-extrabold' : 'bg-[#8e6d72] text-white shadow-sm font-extrabold'
+                        : isBgDark ? 'text-white/70 hover:text-white' : 'text-[#8e6d72]/80 hover:text-[#8e6d72]'
+                    }`}
+                  >
+                    <span>🎵</span>
+                    <span>{language === 'en' ? 'Pure Meditation Tracks' : '静心纯音乐曲库'}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMeditationSoundType('solfeggio')}
+                    className={`py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                      meditationSoundType === 'solfeggio'
+                        ? isBgDark ? 'bg-white text-[#8e6d72] shadow-sm font-extrabold' : 'bg-[#8e6d72] text-white shadow-sm font-extrabold'
+                        : isBgDark ? 'text-white/70 hover:text-white' : 'text-[#8e6d72]/80 hover:text-[#8e6d72]'
+                    }`}
+                  >
+                    <span>🧠</span>
+                    <span>{language === 'en' ? 'Solfeggio Frequency (396~963Hz)' : '396~963Hz 索尔菲吉奥频率'}</span>
+                  </button>
+                </div>
+
+                {meditationSoundType === 'ambient' ? (
+                  <div className="space-y-3 bg-white/5 dark:bg-black/10 p-3.5 rounded-2xl border border-white/10 animate-fadeIn">
+                    {/* Volume and Play/Pause */}
+                    <div className="flex items-center justify-between gap-4">
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => setIsMusicPlaying(!isMusicPlaying)}
-                          className={`p-1.5 rounded-lg transition-all ${
-                            isBgDark ? 'bg-white/15 hover:bg-white/25 text-white' : 'bg-[#8e6d72]/15 hover:bg-[#8e6d72]/25 text-[#8e6d72]'
+                          className={`p-2 rounded-xl transition-all shadow-xs cursor-pointer ${
+                            isBgDark ? 'bg-white/20 hover:bg-white/30 text-white' : 'bg-[#8e6d72] hover:bg-[#8e6d72]/90 text-white'
                           }`}
-                          title={isMusicPlaying ? (language === 'en' ? "Pause ambient sound" : "暂停环境音") : (language === 'en' ? "Play ambient sound" : "播放环境音")}
+                          title={isMusicPlaying ? (language === 'en' ? "Pause pure music" : "暂停纯音乐") : (language === 'en' ? "Play pure music" : "播放纯音乐")}
                         >
-                          {isMusicPlaying ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}
+                          {isMusicPlaying ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
                         </button>
+                        <div className="text-left">
+                          <span className={`text-[11px] font-bold block ${isBgDark ? 'text-white' : 'text-[#8e6d72]'}`}>
+                            {language === 'en' ? (currentTrack.nameEn || currentTrack.name) : currentTrack.name}
+                          </span>
+                          <span className="text-[9px] text-[#b49196] font-mono">
+                            {currentTrack.frequencyBadge || '✨ 静心纯乐'}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <Volume2 className="w-3.5 h-3.5 text-[#b49196]" />
                         <input
                           type="range"
                           min="0"
@@ -2368,23 +2264,48 @@ export default function App() {
                           step="0.05"
                           value={musicVolume}
                           onChange={(e) => setMusicVolume(Number(e.target.value))}
-                          className="w-full accent-[#8e6d72] h-1 bg-gray-200/40 rounded-lg cursor-pointer animate-fadeIn"
+                          className="w-20 sm:w-28 accent-[#8e6d72] h-1 bg-gray-200/40 rounded-lg cursor-pointer"
                         />
-                      </div>
-                      <div className="text-[9px] text-[#b49196] font-medium leading-tight truncate mt-1">
-                        {language === 'en' ? 'Current Track: ' : '当前音轨: '}
-                        {language === 'en' && currentTrack.nameEn ? currentTrack.nameEn : currentTrack.name}
+                        <span className="font-mono text-[10px] w-7 text-right">{Math.round(musicVolume * 100)}%</span>
                       </div>
                     </div>
-                  ) : (
-                    <div className="space-y-2 animate-fadeIn">
-                      <div className="space-y-1 bg-white/5 dark:bg-black/10 p-2.5 rounded-xl border border-white/5">
-                        <div className="flex items-center justify-between text-[10.5px] font-semibold">
-                          <span className={isBgDark ? 'text-white/80' : 'text-[#4a3a3a]'}>
-                            {language === 'en' ? 'Solfeggio Volume' : '频率声波强度'}
-                          </span>
-                          <span className="font-mono text-[10px]">{Math.round(solfeggioVolume * 100)}%</span>
-                        </div>
+
+                    {/* Quick Track Switcher Pills */}
+                    <div className="space-y-1 pt-1 border-t border-white/10">
+                      <span className={`text-[9.5px] uppercase font-bold tracking-wider block ${isBgDark ? 'text-pink-200/80' : 'text-[#8e6d72]/80'}`}>
+                        {language === 'en' ? 'Select Pure Track' : '快速切换静心纯音乐曲目'}
+                      </span>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 max-h-[120px] overflow-y-auto custom-scrollbar pr-0.5">
+                        {tracks.map((track) => (
+                          <button
+                            key={track.id}
+                            type="button"
+                            onClick={() => {
+                              setCurrentTrack(track);
+                              setIsMusicPlaying(true);
+                            }}
+                            className={`p-2 rounded-xl text-left text-[10px] transition-all border flex flex-col justify-between cursor-pointer truncate ${
+                              currentTrack.id === track.id
+                                ? 'bg-white text-[#8e6d72] border-white shadow-sm font-bold scale-[1.01]'
+                                : isBgDark
+                                  ? 'bg-white/5 border-white/10 text-white/80 hover:bg-white/10'
+                                  : 'bg-white/40 border-[#8e6d72]/10 text-[#4a3a3a] hover:bg-white/60'
+                            }`}
+                          >
+                            <span className="truncate font-semibold block">{language === 'en' ? (track.nameEn || track.name) : track.name}</span>
+                            <span className="text-[8px] text-[#b49196] font-mono mt-0.5 block">{track.frequencyBadge || '🎵 纯乐'}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-3 bg-white/5 dark:bg-black/10 p-3.5 rounded-2xl border border-white/10 animate-fadeIn">
+                    <div className="flex items-center justify-between text-[11px] font-semibold">
+                      <span className={isBgDark ? 'text-white/80' : 'text-[#4a3a3a]'}>
+                        {language === 'en' ? 'Solfeggio Resonance Intensity' : '神圣频率声波强度'}
+                      </span>
+                      <div className="flex items-center gap-2">
                         <input
                           type="range"
                           min="0.05"
@@ -2392,74 +2313,81 @@ export default function App() {
                           step="0.05"
                           value={solfeggioVolume}
                           onChange={(e) => setSolfeggioVolume(Number(e.target.value))}
-                          className="w-full accent-[#8e6d72] h-1 bg-gray-200/40 rounded-lg cursor-pointer"
+                          className="w-24 sm:w-32 accent-[#8e6d72] h-1 bg-gray-200/40 rounded-lg cursor-pointer"
                         />
-                      </div>
-
-                      <div className="space-y-1">
-                        <span className={`text-[9px] uppercase font-bold tracking-wider block ${isBgDark ? 'text-pink-200/80' : 'text-[#8e6d72]/80'}`}>
-                          {language === 'en' ? 'Select Resonance Frequency' : '选择宇宙显化频段 (Solfeggio)'}
-                        </span>
-                        <div className="grid grid-cols-1 gap-1 max-h-[140px] overflow-y-auto custom-scrollbar pr-0.5">
-                          {[
-                            {
-                              hz: 432,
-                              emoji: '🌌',
-                              title: language === 'en' ? '432 Hz Cosmic Resonance' : '432 Hz 宇宙共振',
-                              desc: language === 'en' ? 'Heal mind & body, empty thoughts' : '疗愈身心，放空思绪'
-                            },
-                            {
-                              hz: 528,
-                              emoji: '✨',
-                              title: language === 'en' ? '528 Hz Miracle Transformation' : '528 Hz 奇迹转化',
-                              desc: language === 'en' ? 'Cell resonance, manifest miracles' : '细胞共振，显化奇迹'
-                            },
-                            {
-                              hz: 396,
-                              emoji: '🧘',
-                              title: language === 'en' ? '396 Hz Deep Liberation' : '396 Hz 深度释怀',
-                              desc: language === 'en' ? 'Clear fear, unlock security' : '清洗恐惧，打通安全感'
-                            },
-                            {
-                              hz: 639,
-                              emoji: '💖',
-                              title: language === 'en' ? '639 Hz Elegant Love Resonance' : '639 Hz 极奢爱共振',
-                              desc: language === 'en' ? 'Open Heart chakra, manifest harmony' : '打开心轮，显化贵人'
-                            },
-                            {
-                              hz: 963,
-                              emoji: '👑',
-                              title: language === 'en' ? '963 Hz Crown Pure Consciousness' : '963 Hz 神性纯意识',
-                              desc: language === 'en' ? 'Connect Crown chakra, high dimension' : '连接顶轮，高维显化'
-                            }
-                          ].map((freq) => (
-                            <button
-                              key={freq.hz}
-                              type="button"
-                              onClick={() => setSolfeggioFrequency(freq.hz)}
-                              className={`p-1.5 rounded-xl text-left text-[10px] transition-all border flex items-center justify-between gap-1.5 cursor-pointer ${
-                                solfeggioFrequency === freq.hz
-                                  ? 'bg-white text-[#8e6d72] border-white shadow-sm font-bold scale-[1.01]'
-                                  : isBgDark
-                                    ? 'bg-white/5 border-white/10 text-white/80 hover:bg-white/10'
-                                    : 'bg-white/40 border-[#8e6d72]/10 text-[#4a3a3a] hover:bg-white/60'
-                              }`}
-                            >
-                              <div className="flex items-center gap-1.5 truncate">
-                                <span className="text-xs shrink-0">{freq.emoji}</span>
-                                <div className="truncate">
-                                  <span className="font-bold block leading-tight">{freq.title}</span>
-                                  <span className="text-[8px] opacity-75 block font-normal leading-tight truncate">{freq.desc}</span>
-                                </div>
-                              </div>
-                              <span className="font-mono text-[9px] shrink-0 bg-[#8e6d72]/10 px-1 py-0.5 rounded border border-[#8e6d72]/15">{freq.hz}Hz</span>
-                            </button>
-                          ))}
-                        </div>
+                        <span className="font-mono text-[10px]">{Math.round(solfeggioVolume * 100)}%</span>
                       </div>
                     </div>
-                  )}
-                </div>
+
+                    <div className="space-y-1">
+                      <span className={`text-[9.5px] uppercase font-bold tracking-wider block ${isBgDark ? 'text-pink-200/80' : 'text-[#8e6d72]/80'}`}>
+                        {language === 'en' ? 'Select Sacred Frequency' : '选择宇宙显化频段 (Solfeggio 纯音)'}
+                      </span>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 max-h-[140px] overflow-y-auto custom-scrollbar pr-0.5">
+                        {[
+                          {
+                            hz: 432,
+                            emoji: '🌌',
+                            title: language === 'en' ? '432 Hz Cosmic Resonance' : '432 Hz 宇宙自然同频',
+                            desc: language === 'en' ? 'Heal mind & body, empty thoughts' : '疗愈身心，放空思绪'
+                          },
+                          {
+                            hz: 528,
+                            emoji: '✨',
+                            title: language === 'en' ? '528 Hz Miracle Transformation' : '528 Hz DNA 奇迹转化',
+                            desc: language === 'en' ? 'Cell resonance, manifest miracles' : '细胞共振，显化奇迹'
+                          },
+                          {
+                            hz: 396,
+                            emoji: '🪐',
+                            title: language === 'en' ? '396 Hz Root Grounding' : '396 Hz 根轮释放恐惧',
+                            desc: language === 'en' ? 'Clear fear, unlock security' : '清洗恐惧，打通安全感'
+                          },
+                          {
+                            hz: 639,
+                            emoji: '💖',
+                            title: language === 'en' ? '639 Hz Heart Love Harmony' : '639 Hz 心轮大爱共鸣',
+                            desc: language === 'en' ? 'Open Heart chakra, manifest harmony' : '打开心轮，显化丰盛'
+                          },
+                          {
+                            hz: 741,
+                            emoji: '💎',
+                            title: language === 'en' ? '741 Hz Intuitive Cleanse' : '741 Hz 意识净化启迪',
+                            desc: language === 'en' ? 'Awaken higher perception' : '洗涤杂念，开启灵感'
+                          },
+                          {
+                            hz: 963,
+                            emoji: '👑',
+                            title: language === 'en' ? '963 Hz Crown Pure Source' : '963 Hz 顶轮源头合一',
+                            desc: language === 'en' ? 'Connect Crown chakra, high dimension' : '连接顶轮，回归源头'
+                          }
+                        ].map((freq) => (
+                          <button
+                            key={freq.hz}
+                            type="button"
+                            onClick={() => setSolfeggioFrequency(freq.hz)}
+                            className={`p-2 rounded-xl text-left text-[10.5px] transition-all border flex items-center justify-between gap-1.5 cursor-pointer ${
+                              solfeggioFrequency === freq.hz
+                                ? 'bg-white text-[#8e6d72] border-white shadow-sm font-bold scale-[1.01]'
+                                : isBgDark
+                                  ? 'bg-white/5 border-white/10 text-white/80 hover:bg-white/10'
+                                  : 'bg-white/40 border-[#8e6d72]/10 text-[#4a3a3a] hover:bg-white/60'
+                            }`}
+                          >
+                            <div className="flex items-center gap-1.5 truncate">
+                              <span className="text-sm shrink-0">{freq.emoji}</span>
+                              <div className="truncate">
+                                <span className="font-bold block leading-tight">{freq.title}</span>
+                                <span className="text-[8px] opacity-75 block font-normal leading-tight truncate">{freq.desc}</span>
+                              </div>
+                            </div>
+                            <span className="font-mono text-[9.5px] shrink-0 bg-[#8e6d72]/10 px-1.5 py-0.5 rounded-lg border border-[#8e6d72]/15 font-bold">{freq.hz}Hz</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 

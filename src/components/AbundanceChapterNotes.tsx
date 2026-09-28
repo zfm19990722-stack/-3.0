@@ -9,13 +9,12 @@ import { ABUNDANCE_CHAPTERS_DATA, INITIAL_USER_NOTES, ChapterEssence, UserBookNo
 
 interface AbundanceChapterNotesProps {
   language?: 'zh' | 'en';
-  onSpeak?: (text: string) => Promise<void>;
   onAddCustomWish?: (title: string, details: string, category: 'wealth' | 'love' | 'beauty' | 'career' | 'lifestyle') => void;
 }
 
 const STORAGE_KEY = 'ABUNDANCE_USER_READING_NOTES_V1';
 
-export default function AbundanceChapterNotes({ language = 'zh', onSpeak, onAddCustomWish }: AbundanceChapterNotesProps) {
+export default function AbundanceChapterNotes({ language = 'zh', onAddCustomWish }: AbundanceChapterNotesProps) {
   const isEn = language === 'en';
 
   // Sub-view toggle: 'chapters' (全书篇章要义) | 'notes' (我的读书笔记)
@@ -296,20 +295,6 @@ export default function AbundanceChapterNotes({ language = 'zh', onSpeak, onAddC
 
               {/* Action Buttons for Chapter */}
               <div className="flex items-center gap-2">
-                {onSpeak && (
-                  <button
-                    onClick={() => {
-                      const text = `${isEn ? selectedChapter.titleEn : selectedChapter.titleZh}。精神主旨：${isEn ? selectedChapter.corePhilosophyEn : selectedChapter.corePhilosophyZh}。觉醒要义：${isEn ? selectedChapter.awakeningEssenceEn : selectedChapter.awakeningEssenceZh}。实修心法：${isEn ? selectedChapter.practiceKeyEn : selectedChapter.practiceKeyZh}`;
-                      onSpeak(text);
-                    }}
-                    className="p-2.5 rounded-2xl bg-amber-100/80 hover:bg-amber-200 text-amber-900 transition-all flex items-center gap-1.5 text-xs font-bold cursor-pointer"
-                    title={isEn ? 'Listen chapter summary' : '语音朗诵本章要义'}
-                  >
-                    <Volume2 className="w-4 h-4 text-amber-700" />
-                    <span className="hidden sm:inline">{isEn ? 'Listen' : '朗诵要义'}</span>
-                  </button>
-                )}
-
                 <button
                   onClick={() => handleOpenAddNote(selectedChapter.id, selectedChapter.goldenMantras[0]?.textZh)}
                   className="px-4 py-2.5 rounded-2xl bg-[#8e6d72] hover:bg-[#7e5d62] text-white transition-all flex items-center gap-1.5 text-xs font-bold shadow-xs cursor-pointer"
@@ -383,17 +368,7 @@ export default function AbundanceChapterNotes({ language = 'zh', onSpeak, onAddC
                       </p>
                     </div>
 
-                    <div className="flex items-center justify-between pt-2 border-t border-[#8e6d72]/10 text-[10.5px]">
-                      {onSpeak && (
-                        <button
-                          onClick={() => onSpeak(isEn ? mantra.textEn : mantra.textZh)}
-                          className="text-[#8e6d72] hover:text-[#7e5d62] font-semibold flex items-center gap-1 cursor-pointer"
-                        >
-                          <Volume2 className="w-3 h-3" />
-                          <span>{isEn ? 'Listen' : '朗读'}</span>
-                        </button>
-                      )}
-
+                    <div className="flex items-center justify-end pt-2 border-t border-[#8e6d72]/10 text-[10.5px]">
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => handleOpenAddNote(selectedChapter.id, mantra.textZh)}
@@ -605,17 +580,8 @@ export default function AbundanceChapterNotes({ language = 'zh', onSpeak, onAddC
                   </div>
 
                   {/* Note Footer Actions */}
-                  <div className="flex items-center justify-between pt-3 border-t border-[#8e6d72]/10 text-xs">
+                  <div className="flex items-center justify-end pt-3 border-t border-[#8e6d72]/10 text-xs">
                     <div className="flex items-center gap-2">
-                      {onSpeak && (
-                        <button
-                          onClick={() => onSpeak(`金句：${note.quoteOrTitle}。我的感悟：${note.reflection}`)}
-                          className="p-1.5 rounded-xl hover:bg-amber-100/80 text-[#8e6d72] transition-all cursor-pointer"
-                          title={isEn ? 'Read aloud' : '朗读笔记'}
-                        >
-                          <Volume2 className="w-3.5 h-3.5" />
-                        </button>
-                      )}
 
                       <button
                         onClick={() => handleCopyNote(note)}
