@@ -3,13 +3,39 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" type="image/png" href="/logo.png" />
-    <link rel="apple-touch-icon" href="/logo.png" />
-    <title>Lumière Manifest · My Royal Sanctuary 丰盛显化</title>
-    <meta name="description" content="Lumière Manifest: 一款公主风舒适奢华的显化APP。包含梦幻愿望清单、每日暖心正向暗示，支持自定义冥想背景音乐与高画质可视化漫天星辰花海背景。" />
-    <meta property="og:title" content="Lumière Manifest · My Royal Sanctuary 丰盛显化" />
-    <meta property="og:description" content="Lumière Manifest: 一款公主风舒适奢华的显化APP。包含梦幻愿望清单、每日暖心正向暗示，支持自定义冥想背景音乐与高画质可视化漫天星辰花海背景。" />
-    <meta property="og:image" content="/logo.png" />
+    <title>3.1Amanda‘s 丰盛显化辅助器</title>
+    <meta name="description" content="一款公主风舒适奢华的显化APP。包含梦幻愿望清单、每日暖心正向暗示，支持自定义冥想背景音乐与高画质可视化漫天星辰花海背景。并结合 Gemini 智能声学 TTS 技术，通过温柔、深沉的女声进行沉浸式暗示语朗读，引导您进入深度专注的显化磁场。" />
+    <meta property="og:title" content="3.1Amanda‘s 丰盛显化辅助器" />
+    <meta property="og:description" content="一款公主风舒适奢华的显化APP。包含梦幻愿望清单、每日暖心正向暗示，支持自定义冥想背景音乐与高画质可视化漫天星辰花海背景。并结合 Gemini 智能声学 TTS 技术，通过温柔、深沉的女声进行沉浸式暗示语朗读，引导您进入深度专注的显化磁场。" />
+    <script>
+      (function () {
+        try {
+          var desc = Object.getOwnPropertyDescriptor(window, 'fetch');
+          if (desc && desc.get && !desc.set && desc.configurable) {
+            var currentFetch = window.fetch;
+            Object.defineProperty(window, 'fetch', {
+              value: currentFetch,
+              writable: true,
+              enumerable: desc.enumerable,
+              configurable: true,
+            });
+          } else if (!desc && window.Window && Window.prototype) {
+            var protoDesc = Object.getOwnPropertyDescriptor(Window.prototype, 'fetch');
+            if (protoDesc && protoDesc.get && !protoDesc.set) {
+              var protoFetch = window.fetch;
+              Object.defineProperty(window, 'fetch', {
+                value: protoFetch,
+                writable: true,
+                enumerable: true,
+                configurable: true,
+              });
+            }
+          }
+        } catch (e) {
+          // Ignore if environment enforces a non-configurable fetch descriptor
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

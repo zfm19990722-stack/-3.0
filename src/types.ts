@@ -28,11 +28,6 @@ export interface MusicTrack {
   nameEn?: string;
   url: string;
   isCustom?: boolean;
-  category?: 'love' | 'wealth' | 'beauty' | 'career' | 'lifestyle' | 'all';
-  transcript?: string;
-  transcriptZh?: string;
-  summary?: string;
-  frequencyBadge?: string;
 }
 
 export type VisualBackgroundType = 'sparkling-sky' | 'royal-garden' | 'glowing-crystal' | 'dreamy-cloud';

@@ -2,7 +2,10 @@ import { useState, useMemo } from 'react';
 import { ABUNDANCE_BOOK_QUOTES, AbundanceQuote } from '../data/abundanceQuotes';
 import {
   Sparkles,
+  Volume2,
   RefreshCw,
+  VolumeX,
+  CheckCircle2,
   ChevronLeft,
   ChevronRight,
   BookOpen,
@@ -10,18 +13,21 @@ import {
   Check,
   Search,
   X,
-  Heart
+  Filter
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface AffirmationCardProps {
-  onSpeak?: (text: string) => Promise<void>;
-  isSpeaking?: boolean;
-  onStopSpeaking?: () => void;
+  onSpeak: (text: string) => Promise<void>;
+  isSpeaking: boolean;
+  onStopSpeaking: () => void;
   language?: 'zh' | 'en';
 }
 
 export default function AffirmationCard({
+  onSpeak,
+  isSpeaking,
+  onStopSpeaking,
   language = 'zh',
 }: AffirmationCardProps) {
   const isEn = language === 'en';
@@ -41,6 +47,7 @@ export default function AffirmationCard({
   const [isLibraryOpen, setIsLibraryOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [copied, setCopied] = useState(false);
+  const [speakProgress, setSpeakProgress] = useState(false);
 
   // Available themes for filtering
   const themes = useMemo(() => {
@@ -57,6 +64,7 @@ export default function AffirmationCard({
     );
   }, [selectedTheme, isEn]);
 
+  // Ensure currentIndex stays within bounds if filtered
   const currentQuote: AbundanceQuote = ABUNDANCE_BOOK_QUOTES[currentIndex] || ABUNDANCE_BOOK_QUOTES[0];
 
   const handleNext = () => {
@@ -73,6 +81,23 @@ export default function AffirmationCard({
       next = Math.floor(Math.random() * ABUNDANCE_BOOK_QUOTES.length);
     }
     setCurrentIndex(next);
+  };
+
+  const handleSpeakToggle = async () => {
+    if (isSpeaking || speakProgress) {
+      onStopSpeaking();
+      return;
+    }
+
+    setSpeakProgress(true);
+    try {
+      const textToSpeak = isEn ? currentQuote.translation : currentQuote.text;
+      await onSpeak(textToSpeak);
+    } catch (err) {
+      console.error('TTS play error:', err);
+    } finally {
+      setSpeakProgress(false);
+    }
   };
 
   const handleCopy = async () => {
@@ -213,7 +238,7 @@ export default function AffirmationCard({
           </motion.div>
         </AnimatePresence>
 
-        {/* Bottom Switcher & Peaceful Reflection */}
+        {/* Bottom Switcher & Audio Read-Aloud */}
         <div className="mt-4 pt-4 border-t border-white/40 flex items-center justify-between">
           <div className="flex items-center space-x-1">
             <button
@@ -237,10 +262,29 @@ export default function AffirmationCard({
             </button>
           </div>
 
-          <div className="flex items-center gap-1.5 text-[10.5px] text-[#8e6d72] bg-white/60 px-3 py-1.5 rounded-full border border-[#8e6d72]/15 shadow-2xs font-medium">
-            <Heart className="w-3 h-3 text-pink-500 fill-pink-500/30" />
-            <span>{isEn ? 'Mindful Quiet Reading' : '静心默读 · 自然融入'}</span>
-          </div>
+          {/* Audio TTS Speech Button */}
+          <button
+            onClick={handleSpeakToggle}
+            disabled={speakProgress}
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-full font-sans text-xs font-bold transition-all shadow-sm cursor-pointer ${
+              isSpeaking
+                ? 'bg-[#8e6d72] text-white hover:bg-[#8e6d72]/95 animate-pulse'
+                : 'bg-white/70 text-[#8e6d72] hover:bg-white border border-[#8e6d72]/20 hover:scale-105'
+            }`}
+            id="affirmation-speech-btn"
+          >
+            {isSpeaking ? (
+              <>
+                <VolumeX className="w-3.5 h-3.5 animate-bounce" />
+                <span>{isEn ? 'Stop' : '停止朗读'}</span>
+              </>
+            ) : (
+              <>
+                <Volume2 className="w-3.5 h-3.5" />
+                <span>{speakProgress ? (isEn ? 'Connecting wave...' : '感应声波中...') : (isEn ? 'Listen' : '深沉女声朗读')}</span>
+              </>
+            )}
+          </button>
         </div>
       </div>
 
@@ -262,7 +306,7 @@ export default function AffirmationCard({
                   <p className="text-[10px] text-[#b49196]">
                     {isEn
                       ? 'Select any quote to apply directly to your daily affirmation card'
-                      : '杨定一博士经典灵性巨著 • 点击任意金句可直接切换至卡片默读'}
+                      : '杨定一博士经典灵性巨著 • 点击任意金句可直接切换至卡片与朗读'}
                   </p>
                 </div>
               </div>
@@ -270,7 +314,7 @@ export default function AffirmationCard({
               <button
                 type="button"
                 onClick={() => setIsLibraryOpen(false)}
-                className="p-2 text-gray-400 hover:text-[#8e6d72] hover:bg-gray-100 rounded-full transition-colors cursor-pointer"
+                className="p-2 text-gray-400 hover:text-[#8e6d72] hover:bg-gray-100 rounded-full transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -295,7 +339,7 @@ export default function AffirmationCard({
                   {isEn ? 'No quotes matching your search.' : '未找到匹配的金句'}
                 </div>
               ) : (
-                modalFilteredQuotes.map((quote) => {
+                modalFilteredQuotes.map((quote, idx) => {
                   const originalIndex = ABUNDANCE_BOOK_QUOTES.findIndex((q) => q.id === quote.id);
                   const isSelected = originalIndex === currentIndex;
 

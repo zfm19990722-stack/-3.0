@@ -9,6 +9,7 @@ import AbundanceChapterNotes from './AbundanceChapterNotes';
 
 interface AbundanceWisdomSpaceProps {
   language?: 'zh' | 'en';
+  onSpeak?: (text: string) => Promise<void>;
   onAddCustomWish?: (title: string, details: string, category: 'wealth' | 'love' | 'beauty' | 'career' | 'lifestyle') => void;
   onBack?: () => void;
 }
@@ -116,7 +117,7 @@ const GRATITUDE_QUOTES = [
   }
 ];
 
-export default function AbundanceWisdomSpace({ language = 'zh', onAddCustomWish, onBack }: AbundanceWisdomSpaceProps) {
+export default function AbundanceWisdomSpace({ language = 'zh', onSpeak, onAddCustomWish, onBack }: AbundanceWisdomSpaceProps) {
   const [activeTab, setActiveTab] = useState<'alchemy' | 'now' | 'chapters' | 'gratitude' | 'surrender'>('chapters');
   
   // Gratitude Resonance states
@@ -449,6 +450,7 @@ export default function AbundanceWisdomSpace({ language = 'zh', onAddCustomWish,
           <div className="space-y-6 animate-fadeIn" id="tab-chapters-notes">
             <AbundanceChapterNotes
               language={language}
+              onSpeak={onSpeak}
               onAddCustomWish={onAddCustomWish}
             />
           </div>
@@ -555,9 +557,17 @@ export default function AbundanceWisdomSpace({ language = 'zh', onAddCustomWish,
                       <Sparkles className="w-4 h-4 text-amber-500" />
                       <span>{isEn ? 'Consciousness Alchemy Result' : '唯识转念实相报告 • 觉醒回响'}</span>
                     </span>
-                    <span className="text-[10px] text-amber-800/70 font-mono font-semibold bg-amber-100/50 px-2 py-0.5 rounded-full">
-                      {isEn ? 'True Reality' : '静心领悟'}
-                    </span>
+                    {onSpeak && (
+                      <button
+                        type="button"
+                        onClick={() => onSpeak(`${customAlchemyResult.abundanceReality}。${customAlchemyResult.mantra}`)}
+                        className="px-2.5 py-1 rounded-lg bg-amber-100/70 hover:bg-amber-200/70 text-amber-800 text-[10.5px] font-bold flex items-center gap-1 transition-colors cursor-pointer"
+                        title="深沉女声朗读实相真言"
+                      >
+                        <Volume2 className="w-3.5 h-3.5" />
+                        <span>{isEn ? 'Listen' : '真声朗诵'}</span>
+                      </button>
+                    )}
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
@@ -721,9 +731,22 @@ export default function AbundanceWisdomSpace({ language = 'zh', onAddCustomWish,
                           </div>
 
                           <div className="pt-2 border-t border-amber-200/50 flex items-center justify-between">
-                            <span className="text-[9.5px] italic text-amber-800/80 truncate max-w-full">
+                            <span className="text-[9.5px] italic text-amber-800/80 truncate max-w-[200px]">
                               {isEn ? card.quoteEn : card.quoteZh}
                             </span>
+                            {onSpeak && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onSpeak(card.abundanceZh);
+                                }}
+                                className="p-1.5 rounded-lg bg-amber-200/60 hover:bg-amber-300 text-amber-900 text-xs transition-colors cursor-pointer"
+                                title="真声朗诵实相"
+                              >
+                                <Volume2 className="w-3.5 h-3.5" />
+                              </button>
+                            )}
                           </div>
                         </div>
                       </motion.div>

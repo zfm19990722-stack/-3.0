@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sparkles, ArrowRight, Wind, Disc3, Radio, HeartHandshake, Eye, Music } from 'lucide-react';
+import { Sparkles, ArrowRight, Wind, Disc3, Radio, SlidersHorizontal, HeartHandshake, Eye } from 'lucide-react';
 
 interface ImmersiveMeditationPortalCardProps {
   language?: 'zh' | 'en';
@@ -27,7 +27,7 @@ export default function ImmersiveMeditationPortalCard({
           <div className="flex flex-wrap items-center gap-2">
             <span className="px-2.5 py-0.5 rounded-full bg-pink-100 text-pink-800 text-[10.5px] font-mono font-bold tracking-wider uppercase flex items-center gap-1 shadow-xs border border-pink-200/50">
               <Sparkles className="w-3 h-3 text-pink-600 animate-pulse" />
-              <span>{isEn ? "Open Anytime • Pure Meditation" : "随时安住 · 静心纯音乐"}</span>
+              <span>{isEn ? "Open Anytime • No Wish Needed" : "随时安住 · 无需专有愿望"}</span>
             </span>
             <span className="text-[10px] text-[#8e6d72] font-semibold bg-white/90 px-2.5 py-0.5 rounded-full border border-pink-200/40 shadow-xs">
               {isEn ? "Immersive Sanctuary" : "沉浸显化冥想空间"}
@@ -43,31 +43,31 @@ export default function ImmersiveMeditationPortalCard({
           {/* Description */}
           <p className="text-xs text-[#6d5b5e] leading-relaxed">
             {isEn
-              ? "Enter the deep meditative realm instantly without requiring a specific wish. Immerse in pure calming meditation music, 396~963Hz Solfeggio frequencies, So-Hum staged resonance & Box breathing, and 7-Chakra alignment in absolute quiet serenity."
-              : "无需填写或选择特定愿望，一键直接进入深度沉浸式冥想殿堂：完全去除一切机械人声干扰，仅仅保留静心纯音乐、索尔菲吉奥 396~963Hz 神圣频率波、So-Hum 阶段递进呼吸律动与七脉轮能量同频共振。"}
+              ? "Enter the deep meditative realm instantly without requiring a specific wish. Pre-loaded with Universal Cosmic Abundance guidance, So-Hum staged resonance & Box breathing, 7-Chakra interactive alignment, Solfeggio frequencies, and customizable AI narration."
+              : "无需填写或选择特定愿望，一键直接进入深度沉浸式冥想殿堂：内置【宇宙源头纯净丰盛】引导心法、So-Hum 阶段谐振/方盒呼吸光环、七脉轮能量同频共振、索尔菲吉奥 396~963Hz 频率发生器与 4 种皇室治愈配音。"}
           </p>
 
           {/* Highlights */}
           <div className="flex flex-wrap gap-2 pt-1">
             <span className="text-[11px] font-medium text-[#8e6d72] bg-white/80 px-2.5 py-1 rounded-xl border border-pink-200/50 flex items-center gap-1 shadow-2xs">
-              <Music className="w-3 h-3 text-rose-500" />
-              <span>{isEn ? 'Pure Calming Music' : '静心纯音乐'}</span>
-            </span>
-            <span className="text-[11px] font-medium text-[#8e6d72] bg-white/80 px-2.5 py-1 rounded-xl border border-pink-200/50 flex items-center gap-1 shadow-2xs">
-              <Radio className="w-3 h-3 text-amber-500" />
-              <span>{isEn ? '396~963Hz Solfeggio' : '396~963Hz 频率'}</span>
-            </span>
-            <span className="text-[11px] font-medium text-[#8e6d72] bg-white/80 px-2.5 py-1 rounded-xl border border-pink-200/50 flex items-center gap-1 shadow-2xs">
               <Wind className="w-3 h-3 text-pink-500" />
-              <span>{isEn ? '5 Breathing Modes' : '5大经典呼吸法'}</span>
+              <span>{isEn ? '5 Breathing Modes' : '5大呼吸法'}</span>
             </span>
             <span className="text-[11px] font-medium text-[#8e6d72] bg-white/80 px-2.5 py-1 rounded-xl border border-pink-200/50 flex items-center gap-1 shadow-2xs">
               <Eye className="w-3 h-3 text-purple-500" />
               <span>{isEn ? '7-Chakra Alignment' : '七脉轮交互对齐'}</span>
             </span>
             <span className="text-[11px] font-medium text-[#8e6d72] bg-white/80 px-2.5 py-1 rounded-xl border border-pink-200/50 flex items-center gap-1 shadow-2xs">
+              <Radio className="w-3 h-3 text-amber-500" />
+              <span>{isEn ? 'Solfeggio Hz Generator' : '396~963Hz 频率'}</span>
+            </span>
+            <span className="text-[11px] font-medium text-[#8e6d72] bg-white/80 px-2.5 py-1 rounded-xl border border-pink-200/50 flex items-center gap-1 shadow-2xs">
+              <Disc3 className="w-3 h-3 text-rose-500" />
+              <span>{isEn ? 'Sentence Audio Sync' : '点击句子逐句点播'}</span>
+            </span>
+            <span className="text-[11px] font-medium text-[#8e6d72] bg-white/80 px-2.5 py-1 rounded-xl border border-pink-200/50 flex items-center gap-1 shadow-2xs">
               <HeartHandshake className="w-3 h-3 text-teal-600" />
-              <span>{isEn ? 'Universal Abundance' : '宇宙源头纯净心法'}</span>
+              <span>{isEn ? 'Universal Guidance' : '宇宙纯净丰盛引导'}</span>
             </span>
           </div>
         </div>
