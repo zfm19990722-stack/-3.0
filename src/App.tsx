@@ -4,26 +4,26 @@ import ShareAppModal from './components/ShareAppModal';
 import { Wish, MusicTrack, VisualBackground, VisualBackgroundType } from './types';
 import VisualizationBackground from './components/VisualizationBackground';
 import AudioPlayer from './components/AudioPlayer';
-import AffirmationCard from './components/AffirmationCard';
-import Wishlist from './components/Wishlist';
-import AbundanceWisdomSpace from './components/AbundanceWisdomSpace';
-import AbundanceWisdomPortalCard from './components/AbundanceWisdomPortalCard';
-import ImmersiveMeditationPortalCard from './components/ImmersiveMeditationPortalCard';
 import { ChakraVisualizer } from './components/ChakraVisualizer';
 import { BreathingRingWithParticles } from './components/BreathingRingWithParticles';
+import HomePage, { PrimaryViewId } from './components/pages/HomePage';
+import WisdomPage from './components/pages/WisdomPage';
+import TemplePage from './components/pages/TemplePage';
+import StillnessPage from './components/pages/StillnessPage';
+import ManifestationPage from './components/pages/ManifestationPage';
+import MySpacePage from './components/pages/MySpacePage';
 import {
+  Home,
+  BookOpen,
+  Compass,
+  Wind,
   Sparkles,
-  Heart,
-  Sofa,
+  User,
   Volume2,
   VolumeX,
-  X,
-  Compass,
   ArrowLeft,
-  ChevronRight,
   ChevronDown,
   ChevronUp,
-  Eye,
   RotateCcw,
   Play,
   Pause,
@@ -130,7 +130,7 @@ const getSentenceSegments = (text: string): SentenceSegment[] => {
 };
 
 export default function App() {
-  const [currentView, setCurrentView] = useState<'main' | 'wisdom' | 'meditation'>('main');
+  const [currentView, setCurrentView] = useState<PrimaryViewId>('home');
   const [language, setLanguage] = useState<'zh' | 'en'>('zh');
   const [wishes, setWishes] = useState<Wish[]>([]);
   const [isGeneratingMap, setIsGeneratingMap] = useState<Record<string, boolean>>({});
@@ -197,7 +197,6 @@ export default function App() {
   const breathingAudioCtxRef = useRef<AudioContext | null>(null);
   const solfeggioOscsRef = useRef<OscillatorNode[]>([]);
   const solfeggioGainRef = useRef<GainNode | null>(null);
-  const [showIntroduction, setShowIntroduction] = useState(true);
 
   const activeAudioSourceRef = useRef<AudioContext | null>(null);
   const activeGainNodeRef = useRef<GainNode | null>(null);
@@ -1102,8 +1101,15 @@ export default function App() {
     }
   };
 
+  const handleNavigate = (view: PrimaryViewId) => {
+    setCurrentView(view);
+    setShowMobileTools(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const handleEnterMeditationSpace = (wishToUse?: Wish) => {
-    setCurrentView('meditation');
+    setCurrentView('stillness');
+    setShowMobileTools(false);
     const targetWish = wishToUse || activeWishSession || DEFAULT_UNIVERSAL_WISH;
     handleStartManifestationSession(targetWish);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1115,9 +1121,6 @@ export default function App() {
     setShowFinishedOverlay(false);
     handleStopSpeaking();
     stopSolfeggioSynth();
-    if (currentView === 'meditation') {
-      setCurrentView('main');
-    }
   };
 
   const handleSetTimerDuration = (minutes: number) => {
@@ -1131,6 +1134,38 @@ export default function App() {
   const activeTheme = BACKGROUNDS_THEMES.find(t => t.id === visualBg) || BACKGROUNDS_THEMES[1];
   const isBgDark = visualBg === 'sparkling-sky';
 
+  const navItems: {
+    id: PrimaryViewId;
+    label: string;
+    mobileLabel: string;
+    icon: typeof Home;
+  }[] = [
+    { id: 'home', label: language === 'en' ? 'Home' : '归心', mobileLabel: language === 'en' ? 'Home' : '归心', icon: Home },
+    { id: 'wisdom', label: language === 'en' ? 'Wisdom' : '智慧', mobileLabel: language === 'en' ? 'Wisdom' : '智慧', icon: BookOpen },
+    { id: 'temple', label: language === 'en' ? 'Temple' : '寺庙', mobileLabel: language === 'en' ? 'Temple' : '寺庙', icon: Compass },
+    { id: 'stillness', label: language === 'en' ? 'Stillness' : '静心', mobileLabel: language === 'en' ? 'Still' : '静心', icon: Wind },
+    { id: 'manifestation', label: language === 'en' ? 'Manifestation' : '显化', mobileLabel: language === 'en' ? 'Manifest' : '显化', icon: Sparkles },
+    { id: 'myspace', label: language === 'en' ? 'My Space' : '我的空间', mobileLabel: language === 'en' ? 'Space' : '我的', icon: User },
+  ];
+
+  // Single AudioPlayer instance shared cleanly between StillnessPage and off-view fullscreen meditation
+  const audioPlayerNode = (
+    <AudioPlayer
+      language={language}
+      currentTrack={currentTrack}
+      onTrackChange={setCurrentTrack}
+      tracks={tracks}
+      onAddCustomTrack={handleAddCustomTrack}
+      voiceTone={voiceTone}
+      onVoiceToneChange={setVoiceTone}
+      isPlaying={isMusicPlaying}
+      setIsPlaying={setIsMusicPlaying}
+      volume={musicVolume}
+      setVolume={setMusicVolume}
+      activeWishSession={activeWishSession}
+    />
+  );
+
   return (
     <div className="relative min-h-screen text-[var(--amnd-text-primary)] transition-colors duration-500 font-sans">
       {/* Calm Warm Ivory Base Surface */}
@@ -1141,23 +1176,21 @@ export default function App() {
         <VisualizationBackground type={visualBg} intensity={3} saturation={bgSaturation} brightness={bgBrightness} blur={bgBlur} />
       </div>
 
-      {/* Header Bar */}
-      <header className="sticky top-0 z-40 bg-[var(--amnd-bg-elevated)]/95 border-b border-[var(--amnd-border)] py-2 md:py-1.5 px-4 sm:px-6 lg:px-10 flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-2 md:gap-2.5">
-        <div className="min-w-0 flex items-center justify-between gap-2 w-full xl:w-auto shrink-0">
+      {/* Header Bar (compact 56px single row on mobile; single-row 6-section header on desktop) */}
+      <header className="sticky top-0 z-40 bg-[var(--amnd-bg-elevated)]/95 backdrop-blur-md border-b border-[var(--amnd-border)]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 md:h-16 flex items-center justify-between gap-3">
+          {/* Left: Brand Logo */}
           <button
             type="button"
-            onClick={() => {
-              setCurrentView('main');
-              setShowMobileTools(false);
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
-            className="flex items-center text-left cursor-pointer rounded-lg focus-visible:outline-2"
+            onClick={() => handleNavigate('home')}
+            className="flex items-center text-left cursor-pointer rounded-lg focus-visible:outline-2 shrink-0"
             aria-label="AMND Manifestation Home"
+            id="brand-home-logo-btn"
           >
             <img
               src="/logo-header.png"
               alt="AMND Manifestation · Amanda 的学海魔法屋"
-              className="h-11 md:h-16 xl:h-[72px] w-auto object-contain select-none shrink-0"
+              className="h-9 md:h-11 lg:h-12 w-auto object-contain select-none shrink-0"
             />
           </button>
           <h1 className="sr-only">AMND Manifestation</h1>
@@ -1167,141 +1200,121 @@ export default function App() {
               : 'Amanda 的学海魔法屋 · 学习了，魔法会显化。'}
           </p>
 
-          <button
-            type="button"
-            onClick={() => setShowMobileTools((prev) => !prev)}
-            aria-expanded={showMobileTools}
-            aria-controls="header-secondary-tools"
-            id="mobile-tools-toggle-btn"
-            className={`md:hidden inline-flex items-center gap-1.5 min-h-[40px] px-3 py-2 rounded-xl text-xs font-medium border transition-colors cursor-pointer shrink-0 ${
-              showMobileTools
-                ? 'bg-[var(--amnd-wood)] text-[var(--amnd-bg-elevated)] border-transparent'
-                : 'bg-[var(--amnd-bg-secondary)] hover:bg-[var(--amnd-bg-subtle)] text-[var(--amnd-text-primary)] border-[var(--amnd-border-strong)]'
-            }`}
-          >
-            <SlidersHorizontal className="w-3.5 h-3.5" />
-            <span>{language === 'en' ? 'Tools' : '工具'}</span>
-            {showMobileTools ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-          </button>
-        </div>
-
-        {/* Navigation, Canvas Controls & Local Backup Bar */}
-        <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-2.5 md:flex-wrap w-full xl:w-auto xl:justify-end">
-          {/* Main Sanctuary vs Meditation Space vs Wisdom Sanctuary View Switcher */}
+          {/* Center (Desktop >=768px): 6 Primary Pages Navigation */}
           <nav
             aria-label={language === 'en' ? 'Primary navigation' : '主导航'}
-            className="grid grid-cols-3 md:flex items-center gap-1 bg-[var(--amnd-bg-secondary)] p-1 rounded-xl border border-[var(--amnd-border)] w-full md:w-auto max-w-full overflow-x-auto"
+            className="hidden md:flex items-center gap-1 lg:gap-2 overflow-x-auto no-scrollbar"
           >
-            <button
-              type="button"
-              onClick={() => {
-                setCurrentView('main');
-                setShowMobileTools(false);
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }}
-              className={`min-h-[40px] md:min-h-0 px-2.5 md:px-3 py-1.5 rounded-lg text-xs font-sans transition-colors duration-200 flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer ${
-                currentView === 'main'
-                  ? 'bg-[var(--amnd-bg-elevated)] text-[var(--amnd-text-primary)] shadow-2xs font-semibold border border-[var(--amnd-border)]'
-                  : 'text-[var(--amnd-text-secondary)] hover:text-[var(--amnd-text-primary)]'
-              }`}
-              id="nav-view-main"
-            >
-              <span>{language === 'en' ? 'Manifestation' : '显化空间'}</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setShowMobileTools(false);
-                handleEnterMeditationSpace();
-              }}
-              className={`min-h-[40px] md:min-h-0 px-2.5 md:px-3 py-1.5 rounded-lg text-xs font-sans transition-colors duration-200 flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer ${
-                currentView === 'meditation'
-                  ? 'bg-[var(--amnd-bg-elevated)] text-[var(--amnd-text-primary)] shadow-2xs font-semibold border border-[var(--amnd-border)]'
-                  : 'text-[var(--amnd-text-secondary)] hover:text-[var(--amnd-text-primary)]'
-              }`}
-              id="nav-view-meditation"
-            >
-              <span>{language === 'en' ? 'Stillness' : '沉浸冥想'}</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setCurrentView('wisdom');
-                setShowMobileTools(false);
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }}
-              className={`min-h-[40px] md:min-h-0 px-2.5 md:px-3 py-1.5 rounded-lg text-xs font-sans transition-colors duration-200 flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer ${
-                currentView === 'wisdom'
-                  ? 'bg-[var(--amnd-bg-elevated)] text-[var(--amnd-text-primary)] shadow-2xs font-semibold border border-[var(--amnd-border)]'
-                  : 'text-[var(--amnd-text-secondary)] hover:text-[var(--amnd-text-primary)]'
-              }`}
-              id="nav-view-wisdom"
-            >
-              <Compass className="w-3.5 h-3.5 text-[var(--amnd-gold)]" />
-              <span>{language === 'en' ? 'Wisdom' : '丰盛智慧'}</span>
-            </button>
+            {navItems.map((item) => {
+              const isActive = currentView === item.id;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => handleNavigate(item.id)}
+                  id={`nav-view-${item.id}`}
+                  className={`relative px-2.5 lg:px-3.5 py-2 rounded-lg text-xs lg:text-[13px] font-sans transition-colors duration-200 whitespace-nowrap shrink-0 cursor-pointer ${
+                    isActive
+                      ? 'text-[var(--amnd-text-primary)] font-semibold bg-[var(--amnd-bg-secondary)]'
+                      : 'text-[var(--amnd-text-secondary)] hover:text-[var(--amnd-text-primary)] hover:bg-[var(--amnd-bg-secondary)]/50'
+                  }`}
+                >
+                  <span>{item.label}</span>
+                  {isActive && (
+                    <span
+                      aria-hidden="true"
+                      className="absolute inset-x-2.5 bottom-0.5 h-[2px] rounded-full bg-[var(--amnd-wood)]"
+                    />
+                  )}
+                </button>
+              );
+            })}
           </nav>
 
-          {/* Secondary Tools: collapsible drawer on mobile (<768px), inline flex siblings on tablet/desktop (>=768px) */}
-          <div
-            id="header-secondary-tools"
-            className={`${
-              showMobileTools ? 'flex' : 'hidden'
-            } md:contents flex-wrap items-center justify-between gap-2 w-full pt-2 border-t border-[var(--amnd-border)]`}
-          >
-            <div className="flex items-center gap-1 bg-[var(--amnd-bg-secondary)] px-2 py-1 rounded-xl border border-[var(--amnd-border)]">
-              <span className="text-[11px] font-medium text-[var(--amnd-text-muted)] px-1 hidden sm:inline whitespace-nowrap">
-                {language === 'en' ? 'Atmosphere:' : '心境画布:'}
-              </span>
-              {BACKGROUNDS_THEMES.map((theme) => (
-                <button
-                  key={theme.id}
-                  type="button"
-                  onClick={() => setVisualBg(theme.id)}
-                  className={`px-2 py-1 rounded-lg text-xs font-sans transition-colors duration-200 flex items-center gap-1 whitespace-nowrap cursor-pointer ${
-                    visualBg === theme.id
-                      ? 'bg-[var(--amnd-bg-elevated)] text-[var(--amnd-text-primary)] border border-[var(--amnd-border)] font-semibold'
-                      : 'text-[var(--amnd-text-secondary)] hover:text-[var(--amnd-text-primary)] border border-transparent'
-                  }`}
-                  title={language === 'en' ? theme.nameEn : theme.name}
-                  id={`theme-btn-${theme.id}`}
-                >
-                  <span aria-hidden="true">{theme.emoji}</span>
-                  <span className="hidden md:inline text-[11px]">
-                    {language === 'en' ? theme.nameEn : theme.name}
-                  </span>
-                </button>
-              ))}
-            </div>
-
+          {/* Right Controls */}
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            {/* Desktop Atmosphere & Filter Toggle */}
             <button
               type="button"
               onClick={() => setShowFilterPanel(!showFilterPanel)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-sans transition-colors duration-200 flex items-center gap-1.5 border whitespace-nowrap shrink-0 cursor-pointer ${
+              className={`hidden md:inline-flex items-center gap-1.5 px-2.5 lg:px-3 py-1.5 rounded-xl text-xs font-sans transition-colors duration-200 border whitespace-nowrap shrink-0 cursor-pointer ${
                 showFilterPanel
                   ? 'bg-[var(--amnd-wood)] text-[var(--amnd-bg-elevated)] border-transparent'
                   : 'bg-[var(--amnd-bg-elevated)] hover:bg-[var(--amnd-bg-secondary)] text-[var(--amnd-text-secondary)] border-[var(--amnd-border-strong)]'
               }`}
               id="filter-toggle-btn"
-              title={language === 'en' ? 'Adjust canvas saturation, brightness, and blur' : '调节画布饱和度、亮度和模糊度'}
+              title={language === 'en' ? 'Adjust canvas atmosphere, saturation, brightness, and blur' : '调节画布心境、饱和度、亮度和模糊度'}
             >
               <SlidersHorizontal className="w-3.5 h-3.5" />
-              <span className="font-medium">
-                {language === 'en' ? 'Filter' : '氛围滤镜'}
+              <span className="font-medium hidden lg:inline">
+                {language === 'en' ? 'Atmosphere' : '氛围'}
               </span>
             </button>
 
+            {/* Language Switcher (always accessible) */}
             <button
               type="button"
-              onClick={() => setLanguage(l => l === 'zh' ? 'en' : 'zh')}
-              className="px-3 py-1.5 rounded-xl text-xs font-sans transition-colors duration-200 flex items-center gap-1.5 border bg-[var(--amnd-bg-elevated)] hover:bg-[var(--amnd-bg-secondary)] text-[var(--amnd-text-primary)] border-[var(--amnd-border-strong)] font-medium whitespace-nowrap shrink-0 cursor-pointer"
+              onClick={() => setLanguage((l) => (l === 'zh' ? 'en' : 'zh'))}
+              className="min-h-[36px] md:min-h-0 px-2.5 lg:px-3 py-1.5 rounded-xl text-xs font-sans transition-colors duration-200 flex items-center gap-1 border bg-[var(--amnd-bg-elevated)] hover:bg-[var(--amnd-bg-secondary)] text-[var(--amnd-text-primary)] border-[var(--amnd-border-strong)] font-medium whitespace-nowrap shrink-0 cursor-pointer"
               id="language-toggle-btn"
             >
-              <span>{language === 'zh' ? 'English' : '中文'}</span>
+              <span>{language === 'zh' ? 'EN' : '中文'}</span>
             </button>
 
-            {/* Local Private Storage & Share Controls */}
-            <div className="ml-auto md:ml-0 md:contents">
+            {/* Desktop Backup / Share Bar */}
+            <div className="hidden lg:block">
+              <UserSyncBar
+                wishes={wishes}
+                onOpenShareModal={() => setIsShareModalOpen(true)}
+                language={language}
+                onImportWishes={(imported) => saveWishesToStorage(imported)}
+              />
+            </div>
+
+            {/* Mobile & Tablet (<1024px) Utility Drawer Toggle */}
+            <button
+              type="button"
+              onClick={() => setShowMobileTools((prev) => !prev)}
+              aria-expanded={showMobileTools}
+              aria-controls="header-secondary-tools"
+              id="mobile-tools-toggle-btn"
+              className={`lg:hidden inline-flex items-center gap-1 min-h-[36px] px-2.5 py-1.5 rounded-xl text-xs font-medium border transition-colors cursor-pointer shrink-0 ${
+                showMobileTools
+                  ? 'bg-[var(--amnd-wood)] text-[var(--amnd-bg-elevated)] border-transparent'
+                  : 'bg-[var(--amnd-bg-secondary)] hover:bg-[var(--amnd-bg-subtle)] text-[var(--amnd-text-primary)] border-[var(--amnd-border-strong)]'
+              }`}
+            >
+              <SlidersHorizontal className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">{language === 'en' ? 'Tools' : '工具'}</span>
+              {showMobileTools ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+            </button>
+          </div>
+        </div>
+
+        {/* Collapsible Secondary Tools Drawer (<1024px) */}
+        {showMobileTools && (
+          <div
+            id="header-secondary-tools"
+            className="lg:hidden border-t border-[var(--amnd-border)] bg-[var(--amnd-bg-elevated)] px-4 py-3 flex flex-wrap items-center justify-between gap-2 animate-fadeIn"
+          >
+            <button
+              type="button"
+              onClick={() => {
+                setShowFilterPanel((prev) => !prev);
+                setShowMobileTools(false);
+              }}
+              className={`md:hidden px-3 py-1.5 rounded-xl text-xs font-medium border flex items-center gap-1.5 cursor-pointer ${
+                showFilterPanel
+                  ? 'bg-[var(--amnd-wood)] text-[var(--amnd-bg-elevated)] border-transparent'
+                  : 'bg-[var(--amnd-bg-secondary)] text-[var(--amnd-text-primary)] border-[var(--amnd-border-strong)]'
+              }`}
+              id="mobile-filter-toggle-btn"
+            >
+              <SlidersHorizontal className="w-3.5 h-3.5" />
+              <span>{language === 'en' ? 'Atmosphere & Filter' : '画布与氛围滤镜'}</span>
+            </button>
+
+            <div className="ml-auto">
               <UserSyncBar
                 wishes={wishes}
                 onOpenShareModal={() => setIsShareModalOpen(true)}
@@ -1310,29 +1323,28 @@ export default function App() {
               />
             </div>
           </div>
-        </div>
+        )}
       </header>
 
       {/* Main Layout container */}
-      <main className="max-w-7xl mx-auto px-4 md:px-8 py-8" id="manifestation-app-body">
-        
-        {/* Ambient Filter Control Panel */}
+      <main className="max-w-7xl mx-auto px-4 md:px-8 py-6 md:py-8" id="manifestation-app-body">
+
+        {/* Ambient Atmosphere & Filter Control Panel */}
         {showFilterPanel && (
-          <div className="mb-6 p-5 amnd-surface animate-fadeIn space-y-4" id="ambient-filters-panel">
+          <div className="mb-6 p-5 amnd-surface animate-fadeIn space-y-5" id="ambient-filters-panel">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-[var(--amnd-border)] pb-3 gap-2">
               <div>
                 <h3 className="font-serif text-lg font-semibold text-[var(--amnd-text-primary)] flex items-center gap-2">
                   <SlidersHorizontal className="w-4 h-4 text-[var(--amnd-wood)]" />
                   <span>
-                    {language === 'en' ? 'Canvas Filter Settings' : '画布氛围滤镜设置'}
+                    {language === 'en' ? 'Atmosphere & Canvas Filter' : '心境画布与氛围滤镜'}
                   </span>
                 </h3>
                 <p className="text-xs text-[var(--amnd-text-muted)] mt-0.5">
-                  {language === 'en' ? 'Customize saturation, brightness, and blur to match your current meditation depth' : '根据您的静心深度，自由调节画面饱和度、亮度和模糊度'}
+                  {language === 'en' ? 'Customize visual atmosphere, saturation, brightness, and blur' : '按当下心境自由选择视觉画布，调节画面饱和度、亮度和模糊度'}
                 </p>
               </div>
 
-              {/* Reset to defaults button */}
               <button
                 type="button"
                 onClick={() => {
@@ -1340,11 +1352,37 @@ export default function App() {
                   setBgBrightness(100);
                   setBgBlur(0);
                 }}
-                className="text-xs font-medium text-[var(--amnd-wood)] hover:text-[var(--amnd-bg-elevated)] bg-[var(--amnd-bg-secondary)] hover:bg-[var(--amnd-wood)] px-3.5 py-1.5 rounded-lg border border-[var(--amnd-border-strong)] transition-colors flex items-center gap-1.5 cursor-pointer"
+                className="text-xs font-medium text-[var(--amnd-wood)] hover:text-[var(--amnd-bg-elevated)] bg-[var(--amnd-bg-secondary)] hover:bg-[var(--amnd-wood)] px-3.5 py-1.5 rounded-lg border border-[var(--amnd-border-strong)] transition-colors flex items-center gap-1.5 cursor-pointer self-start sm:self-auto"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
                 <span>{language === 'en' ? 'Reset to Default' : '重置原版'}</span>
               </button>
+            </div>
+
+            {/* Canvas Atmosphere Themes */}
+            <div className="space-y-2">
+              <span className="text-xs font-medium text-[var(--amnd-text-secondary)] block">
+                {language === 'en' ? 'Canvas Atmosphere' : '心境画布主题'}
+              </span>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                {BACKGROUNDS_THEMES.map((theme) => (
+                  <button
+                    key={theme.id}
+                    type="button"
+                    onClick={() => setVisualBg(theme.id)}
+                    className={`p-3 rounded-xl border text-left transition-colors flex items-center gap-2 cursor-pointer ${
+                      visualBg === theme.id
+                        ? 'bg-[var(--amnd-wood-soft)] text-[var(--amnd-text-primary)] border-[var(--amnd-wood)] font-semibold'
+                        : 'bg-[var(--amnd-bg-secondary)]/60 hover:bg-[var(--amnd-bg-secondary)] text-[var(--amnd-text-secondary)] border-[var(--amnd-border)]'
+                    }`}
+                    title={language === 'en' ? theme.nameEn : theme.name}
+                    id={`theme-btn-${theme.id}`}
+                  >
+                    <span aria-hidden="true">{theme.emoji}</span>
+                    <span className="text-xs truncate">{language === 'en' ? theme.nameEn : theme.name}</span>
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* Ambient Presets Grid */}
@@ -1382,7 +1420,6 @@ export default function App() {
 
             {/* Sliders Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
-              {/* Saturation */}
               <div className="space-y-1.5 p-3.5 rounded-xl bg-[var(--amnd-bg-secondary)]/60 border border-[var(--amnd-border)]">
                 <div className="flex items-center justify-between text-xs font-medium text-[var(--amnd-text-primary)]">
                   <span>{language === 'en' ? 'Canvas Saturation' : '背景饱和度'}</span>
@@ -1404,7 +1441,6 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Brightness */}
               <div className="space-y-1.5 p-3.5 rounded-xl bg-[var(--amnd-bg-secondary)]/60 border border-[var(--amnd-border)]">
                 <div className="flex items-center justify-between text-xs font-medium text-[var(--amnd-text-primary)]">
                   <span>{language === 'en' ? 'Canvas Brightness' : '背景亮度'}</span>
@@ -1426,7 +1462,6 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Blur */}
               <div className="space-y-1.5 p-3.5 rounded-xl bg-[var(--amnd-bg-secondary)]/60 border border-[var(--amnd-border)]">
                 <div className="flex items-center justify-between text-xs font-medium text-[var(--amnd-text-primary)]">
                   <span>{language === 'en' ? 'Canvas Blur' : '背景模糊度'}</span>
@@ -1451,180 +1486,89 @@ export default function App() {
           </div>
         )}
 
-        {/* Intro Brand Sanctuary Card */}
-        {showIntroduction && (
-          <div className="mb-8 p-5 md:p-6 amnd-surface-stone flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-5 relative animate-fadeIn">
-            <div className="p-2 rounded-xl bg-[var(--amnd-bg-elevated)] shrink-0 border border-[var(--amnd-border)]">
-              <img
-                src="/logo-hero.png"
-                alt="AMND Manifestation Logo"
-                className="w-16 sm:w-20 h-auto object-contain select-none"
-              />
-            </div>
-            <div className="text-sm text-[var(--amnd-text-secondary)] leading-relaxed pr-7 space-y-1.5">
-              <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                <h2 className="font-serif font-semibold text-lg text-[var(--amnd-text-primary)]">
-                  {language === 'en' ? 'AMND Manifestation' : 'AMND Manifestation · Amanda 的学海魔法屋'}
-                </h2>
-                <span className="text-xs font-medium text-[var(--amnd-wood)]">
-                  {language === 'en' ? 'Learn, and Magic Manifests.' : '学习了，魔法会显化。'}
-                </span>
-              </div>
-              <p className="text-xs text-[var(--amnd-text-muted)]">
-                {language === 'en'
-                  ? 'Learning → Awareness → Stillness → Manifestation'
-                  : '学习 → 觉察 → 静心 → 显化'}
-              </p>
-              <p className="text-xs md:text-[13px] text-[var(--amnd-text-secondary)] leading-relaxed pt-0.5">
-                {language === 'en' ? (
-                  <>
-                    A quiet space for Eastern wisdom, reflection, and mindful manifestation. Click <strong className="text-[var(--amnd-text-primary)] font-semibold">"Fast Activate"</strong> on any wish to compose rich sensory details, and pair it with <strong className="text-[var(--amnd-text-primary)] font-semibold">voice guidance</strong> to settle your attention.
-                  </>
-                ) : (
-                  <>
-                    在东方智慧与现代自我觉察中安顿身心。点击心愿卡片中的 <strong className="text-[var(--amnd-text-primary)] font-semibold">“快速激活细节”</strong>，即可为您编织具象感官画面，并配合 <strong className="text-[var(--amnd-text-primary)] font-semibold">语音朗读</strong> 与静坐声景进入深度专注。
-                  </>
-                )}
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() => setShowIntroduction(false)}
-              className="absolute top-4 right-4 p-1 text-[var(--amnd-text-muted)] hover:text-[var(--amnd-text-primary)] transition-colors cursor-pointer"
-              id="close-intro-btn"
-              aria-label={language === 'en' ? 'Dismiss introduction' : '关闭简介'}
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
+        {/* Primary 6-Page Views */}
+        {currentView === 'home' && (
+          <HomePage
+            language={language}
+            onNavigate={handleNavigate}
+            onEnterStillness={() => handleNavigate('stillness')}
+            onSpeak={handleSpeakText}
+            isSpeaking={isSpeaking}
+            onStopSpeaking={handleStopSpeaking}
+          />
         )}
 
-        {currentView === 'wisdom' ? (
-          /* Standalone Dedicated Abundance Wisdom Awakening Sanctuary Screen */
-          <div className="space-y-6 animate-fadeIn" id="standalone-abundance-wisdom-view">
-            <AbundanceWisdomSpace
-              language={language}
-              onSpeak={handleSpeakText}
-              onAddCustomWish={(title, details, category) => {
-                handleAddWish({ title, details, category });
-              }}
-              onBack={() => {
-                setCurrentView('main');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }}
-            />
-          </div>
-        ) : (
-          /* Main Dashboard Bento Box Layout */
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fadeIn" id="main-sanctuary-grid">
-            
-            {/* Column A: Left side (Wishes details and list, plus Portal Card) */}
-            <div className="lg:col-span-2 space-y-6">
-              <Wishlist
-                language={language}
-                wishes={wishes}
-                onAddWish={handleAddWish}
-                onDeleteWish={handleDeleteWish}
-                onGenerateDetails={handleGenerateDetails}
-                onStartSession={handleStartManifestationSession}
-                isGeneratingMap={isGeneratingMap}
-                onUpdateWish={handleUpdateWish}
-              />
+        {currentView === 'wisdom' && (
+          <WisdomPage
+            language={language}
+            onSpeak={handleSpeakText}
+            onAddCustomWish={(title, details, category) => {
+              handleAddWish({ title, details, category });
+            }}
+            onNavigate={handleNavigate}
+          />
+        )}
 
-              {/* Portal Entrance Cards to Dedicated Sanctuaries */}
-              <div className="space-y-4">
-                {/* Immersive Meditation Space Entrance Card */}
-                <ImmersiveMeditationPortalCard
-                  language={language}
-                  onEnter={() => {
-                    handleEnterMeditationSpace();
-                  }}
-                />
+        {currentView === 'temple' && (
+          <TemplePage
+            language={language}
+            onNavigate={handleNavigate}
+            onEnterStillness={() => handleNavigate('stillness')}
+          />
+        )}
 
-                {/* Portal Entrance Card to Dedicated Abundance Wisdom Sanctuary */}
-                <AbundanceWisdomPortalCard
-                  language={language}
-                  onEnter={() => {
-                    setCurrentView('wisdom');
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                  }}
-                />
-              </div>
-            </div>
+        {currentView === 'stillness' && (
+          <StillnessPage
+            language={language}
+            wishes={wishes}
+            defaultUniversalWish={DEFAULT_UNIVERSAL_WISH}
+            timerDuration={timerDuration}
+            onSelectDurationMinutes={(mins) => {
+              const seconds = mins * 60;
+              setTimerDuration(seconds);
+              setTimerRemaining(seconds);
+            }}
+            breathingPatterns={breathingPatterns}
+            selectedPatternId={selectedPatternId}
+            onSelectPatternId={setSelectedPatternId}
+            onStartMeditation={(wish) => handleEnterMeditationSpace(wish)}
+            audioPlayerSlot={audioPlayerNode}
+            onNavigate={handleNavigate}
+          />
+        )}
 
-            {/* Column B: Right side (Affirmation of the day and customized meditation music) */}
-            <div className="space-y-6">
-              {/* Daily Affirmation */}
-              <AffirmationCard
-                language={language}
-                onSpeak={handleSpeakText}
-                isSpeaking={isSpeaking}
-                onStopSpeaking={handleStopSpeaking}
-              />
+        {currentView === 'manifestation' && (
+          <ManifestationPage
+            language={language}
+            wishes={wishes}
+            onAddWish={handleAddWish}
+            onDeleteWish={handleDeleteWish}
+            onGenerateDetails={handleGenerateDetails}
+            onStartSession={handleStartManifestationSession}
+            isGeneratingMap={isGeneratingMap}
+            onUpdateWish={handleUpdateWish}
+            onSpeak={handleSpeakText}
+            isSpeaking={isSpeaking}
+            onStopSpeaking={handleStopSpeaking}
+            onNavigate={handleNavigate}
+          />
+        )}
 
-              {/* Customized Meditation Tracks */}
-              <AudioPlayer
-                language={language}
-                currentTrack={currentTrack}
-                onTrackChange={setCurrentTrack}
-                tracks={tracks}
-                onAddCustomTrack={handleAddCustomTrack}
-                voiceTone={voiceTone}
-                onVoiceToneChange={setVoiceTone}
-                isPlaying={isMusicPlaying}
-                setIsPlaying={setIsMusicPlaying}
-                volume={musicVolume}
-                setVolume={setMusicVolume}
-                activeWishSession={activeWishSession}
-              />
+        {currentView === 'myspace' && (
+          <MySpacePage
+            language={language}
+            wishes={wishes}
+            onImportWishes={(imported) => saveWishesToStorage(imported)}
+            onOpenShareModal={() => setIsShareModalOpen(true)}
+            onStartMeditationForWish={(wish) => handleStartManifestationSession(wish)}
+            onNavigate={handleNavigate}
+          />
+        )}
 
-              {/* Practice Path guidance */}
-              <div className="p-6 amnd-surface-stone">
-                <h4 className="font-serif text-lg font-semibold mb-1 text-[var(--amnd-text-primary)]">
-                  {language === 'en' ? 'The AMND Practice' : 'AMND 静心与显化路径'}
-                </h4>
-                <p className="text-xs text-[var(--amnd-wood)] mb-4">
-                  {language === 'en'
-                    ? 'Learning → Awareness → Stillness → Manifestation'
-                    : '学习 → 觉察 → 静心 → 显化'}
-                </p>
-                <ul className="text-xs text-[var(--amnd-text-secondary)] space-y-3 leading-relaxed font-sans">
-                  {language === 'en' ? (
-                    <>
-                      <li className="flex items-start gap-2.5">
-                        <span className="text-[var(--amnd-wood)] font-semibold shrink-0">01.</span>
-                        <span>Write down clear intentions and compose sensory details with gentle clarity.</span>
-                      </li>
-                      <li className="flex items-start gap-2.5">
-                        <span className="text-[var(--amnd-wood)] font-semibold shrink-0">02.</span>
-                        <span>Enter the stillness space with breath pacing, natural soundscapes, and spoken guidance.</span>
-                      </li>
-                      <li className="flex items-start gap-2.5">
-                        <span className="text-[var(--amnd-wood)] font-semibold shrink-0">03.</span>
-                        <span>Return to daily wisdom notes and cultivate steady, unhurried awareness.</span>
-                      </li>
-                    </>
-                  ) : (
-                    <>
-                      <li className="flex items-start gap-2.5">
-                        <span className="text-[var(--amnd-wood)] font-semibold shrink-0">01.</span>
-                        <span>写下清晰真诚的心愿，辅以具体的画面、温度与日常感官细节。</span>
-                      </li>
-                      <li className="flex items-start gap-2.5">
-                        <span className="text-[var(--amnd-wood)] font-semibold shrink-0">02.</span>
-                        <span>在静心空间中伴随自然声景、呼吸节律与温和引导语安住当下。</span>
-                      </li>
-                      <li className="flex items-start gap-2.5">
-                        <span className="text-[var(--amnd-wood)] font-semibold shrink-0">03.</span>
-                        <span>在《丰盛》智慧阅读与读书笔记中持续学习、觉察并沉淀日常实践。</span>
-                      </li>
-                    </>
-                  )}
-                </ul>
-              </div>
-
-            </div>
-
+        {/* Single-instance off-view AudioPlayer fallback ONLY when fullscreen meditation is opened outside StillnessPage */}
+        {currentView !== 'stillness' && activeWishSession !== null && (
+          <div className="hidden" aria-hidden="true">
+            {audioPlayerNode}
           </div>
         )}
       </main>
@@ -1897,9 +1841,9 @@ export default function App() {
 
                   {/* Real-time Staged Progress Indicator */}
                   <div className="flex items-center justify-center gap-2 text-[10.5px] font-mono font-semibold">
-                    <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
+                    <span className="w-2 h-2 rounded-full bg-amber-500" />
                     <span>
-                      {sohumCurrentStage === 1 
+                      {sohumCurrentStage === 1
                         ? (language === 'en' ? `Stage 1: 6 breaths/min (5s/5s) • Breath ${((sohumCycleCount - 1) % 6) + 1}/6` : `当前：第 1 阶段（6次/分 • 5s So吸 / 5s Hum呼 • 第 ${((sohumCycleCount - 1) % 6) + 1}/6 次呼吸）`)
                         : (language === 'en' ? `Stage 2: 5 breaths/min (6s/6s) • Deep Resonance ${((sohumCycleCount - 1) % 5) + 1}/5` : `当前：第 2 阶段（5次/分 • 6s So吸 / 6s Hum呼 • 第 ${((sohumCycleCount - 1) % 5) + 1}/5 次深度同频）`)
                       }
@@ -1925,49 +1869,49 @@ export default function App() {
                   {/* 1. 吸气 Inhale */}
                   <div className={`flex items-center gap-1.5 px-2 md:px-3 py-1 rounded-full text-[11px] md:text-xs transition-all duration-500 ${
                     breathingPhase === 'inhale'
-                      ? 'bg-pink-400/30 text-pink-700 dark:text-pink-200 border border-pink-300/40 font-bold scale-105 shadow-md shadow-pink-300/10'
-                      : isBgDark ? 'text-white/40 border border-transparent' : 'text-[#8e6d72]/40 border border-transparent'
+                      ? 'bg-amber-400/25 text-amber-900 dark:text-amber-100 border border-amber-400/40 font-bold scale-105'
+                      : isBgDark ? 'text-white/40 border border-transparent' : 'text-[var(--amnd-text-muted)] border border-transparent'
                   }`}>
                     <span className={`w-1.5 h-1.5 rounded-full ${
-                      breathingPhase === 'inhale' 
-                        ? 'bg-pink-500 dark:bg-pink-300 animate-ping' 
-                        : isBgDark ? 'bg-white/20' : 'bg-[#8e6d72]/20'
+                      breathingPhase === 'inhale'
+                        ? 'bg-amber-600 dark:bg-amber-300'
+                        : isBgDark ? 'bg-white/20' : 'bg-[var(--amnd-border-strong)]'
                     }`} />
                     <span>
                       {language === 'en' ? 'Inhale' : '吸气'}{' '}
                       {breathingPhase === 'inhale' ? `${breathingCountdown}s` : `${currentPattern.inhale}s`}
                     </span>
                   </div>
-                  <div className={`w-2.5 h-[1px] ${isBgDark ? 'bg-white/10' : 'bg-[#8e6d72]/10'}`}></div>
+                  <div className={`w-2.5 h-[1px] ${isBgDark ? 'bg-white/10' : 'bg-[var(--amnd-border)]'}`}></div>
 
                   {/* 2. 吸气后屏息 Hold In */}
                   <div className={`flex items-center gap-1.5 px-2 md:px-3 py-1 rounded-full text-[11px] md:text-xs transition-all duration-500 ${
                     breathingPhase === 'holdIn'
-                      ? 'bg-amber-400/30 text-amber-800 dark:text-amber-200 border border-amber-300/40 font-bold scale-105 shadow-md shadow-amber-300/10'
-                      : isBgDark ? 'text-white/40 border border-transparent' : 'text-[#8e6d72]/40 border border-transparent'
+                      ? 'bg-amber-400/30 text-amber-900 dark:text-amber-100 border border-amber-300/40 font-bold scale-105'
+                      : isBgDark ? 'text-white/40 border border-transparent' : 'text-[var(--amnd-text-muted)] border border-transparent'
                   }`}>
                     <span className={`w-1.5 h-1.5 rounded-full ${
-                      breathingPhase === 'holdIn' 
-                        ? 'bg-amber-600 dark:bg-amber-300 animate-ping' 
-                        : isBgDark ? 'bg-white/20' : 'bg-[#8e6d72]/20'
+                      breathingPhase === 'holdIn'
+                        ? 'bg-amber-700 dark:bg-amber-300'
+                        : isBgDark ? 'bg-white/20' : 'bg-[var(--amnd-border-strong)]'
                     }`} />
                     <span>
                       {language === 'en' ? 'Hold' : '屏息'}{' '}
                       {breathingPhase === 'holdIn' ? `${breathingCountdown}s` : `${currentPattern.holdIn}s`}
                     </span>
                   </div>
-                  <div className={`w-2.5 h-[1px] ${isBgDark ? 'bg-white/10' : 'bg-[#8e6d72]/10'}`}></div>
+                  <div className={`w-2.5 h-[1px] ${isBgDark ? 'bg-white/10' : 'bg-[var(--amnd-border)]'}`}></div>
 
                   {/* 3. 呼气 Exhale */}
                   <div className={`flex items-center gap-1.5 px-2 md:px-3 py-1 rounded-full text-[11px] md:text-xs transition-all duration-500 ${
                     breathingPhase === 'exhale'
-                      ? 'bg-sky-400/30 text-sky-800 dark:text-sky-200 border border-sky-300/40 font-bold scale-105 shadow-md shadow-sky-300/10'
-                      : isBgDark ? 'text-white/40 border border-transparent' : 'text-[#8e6d72]/40 border border-transparent'
+                      ? 'bg-sky-400/25 text-sky-900 dark:text-sky-100 border border-sky-300/40 font-bold scale-105'
+                      : isBgDark ? 'text-white/40 border border-transparent' : 'text-[var(--amnd-text-muted)] border border-transparent'
                   }`}>
                     <span className={`w-1.5 h-1.5 rounded-full ${
-                      breathingPhase === 'exhale' 
-                        ? 'bg-sky-600 dark:bg-sky-300 animate-ping' 
-                        : isBgDark ? 'bg-white/20' : 'bg-[#8e6d72]/20'
+                      breathingPhase === 'exhale'
+                        ? 'bg-sky-600 dark:bg-sky-300'
+                        : isBgDark ? 'bg-white/20' : 'bg-[var(--amnd-border-strong)]'
                     }`} />
                     <span>
                       {language === 'en' ? 'Exhale' : '呼气'}{' '}
@@ -1978,16 +1922,16 @@ export default function App() {
                   {/* 4. 呼气后屏息 Hold Out (only shown for Box breathing patterns) */}
                   {currentPattern.holdOut > 0 && (
                     <>
-                      <div className={`w-2.5 h-[1px] ${isBgDark ? 'bg-white/10' : 'bg-[#8e6d72]/10'}`}></div>
+                      <div className={`w-2.5 h-[1px] ${isBgDark ? 'bg-white/10' : 'bg-[var(--amnd-border)]'}`}></div>
                       <div className={`flex items-center gap-1.5 px-2 md:px-3 py-1 rounded-full text-[11px] md:text-xs transition-all duration-500 ${
                         breathingPhase === 'holdOut'
-                          ? 'bg-purple-400/30 text-purple-800 dark:text-purple-200 border border-purple-300/40 font-bold scale-105 shadow-md shadow-purple-300/10'
-                          : isBgDark ? 'text-white/40 border border-transparent' : 'text-[#8e6d72]/40 border border-transparent'
+                          ? 'bg-stone-400/25 text-stone-900 dark:text-stone-100 border border-stone-300/40 font-bold scale-105'
+                          : isBgDark ? 'text-white/40 border border-transparent' : 'text-[var(--amnd-text-muted)] border border-transparent'
                       }`}>
                         <span className={`w-1.5 h-1.5 rounded-full ${
-                          breathingPhase === 'holdOut' 
-                            ? 'bg-purple-600 dark:bg-purple-300 animate-ping' 
-                            : isBgDark ? 'bg-white/20' : 'bg-[#8e6d72]/20'
+                          breathingPhase === 'holdOut'
+                            ? 'bg-stone-600 dark:bg-stone-300'
+                            : isBgDark ? 'bg-white/20' : 'bg-[var(--amnd-border-strong)]'
                         }`} />
                         <span>
                           {language === 'en' ? 'Hold' : '屏息'}{' '}
@@ -2204,8 +2148,8 @@ export default function App() {
                     {language === 'en' ? '🗣️ Narration Voice Control' : '🗣️ 智能显化配音调节 (Narration Voice)'}
                   </span>
                   {isSpeakingLoading && (
-                    <span className="text-[9.5px] text-pink-400 font-bold animate-pulse flex items-center gap-1">
-                      <span className="w-1 h-1 rounded-full bg-pink-400 animate-ping"></span>
+                    <span className="text-[9.5px] text-amber-500 font-bold flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
                       {language === 'en' ? 'Loading voice...' : '正在载入中...'}
                     </span>
                   )}
@@ -2493,85 +2437,69 @@ export default function App() {
             </div>
           </div>
 
-          {/* MEDITATION FINISHED CELESTIAL OVERLAY */}
+          {/* MEDITATION FINISHED CALM OVERLAY */}
           {showFinishedOverlay && (
-            <div className="absolute inset-0 z-50 bg-[#8e6d72]/45 backdrop-blur-3xl flex flex-col items-center justify-center text-center p-6 md:p-8 overflow-y-auto animate-fadeIn" id="finished-overlay">
-              <div className="bg-white/95 max-w-lg p-6 md:p-10 rounded-[40px] border border-white/60 shadow-2xl flex flex-col items-center space-y-5 md:space-y-6 my-auto">
-                <span className="text-4xl md:text-5xl animate-bounce">🦢</span>
-                <div className="space-y-1">
-                  <h3 className="font-serif text-2xl md:text-3xl font-bold text-[#8e6d72] tracking-wide">
-                    {language === 'en' ? 'Manifestation Fulfilled • Walk with Grace' : '显化圆满 • 怀恩前行'}
-                  </h3>
-                  <span className="text-[10px] uppercase tracking-widest text-[#b49196] font-bold block font-mono">Completed & Blessed</span>
+            <div className="absolute inset-0 z-50 bg-[#262320]/60 backdrop-blur-2xl flex flex-col items-center justify-center text-center p-6 md:p-8 overflow-y-auto animate-fadeIn" id="finished-overlay">
+              <div className="bg-[var(--amnd-bg-elevated)] max-w-lg p-6 md:p-10 rounded-[28px] border border-[var(--amnd-border)] shadow-2xl flex flex-col items-center space-y-5 md:space-y-6 my-auto text-[var(--amnd-text-primary)]">
+                <div className="w-12 h-12 rounded-2xl bg-[var(--amnd-bg-secondary)] border border-[var(--amnd-border)] flex items-center justify-center text-[var(--amnd-wood)]">
+                  <Sparkles className="w-6 h-6" />
                 </div>
-                
-                <div className="w-12 h-[1.5px] bg-[#8e6d72]/20"></div>
+                <div className="space-y-1">
+                  <h3 className="font-serif text-2xl md:text-3xl font-semibold text-[var(--amnd-text-primary)] tracking-wide">
+                    {language === 'en' ? 'Stillness Complete · Walk with Clarity' : '静坐圆满 · 带着清明前行'}
+                  </h3>
+                  <span className="text-[11px] uppercase tracking-widest text-[var(--amnd-text-muted)] font-mono block">
+                    Session Completed
+                  </span>
+                </div>
 
-                {/* Subconscious resonance message */}
-                <p className="text-xs md:text-sm text-[#6d5b5e] leading-relaxed tracking-wider font-sans">
+                <div className="w-12 h-[1px] bg-[var(--amnd-border-strong)]"></div>
+
+                <p className="text-xs md:text-sm text-[var(--amnd-text-secondary)] leading-relaxed font-sans">
                   {language === 'en'
-                    ? 'Your subconsciousness has deeply resonated with high-frequency cosmic energies. Thank yourself for this moment of absolute peace; all the dignity, abundance, and ultimate beauty you conceive are floating gently into your destiny.'
-                    : '您的潜意识已与高维能量深度共振。感谢自己这一刻的全然静默，凡您心中所构想的尊贵、富饶与至美，皆在以不可抗拒之势徐徐向您走来。'}
+                    ? 'Thank yourself for giving this quiet time back to your breath and body. Carry this steadiness gently into your next ordinary action.'
+                    : '感谢自己将这段安静的时间留给呼吸与身心。带着这份平稳与清醒，从容走回接下来的日常行动。'}
                 </p>
 
                 {/* Dynamic Gratitude Whisper Block */}
                 {selectedGratitudeWhisper && (
-                  <div className="w-full bg-[#ffe4e9]/30 rounded-3xl p-4 md:p-5 border border-white shadow-inner text-center">
-                    <span className="text-[10px] uppercase font-bold tracking-widest text-[#8e6d72]/70 block mb-2">
-                      {language === 'en' ? '✨ Cosmic Gratitude Whisper' : '✨ 宇宙感恩密语 • Cosmic Gratitude'}
+                  <div className="w-full bg-[var(--amnd-bg-secondary)] rounded-2xl p-4 md:p-5 border border-[var(--amnd-border)] text-center">
+                    <span className="text-[10px] uppercase font-medium tracking-widest text-[var(--amnd-text-muted)] block mb-2">
+                      {language === 'en' ? 'Closing Reflection' : '今日静心余韵'}
                     </span>
-                    <blockquote className="font-serif italic text-xs md:text-sm text-[#8e6d72] leading-relaxed">
+                    <blockquote className="font-serif italic text-xs md:text-sm text-[var(--amnd-text-primary)] leading-relaxed">
                       “ {selectedGratitudeWhisper} ”
                     </blockquote>
                   </div>
                 )}
 
-                {/* Gratitude checklist/rituals */}
-                <div className="w-full text-left space-y-3 pt-2">
-                  <span className="text-[10px] uppercase font-bold tracking-widest text-[#8e6d72]/70 block text-center mb-1">
-                    {language === 'en' ? '🧘 Gratitude Integration Ritual' : '🧘 感恩当下三部曲 • Gratitude Integration'}
+                <div className="w-full text-left space-y-3 pt-1">
+                  <span className="text-[10px] uppercase font-medium tracking-widest text-[var(--amnd-text-muted)] block text-center mb-1">
+                    {language === 'en' ? 'Gentle Transition Steps' : '出定后的温和收尾'}
                   </span>
-                  <div className="grid grid-cols-1 gap-2.5">
-                    {language === 'en' ? (
-                      <>
-                        <div className="flex items-start gap-2 text-xs text-[#6d5b5e]">
-                          <span className="text-[#8e6d72] font-serif font-bold text-sm leading-none mt-0.5">🌸</span>
-                          <span><strong>Close eyes, cover heart</strong>: Smile inward, genuinely thank yourself for your patient presence.</span>
-                        </div>
-                        <div className="flex items-start gap-2 text-xs text-[#6d5b5e]">
-                          <span className="text-[#8e6d72] font-serif font-bold text-sm leading-none mt-0.5">🦢</span>
-                          <span><strong>Be grateful for all life</strong>: Thank every ray of light and love, purifying your soul field.</span>
-                        </div>
-                        <div className="flex items-start gap-2 text-xs text-[#6d5b5e]">
-                          <span className="text-[#8e6d72] font-serif font-bold text-sm leading-none mt-0.5">✨</span>
-                          <span><strong>Carry ultimate deservingness</strong>: Believe that everything beautiful you desire is already embracing you.</span>
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <div className="flex items-start gap-2 text-xs text-[#6d5b5e]">
-                          <span className="text-[#8e6d72] font-serif font-bold text-sm leading-none mt-0.5">🌸</span>
-                          <span><strong>微闭双眸，双手覆心</strong>：向内微笑，由衷感谢自己的专注陪伴与包容。</span>
-                        </div>
-                        <div className="flex items-start gap-2 text-xs text-[#6d5b5e]">
-                          <span className="text-[#8e6d72] font-serif font-bold text-sm leading-none mt-0.5">🦢</span>
-                          <span><strong>对当下万物心存感激</strong>：感恩已拥有的每一丝爱，使您的灵魂更纯净磁满。</span>
-                        </div>
-                        <div className="flex items-start gap-2 text-xs text-[#6d5b5e]">
-                          <span className="text-[#8e6d72] font-serif font-bold text-sm leading-none mt-0.5">✨</span>
-                          <span><strong>带着极致配得感出发</strong>：相信凡你渴望之极美，早已在未来向你张开双臂。</span>
-                        </div>
-                      </>
-                    )}
+                  <div className="grid grid-cols-1 gap-2 text-xs text-[var(--amnd-text-secondary)]">
+                    <p>
+                      <strong className="text-[var(--amnd-text-primary)] font-medium">01 · {language === 'en' ? 'Sense your breath' : '觉察呼吸'}：</strong>
+                      {language === 'en' ? 'Notice your shoulders soften before opening your eyes fully.' : '缓缓睁眼之前，先感受双肩与下颌的自然放松。'}
+                    </p>
+                    <p>
+                      <strong className="text-[var(--amnd-text-primary)] font-medium">02 · {language === 'en' ? 'Offer quiet gratitude' : '心怀感恩'}：</strong>
+                      {language === 'en' ? 'Acknowledge what feels supportive and steady in your life right now.' : '感谢此刻陪伴着你的稳定细节，无论大小。'}
+                    </p>
+                    <p>
+                      <strong className="text-[var(--amnd-text-primary)] font-medium">03 · {language === 'en' ? 'Record a clear note' : '记下一句感悟'}：</strong>
+                      {language === 'en' ? 'Optionally capture one honest thought in My Space.' : '如有清明浮现的想法，可返回后记入「我的空间」。'}
+                    </p>
                   </div>
                 </div>
 
                 <button
+                  type="button"
                   onClick={handleExitManifestationSession}
-                  className="w-full sm:w-auto px-8 py-3.5 rounded-full bg-[#8e6d72] hover:bg-[#8e6d72]/90 text-white font-bold text-xs transition-all shadow-lg hover:scale-105 active:scale-95"
+                  className="w-full sm:w-auto px-8 py-3 amnd-btn-primary font-medium text-xs transition-colors cursor-pointer"
                   id="finished-exit-btn"
                 >
-                  {language === 'en' ? 'Return with Gratitude & Abundance' : '带着无尽感恩与丰盛回归'}
+                  {language === 'en' ? 'Return to Sanctuary' : '带着清明回归'}
                 </button>
               </div>
             </div>
@@ -2591,8 +2519,8 @@ export default function App() {
         }}
       />
 
-      {/* Footer credits */}
-      <footer className="text-center py-10 px-4 text-xs border-t border-[var(--amnd-border)] mt-14 bg-[var(--amnd-bg-secondary)]/70 text-[var(--amnd-text-secondary)]">
+      {/* Footer credits (with extra mobile bottom padding so fixed tab bar never covers it) */}
+      <footer className="text-center pt-10 pb-24 md:pb-10 px-4 text-xs border-t border-[var(--amnd-border)] mt-14 bg-[var(--amnd-bg-secondary)]/70 text-[var(--amnd-text-secondary)]">
         <img
           src="/logo-icon.png"
           alt="AMND Manifestation"
@@ -2607,6 +2535,34 @@ export default function App() {
             : '学习了，魔法会显化。 · 学习 → 觉察 → 静心 → 显化'}
         </p>
       </footer>
+
+      {/* Mobile Fixed Bottom Thumb-Zone Navigation Bar (58px tall + 56px top bar = 114px < 15% of 844px mobile viewport) */}
+      <nav
+        aria-label={language === 'en' ? 'Mobile navigation' : '移动端底部导航'}
+        className="md:hidden fixed bottom-0 inset-x-0 z-40 h-[58px] bg-[var(--amnd-bg-elevated)]/95 backdrop-blur-md border-t border-[var(--amnd-border)] grid grid-cols-6 px-1"
+        id="mobile-bottom-nav"
+      >
+        {navItems.map((item) => {
+          const Icon = item.icon;
+          const isActive = currentView === item.id;
+          return (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => handleNavigate(item.id)}
+              id={`mobile-nav-${item.id}`}
+              className={`flex flex-col items-center justify-center gap-0.5 min-h-[44px] rounded-lg transition-colors cursor-pointer ${
+                isActive
+                  ? 'text-[var(--amnd-wood)] font-semibold'
+                  : 'text-[var(--amnd-text-muted)] hover:text-[var(--amnd-text-primary)]'
+              }`}
+            >
+              <Icon className="w-4 h-4 shrink-0" />
+              <span className="text-[10px] leading-none whitespace-nowrap">{item.mobileLabel}</span>
+            </button>
+          );
+        })}
+      </nav>
     </div>
   );
 }

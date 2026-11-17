@@ -64,9 +64,9 @@ export default function ShareAppModal({
 
   const handleCopyShareText = () => {
     const text = isEn
-      ? `👑 LUMIÈRE MANIFEST - Princess Royal Manifestation & Mindfulness Oasis\n✨ Open now: ${sharedUrl}\nExperience 528Hz Solfeggio sound healing, SOHUM breathwork, Gemini AI wish visualization, and the complete "Abundance" wisdom repository!`
-      : `👑 LUMIÈRE MANIFEST • 公主风奢华显化小屋\n✨ 点击链接即刻开启：${sharedUrl}\n包含 528Hz 黄金音频、SOHUM 黄金呼吸实修、Gemini AI 具象化心愿显化，以及《丰盛》全书核心要义与读书心得宝库！无需注册即可畅享。`;
-    
+      ? `AMND Manifestation · Amanda's Digital Sanctuary\nOpen now: ${sharedUrl}\nLearn, and Magic Manifests. Explore 《Abundance》 wisdom reading, SoHum stillness practice, Solfeggio soundscapes, and local-private intention journaling.`
+      : `AMND Manifestation · Amanda 的学海魔法屋\n点击链接即刻开启：${sharedUrl}\n学习了，魔法会显化。包含《丰盛》阅读笔记、SoHum 静心呼吸、自然声景与本地私密心愿显化记录，无需注册即可使用。`;
+
     navigator.clipboard.writeText(text);
     setCopiedText(true);
     setTimeout(() => setCopiedText(false), 3000);
@@ -74,18 +74,18 @@ export default function ShareAppModal({
 
   // Export current wishes & reading notes as unified JSON
   const handleExportDataPackage = () => {
-    const ok = downloadBackupFile(wishes, 'lumiere_manifest_data');
+    const ok = downloadBackupFile(wishes, 'amnd_manifestation_backup');
     if (ok) {
       setImportStatus({
         type: 'success',
         message: isEn
           ? `Exported ${wishes.length} wishes & ${getReadingNotesCount()} reading notes.`
-          : `📦 已导出 ${wishes.length} 个愿望与 ${getReadingNotesCount()} 条读书笔记！`,
+          : `已导出 ${wishes.length} 个愿望与 ${getReadingNotesCount()} 条读书笔记`,
       });
     } else {
       setImportStatus({
         type: 'error',
-        message: isEn ? 'Failed to export backup file.' : '❌ 导出备份失败，请重试。',
+        message: isEn ? 'Failed to export backup file.' : '导出备份失败，请重试',
       });
     }
   };
@@ -117,7 +117,7 @@ export default function ShareAppModal({
           type: 'success',
           message: isEn
             ? `Imported ${result.wishesCount} wishes${result.notesImported ? ` & ${result.notesCount} reading notes` : ''}. Pre-import snapshot saved.`
-            : `🎉 成功导入！已恢复 ${result.wishesCount} 个愿望${result.notesImported ? `与 ${result.notesCount} 条读书笔记` : ''}（已自动保存导入前快照）。`,
+            : `成功导入！已恢复 ${result.wishesCount} 个愿望${result.notesImported ? `与 ${result.notesCount} 条读书笔记` : ''}（已自动保存导入前快照）。`,
         });
         setTimeout(() => {
           setImportStatus(null);
@@ -129,7 +129,7 @@ export default function ShareAppModal({
     reader.onerror = () => {
       setImportStatus({
         type: 'error',
-        message: isEn ? 'Failed to read selected file.' : '❌ 读取文件失败，请检查文件。',
+        message: isEn ? 'Failed to read selected file.' : '读取文件失败，请检查文件。',
       });
       inputEl.value = '';
     };
@@ -153,73 +153,75 @@ export default function ShareAppModal({
         type: 'success',
         message: isEn
           ? `Restored pre-import snapshot (${res.wishesCount} wishes).`
-          : `↩️ 已恢复至导入前备份快照（${res.wishesCount} 个愿望与原笔记）。`,
+          : `已恢复至导入前备份快照（${res.wishesCount} 个愿望与原笔记）。`,
       });
     }
   };
 
   return (
-    <div 
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-md animate-fadeIn"
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#262320]/45 backdrop-blur-md animate-fadeIn"
       onClick={onClose}
       id="share-app-modal-overlay"
     >
-      <div 
-        className="relative w-full max-w-xl bg-white/95 backdrop-blur-2xl rounded-[32px] p-6 sm:p-8 shadow-2xl border border-white text-[#4a3a3a] overflow-hidden max-h-[90vh] overflow-y-auto"
+      <div
+        className="relative w-full max-w-xl bg-[var(--amnd-bg-elevated)] rounded-[24px] p-6 sm:p-8 shadow-2xl border border-[var(--amnd-border)] text-[var(--amnd-text-primary)] overflow-hidden max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
         id="share-app-modal-dialog"
       >
         {/* Close Button */}
         <button
+          type="button"
           onClick={onClose}
-          className="absolute top-5 right-5 w-8 h-8 rounded-full bg-[#8e6d72]/10 hover:bg-[#8e6d72]/20 flex items-center justify-center text-[#8e6d72] transition-colors cursor-pointer text-sm font-bold"
+          className="absolute top-5 right-5 w-8 h-8 rounded-lg bg-[var(--amnd-bg-secondary)] hover:bg-[var(--amnd-bg-subtle)] border border-[var(--amnd-border)] flex items-center justify-center text-[var(--amnd-text-secondary)] transition-colors cursor-pointer text-sm font-medium"
           id="close-share-modal-btn"
+          aria-label={isEn ? 'Close modal' : '关闭窗口'}
         >
           ✕
         </button>
 
         {/* Header */}
         <div className="text-center mb-6">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-tr from-pink-100 to-amber-100 text-[#8e6d72] mb-3 shadow-inner">
-            <Share2 className="w-6 h-6" />
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-[var(--amnd-bg-secondary)] border border-[var(--amnd-border)] text-[var(--amnd-wood)] mb-3">
+            <Share2 className="w-5 h-5" />
           </div>
-          <h2 className="font-serif text-2xl font-bold text-[#8e6d72]">
-            {isEn ? 'Share & Synchronize with Others' : '分享与同步给他人使用'}
+          <h2 className="font-serif text-2xl font-semibold text-[var(--amnd-text-primary)]">
+            {isEn ? 'Share & Backup Sanctuary Data' : '分享空间与本地数据备份'}
           </h2>
-          <p className="text-xs text-[#b49196] mt-1 font-medium">
+          <p className="text-xs text-[var(--amnd-text-muted)] mt-1">
             {isEn
-              ? 'Send the app link or export your wishboard data for friends & family'
-              : '复制公开链接或打包心愿数据，让好友与家人随时随地在任何设备上开启显化'}
+              ? 'Share the public access link or export a portable JSON backup across devices'
+              : '复制公开网页链接给朋友，或导出 JSON 数据包实现跨设备安全迁移'}
           </p>
         </div>
 
         {/* SECTION 1: PUBLIC DIRECT SHARING LINK */}
         <div className="space-y-4 mb-6">
-          <div className="p-4 rounded-2xl bg-gradient-to-br from-pink-50/80 via-white to-amber-50/60 border border-pink-100/80 shadow-xs space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="flex items-center gap-1.5 text-xs font-bold text-[#8e6d72]">
-                <Globe className="w-4 h-4 text-[#8e6d72]" />
-                <span>{isEn ? 'Public Web Link (No Login Required)' : '公开网页链接（他人打开即用，无需登录）'}</span>
+          <div className="p-4 rounded-2xl bg-[var(--amnd-bg-secondary)]/70 border border-[var(--amnd-border)] space-y-3">
+            <div className="flex items-center justify-between gap-2">
+              <span className="flex items-center gap-1.5 text-xs font-medium text-[var(--amnd-text-primary)]">
+                <Globe className="w-4 h-4 text-[var(--amnd-wood)]" />
+                <span>{isEn ? 'Public Web Link (No Login Required)' : '公开网页链接（打开即用，无需注册）'}</span>
               </span>
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-semibold flex items-center gap-1">
+              <span className="text-[11px] px-2 py-0.5 rounded bg-[var(--amnd-bg-elevated)] border border-[var(--amnd-border)] text-[var(--amnd-sage)] font-medium flex items-center gap-1 shrink-0">
                 <Check className="w-3 h-3" />
-                {isEn ? 'Live Ready' : '永久有效'}
+                {isEn ? 'Ready' : '可用'}
               </span>
             </div>
 
             {/* URL Display and Action */}
-            <div className="flex items-center gap-2 bg-white p-2 rounded-xl border border-[#8e6d72]/15 shadow-inner">
+            <div className="flex items-center gap-2 bg-[var(--amnd-bg-elevated)] p-2 rounded-xl border border-[var(--amnd-border)]">
               <input
                 type="text"
                 readOnly
                 value={sharedUrl}
-                className="flex-1 bg-transparent text-xs font-mono text-[#5c3e43] px-2 outline-none select-all truncate"
+                className="flex-1 bg-transparent text-xs font-mono text-[var(--amnd-text-primary)] px-2 outline-none select-all truncate"
                 id="shared-app-url-input"
               />
               <button
                 type="button"
                 onClick={handleCopyLink}
-                className="px-3.5 py-1.5 rounded-lg bg-[#8e6d72] hover:bg-[#8e6d72]/90 text-white text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 cursor-pointer shrink-0"
+                className="px-3.5 py-1.5 rounded-lg amnd-btn-primary text-xs font-medium flex items-center gap-1.5 cursor-pointer shrink-0"
                 id="copy-shared-url-btn"
               >
                 {copiedLink ? (
@@ -241,36 +243,36 @@ export default function ShareAppModal({
               <button
                 type="button"
                 onClick={handleCopyShareText}
-                className="flex-1 py-2 px-3 rounded-xl bg-white hover:bg-pink-50 border border-pink-200 text-xs font-bold text-[#8e6d72] flex items-center justify-center gap-1.5 transition-all shadow-2xs cursor-pointer"
+                className="flex-1 py-2 px-3 amnd-btn-secondary text-xs font-medium flex items-center justify-center gap-1.5 cursor-pointer"
                 id="copy-share-invitation-btn"
               >
-                <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                <span>{copiedText ? (isEn ? 'Copied Invitation!' : '已复制完整邀请文案！') : (isEn ? 'Copy Social Invite Text' : '复制微信/朋友圈推荐文案')}</span>
+                <Sparkles className="w-3.5 h-3.5 text-[var(--amnd-gold)]" />
+                <span>{copiedText ? (isEn ? 'Copied Invitation!' : '已复制邀请文案') : (isEn ? 'Copy Invite Text' : '复制推荐文案')}</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setShowQr(!showQr)}
-                className="py-2 px-3.5 rounded-xl bg-white hover:bg-pink-50 border border-pink-200 text-xs font-bold text-[#8e6d72] flex items-center justify-center gap-1.5 transition-all shadow-2xs cursor-pointer"
+                className="py-2 px-3.5 amnd-btn-secondary text-xs font-medium flex items-center justify-center gap-1.5 cursor-pointer"
                 id="toggle-qr-code-btn"
               >
-                <QrCode className="w-3.5 h-3.5" />
-                <span>{showQr ? (isEn ? 'Hide QR' : '收起二维码') : (isEn ? 'Show Mobile QR' : '手机扫码体验')}</span>
+                <QrCode className="w-3.5 h-3.5 text-[var(--amnd-wood)]" />
+                <span>{showQr ? (isEn ? 'Hide QR' : '收起二维码') : (isEn ? 'Mobile QR' : '手机扫码')}</span>
               </button>
             </div>
 
             {/* QR Code preview */}
             {showQr && (
-              <div className="p-4 bg-white rounded-2xl border border-pink-200 text-center animate-fadeIn space-y-2">
-                <div className="w-40 h-40 mx-auto bg-white p-2 rounded-xl border border-gray-200 flex items-center justify-center shadow-xs">
+              <div className="p-4 bg-[var(--amnd-bg-elevated)] rounded-2xl border border-[var(--amnd-border)] text-center animate-fadeIn space-y-2">
+                <div className="w-40 h-40 mx-auto bg-white p-2 rounded-xl border border-[var(--amnd-border)] flex items-center justify-center">
                   <img
                     src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(sharedUrl)}`}
                     alt="App QR Code"
                     className="w-full h-full object-contain"
                   />
                 </div>
-                <p className="text-[11px] text-[#8e6d72] font-semibold">
-                  {isEn ? 'Scan with your phone camera or WeChat to open directly' : '用微信或手机浏览器扫描，随时随地开启显化实修'}
+                <p className="text-[11px] text-[var(--amnd-text-secondary)]">
+                  {isEn ? 'Scan with your phone camera to open directly' : '使用手机相机或微信扫描，随时随地开启静心与记录'}
                 </p>
               </div>
             )}
@@ -278,60 +280,70 @@ export default function ShareAppModal({
         </div>
 
         {/* SECTION 2: HOW MULTI-USER WORKS */}
-        <div className="mb-6 p-4 rounded-2xl bg-white/70 border border-[#8e6d72]/15 space-y-2.5">
-          <div className="flex items-center gap-1.5 text-xs font-bold text-[#8e6d72]">
-            <Users className="w-4 h-4 text-[#8e6d72]" />
-            <span>{isEn ? 'How Multi-User Sharing Works' : '他人使用方式与数据隔离说明'}</span>
+        <div className="mb-6 p-4 rounded-2xl bg-[var(--amnd-bg-secondary)]/50 border border-[var(--amnd-border)] space-y-2.5 text-left">
+          <div className="flex items-center gap-1.5 text-xs font-medium text-[var(--amnd-text-primary)]">
+            <Users className="w-4 h-4 text-[var(--amnd-wood)]" />
+            <span>{isEn ? 'Local Privacy & Isolation' : '隐私隔离与使用说明'}</span>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] text-[#6d5b5e]">
-            <div className="p-2.5 rounded-xl bg-pink-50/40 border border-pink-100/60">
-              <p className="font-bold text-[#8e6d72] mb-0.5">🔒 私密独立空间</p>
-              <p>他人打开链接后拥有独立的本地保险库，绝不会泄露或混淆您的个人心愿。</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs text-[var(--amnd-text-secondary)]">
+            <div className="p-3 rounded-xl bg-[var(--amnd-bg-elevated)] border border-[var(--amnd-border)]">
+              <p className="font-semibold text-[var(--amnd-text-primary)] mb-1">
+                {isEn ? 'Private Local Storage' : '私密独立空间'}
+              </p>
+              <p className="text-[11px] leading-relaxed">
+                {isEn
+                  ? 'Each visitor keeps an independent local browser vault; personal wishes and notes remain strictly private.'
+                  : '他人打开链接后拥有独立的本地浏览器存储，不会接触或覆盖你的任何个人愿望与笔记。'}
+              </p>
             </div>
-            <div className="p-2.5 rounded-xl bg-amber-50/40 border border-amber-100/60">
-              <p className="font-bold text-amber-900 mb-0.5">⚡ 免登录全功能畅享</p>
-              <p>无需安装任何 App，支持手机/平板/电脑浏览器，随时随地调频与记笔记。</p>
+            <div className="p-3 rounded-xl bg-[var(--amnd-bg-elevated)] border border-[var(--amnd-border)]">
+              <p className="font-semibold text-[var(--amnd-text-primary)] mb-1">
+                {isEn ? 'Zero-Account Access' : '免登录直接使用'}
+              </p>
+              <p className="text-[11px] leading-relaxed">
+                {isEn
+                  ? 'Works directly in desktop and mobile browsers without installing an app.'
+                  : '无需注册或安装客户端，支持手机、平板与桌面端随时进入阅读与静坐。'}
+              </p>
             </div>
           </div>
         </div>
 
         {/* SECTION 3: DATA PACKAGE BACKUP & TRANSFER */}
-        <div className="p-4 rounded-2xl bg-white/70 border border-[#8e6d72]/15 space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="flex items-center gap-1.5 text-xs font-bold text-[#8e6d72]">
-              <Download className="w-4 h-4 text-[#8e6d72]" />
-              <span>{isEn ? 'Sync My Data to Another Device / Friend' : '跨设备迁移 / 将我的心愿与心得分享给好友'}</span>
+        <div className="p-4 rounded-2xl bg-[var(--amnd-bg-secondary)]/70 border border-[var(--amnd-border)] space-y-3 text-left">
+          <div className="flex items-center justify-between gap-2">
+            <span className="flex items-center gap-1.5 text-xs font-medium text-[var(--amnd-text-primary)]">
+              <Download className="w-4 h-4 text-[var(--amnd-wood)]" />
+              <span>{isEn ? 'Export & Import JSON Backup' : '跨设备迁移与 JSON 数据备份'}</span>
             </span>
-            <span className="text-[10px] text-[#b49196] font-mono font-medium">
-              {wishes.length} {isEn ? 'Wishes' : '个心愿'} • {notesCount} {isEn ? 'Notes' : '条笔记'}
+            <span className="text-[11px] text-[var(--amnd-text-muted)] font-mono tabular-nums">
+              {wishes.length} {isEn ? 'Wishes' : '愿望'} · {notesCount} {isEn ? 'Notes' : '笔记'}
             </span>
           </div>
 
-          <p className="text-[11px] text-[#6d5b5e] leading-relaxed">
+          <p className="text-xs text-[var(--amnd-text-secondary)] leading-relaxed">
             {isEn
-              ? 'Export your wishes, Gemini imagery details, and Abundance notes as a portable JSON backup to load on any device. Importing automatically saves a safety snapshot of your current data first.'
-              : '您可以将您当前的心愿列表、AI 具象化场景与读书笔记一键导出为数据文件；导入前会自动留存当前数据快照，防止误覆盖。'}
+              ? 'Export your wishes, AI sensory details, and Abundance reading notes as a portable JSON backup. Importing automatically saves a pre-import safety snapshot first.'
+              : '将当前愿望清单、感官画面与《丰盛》读书笔记一键导出为 JSON 备份文件；导入前会自动留存本地安全快照。'}
           </p>
 
           <div className="flex flex-col sm:flex-row items-center gap-2.5 pt-1">
-            {/* Export button */}
             <button
               type="button"
               onClick={handleExportDataPackage}
-              className="w-full sm:flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-[#8e6d72] to-[#75555a] text-white text-xs font-bold shadow-sm hover:shadow transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98"
+              className="w-full sm:flex-1 py-2.5 px-4 amnd-btn-primary text-xs font-medium flex items-center justify-center gap-2 cursor-pointer"
               id="export-data-pkg-btn"
             >
               <Download className="w-3.5 h-3.5" />
-              <span>{isEn ? 'Export My Data Package' : '📦 导出我的数据包 (JSON)'}</span>
+              <span>{isEn ? 'Export JSON Backup' : '导出数据包 (JSON)'}</span>
             </button>
 
-            {/* Import button */}
-            <label 
-              className="w-full sm:flex-1 py-2.5 px-4 rounded-xl bg-white hover:bg-pink-50/80 border border-[#8e6d72]/30 text-[#8e6d72] text-xs font-bold shadow-xs hover:shadow transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98 text-center"
+            <label
+              className="w-full sm:flex-1 py-2.5 px-4 amnd-btn-secondary text-xs font-medium flex items-center justify-center gap-2 cursor-pointer text-center"
               id="import-data-pkg-label"
             >
-              <Upload className="w-3.5 h-3.5" />
-              <span>{isEn ? 'Import Data Package' : '📥 导入好友数据包'}</span>
+              <Upload className="w-3.5 h-3.5 text-[var(--amnd-wood)]" />
+              <span>{isEn ? 'Import JSON Backup' : '导入数据包 (JSON)'}</span>
               <input
                 type="file"
                 accept=".json"
@@ -346,20 +358,20 @@ export default function ShareAppModal({
             <button
               type="button"
               onClick={handleRestoreSnapshot}
-              className="w-full py-2 px-3 rounded-xl bg-gray-50 hover:bg-gray-100 border border-gray-200 text-[11px] font-semibold text-[#6d5b5e] flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+              className="w-full py-2 px-3 rounded-xl bg-[var(--amnd-bg-elevated)] hover:bg-[var(--amnd-bg-subtle)] border border-[var(--amnd-border)] text-xs font-medium text-[var(--amnd-text-secondary)] flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
               id="modal-restore-snapshot-btn"
             >
-              <RotateCcw className="w-3.5 h-3.5 text-[#8e6d72]" />
-              <span>{isEn ? 'Restore Pre-Import Snapshot' : '↩️ 撤销导入（恢复导入前数据快照）'}</span>
+              <RotateCcw className="w-3.5 h-3.5 text-[var(--amnd-wood)]" />
+              <span>{isEn ? 'Restore Pre-Import Snapshot' : '撤销导入（恢复导入前数据快照）'}</span>
             </button>
           )}
 
           {importStatus && (
             <div
-              className={`p-2.5 rounded-xl text-xs font-bold text-center animate-fadeIn flex items-center justify-center gap-1.5 ${
+              className={`p-2.5 rounded-xl text-xs font-medium text-center animate-fadeIn flex items-center justify-center gap-1.5 ${
                 importStatus.type === 'error'
                   ? 'bg-rose-50 text-rose-700 border border-rose-200'
-                  : 'bg-pink-100/70 text-[#8e6d72]'
+                  : 'bg-[var(--amnd-bg-elevated)] text-[var(--amnd-text-primary)] border border-[var(--amnd-border)]'
               }`}
               id="share-modal-import-status"
             >
@@ -374,12 +386,11 @@ export default function ShareAppModal({
           <button
             type="button"
             onClick={onClose}
-            className="text-xs text-[#b49196] hover:text-[#8e6d72] font-bold underline cursor-pointer"
+            className="text-xs text-[var(--amnd-text-secondary)] hover:text-[var(--amnd-text-primary)] font-medium underline cursor-pointer"
           >
             {isEn ? 'Close Window' : '完成并关闭'}
           </button>
         </div>
-
       </div>
     </div>
   );
