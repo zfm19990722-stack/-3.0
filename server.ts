@@ -335,10 +335,12 @@ async function startServer() {
   // 1.5 Expand brief user keywords into a beautiful detailed manifestation script
   app.post("/api/wish/expand", async (req, res) => {
     try {
-      const { text, category } = req.body;
+      const { text, category, language = 'zh' } = req.body;
       if (!text) {
         return res.status(400).json({ error: "Brief cue words/prompts are required." });
       }
+
+      const targetLang: 'zh' | 'en' = language === 'en' ? 'en' : 'zh';
 
       const categoryMap: Record<string, string> = {
         love: "浪漫情缘",
@@ -348,15 +350,49 @@ async function startServer() {
         lifestyle: "理想生活"
       };
 
+      const categoryEnMap: Record<string, string> = {
+        love: "Love & Harmony",
+        wealth: "Abundance & Wealth",
+        beauty: "Beauty & Vitality",
+        career: "Graceful Career",
+        lifestyle: "Ideal Lifestyle"
+      };
+
       if (!ai) {
         // High quality offline expander
+        if (targetLang === 'en') {
+          const catNameEn = categoryEnMap[category] || "Graceful Wish";
+          const expandedText = `【My Ultimate Manifestation State】\nIn my "${catNameEn}" wish, I effortlessly embrace and embody: ${text}.\n\n【Immersive Sensory Imagery】\nIn an afternoon bathed in warm golden sunlight and delicate floral fragrance, a gentle breeze brushes past. Wearing soft cream cashmere, I hold a warm porcelain cup of fragrant tea as soothing notes drift gently through the air, feeling deeply held, serene, and cherished by the universe.\n\n【My Affirmation of Deservedness】\nI am inherently whole, and I naturally deserve the gentlest, most abundant, unconditional love and beauty in this life.`;
+          return res.json({ expandedText, isOffline: true });
+        }
+
         const catName = categoryMap[category] || "优雅愿望";
         const expandedText = `【我期望显化的终极状态】\n在我的「${catName}」愿望中，我全然拥有了：${text}。\n\n【令我身临其境的感官画面】\n在一个充满暖光与雅致芬芳的午后，微风轻拂。我身着极为轻软舒适的奶油色羊绒裙，手执精巧的骨瓷杯。耳畔是若有若无的治愈琴音，空气中弥漫着清新的栀子花香与红茶暖意。我沉浸在这一幕高度安详、被宇宙全然托起并爱着的时刻。\n\n【我的高配得感誓言】\n我本自具足，我天生便值得拥有这世间最温柔、奢华、无条件且神圣的宠爱与无限美好。`;
 
         return res.json({ expandedText, isOffline: true });
       }
 
-      const prompt = `你是一位专门引导人们进行潜意识显化（Manifestation）的心理学导师与灵性美学专家。
+      const prompt = targetLang === 'en'
+        ? `You are a mindful manifestation coach and sensory writing guide.
+The user provided brief cue words or inspiration for their wish:
+Cue words / brief description: "${text}"
+Category: "${categoryEnMap[category] || category}"
+
+Please expand these cues into an evocative, serene, comfortable, and luxurious three-part manifestation description written in the first person ("I").
+
+Strictly follow this exact three-section format in natural, poetic English:
+
+【My Ultimate Manifestation State】
+(Describe the fulfilled, peaceful, and abundant end state based on the user's cue words)
+
+【Immersive Sensory Imagery】
+(Paint vivid visual light, calming sounds, delicate aromas, and comforting tactile warmth within 3 sentences)
+
+【My Affirmation of Deservedness】
+(One calm, grounded, empowering first-person affirmation of innate worthiness)
+
+Return only the expanded plain text directly, without any extra commentary or markdown wrappers.`
+        : `你是一位专门引导人们进行潜意识显化（Manifestation）的心理学导师与灵性美学专家。
 用户提供了他们心愿的简短提示词/灵感线索：
 提示词/简短描述: "${text}"
 所属类别: "${categoryMap[category] || category}"

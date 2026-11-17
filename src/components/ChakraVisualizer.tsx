@@ -213,6 +213,8 @@ export const ChakraVisualizer: React.FC<ChakraVisualizerProps> = ({
   };
 
   const selectedChakra = CHAKRAS_DATA.find((c) => c.id === selectedChakraId) || CHAKRAS_DATA[3];
+  const chakraTextColor =
+    !isBgDark && selectedChakra.id === 'solarPlexus' ? '#a16207' : selectedChakra.color;
 
   // Dynamically calculate flow dot or gradient position inside the Central Channel
   useEffect(() => {
@@ -380,7 +382,7 @@ export const ChakraVisualizer: React.FC<ChakraVisualizerProps> = ({
                   cy={ySequence[0]}
                   r={1.0 + (i % 3) * 0.4}
                   fill={particleColor}
-                  initial={{ y: 0, opacity: 0 }}
+                  initial={{ y: 0, cy: ySequence[0], opacity: 0 }}
                   animate={{
                     cy: ySequence,
                     opacity: [0, 0.8, 0.8, 0]
@@ -823,12 +825,20 @@ export const ChakraVisualizer: React.FC<ChakraVisualizerProps> = ({
           </svg>
 
           {/* Quick UI Labels next to the visual body */}
-          <div className="absolute right-0 top-0 bottom-0 flex flex-col justify-between py-5 pointer-events-none text-[8.5px] font-mono font-bold opacity-60">
+          <div className="absolute right-0 top-0 bottom-0 flex flex-col justify-between py-5 pointer-events-none text-[8.5px] font-mono font-bold">
             {CHAKRAS_DATA.map((c) => (
               <div 
                 key={c.id} 
                 style={{ position: 'absolute', top: `${(c.y / 250) * 100}%`, transform: 'translateY(-50%)', right: '-12px' }}
-                className={`flex items-center gap-1 transition-all duration-300 ${selectedChakraId === c.id ? 'opacity-100 scale-105 font-bold text-white' : 'opacity-40'}`}
+                className={`flex items-center gap-1 transition-all duration-300 ${
+                  selectedChakraId === c.id
+                    ? isBgDark
+                      ? 'opacity-100 scale-105 font-bold text-white'
+                      : 'opacity-100 scale-105 font-bold text-[#4a2e31]'
+                    : isBgDark
+                      ? 'opacity-50 text-white/80'
+                      : 'opacity-70 text-[#61454a]'
+                }`}
               >
                 <span className="w-1 h-1 rounded-full" style={{ backgroundColor: c.color }} />
                 <span>{language === 'en' ? c.nameEn.split(' ')[0] : c.name.split(' ')[0]}</span>
@@ -839,10 +849,21 @@ export const ChakraVisualizer: React.FC<ChakraVisualizerProps> = ({
 
         {/* Energy Phase Helper Text */}
         <div className={`mt-2.5 px-3 py-1 rounded-full text-[10.5px] font-medium flex items-center gap-1.5 backdrop-blur-md border ${
-          breathingPhase === 'inhale' ? 'bg-pink-500/10 border-pink-500/20 text-pink-300' :
-          breathingPhase === 'holdIn' ? 'bg-amber-500/10 border-amber-500/20 text-amber-200' :
-          breathingPhase === 'exhale' ? 'bg-sky-500/10 border-sky-500/20 text-sky-200' :
-          'bg-purple-500/10 border-purple-500/20 text-purple-200'
+          breathingPhase === 'inhale'
+            ? isBgDark
+              ? 'bg-pink-500/10 border-pink-500/20 text-pink-200'
+              : 'bg-pink-50/85 border-pink-300/60 text-pink-900'
+            : breathingPhase === 'holdIn'
+              ? isBgDark
+                ? 'bg-amber-500/10 border-amber-500/20 text-amber-200'
+                : 'bg-amber-50/85 border-amber-300/60 text-amber-900'
+              : breathingPhase === 'exhale'
+                ? isBgDark
+                  ? 'bg-sky-500/10 border-sky-500/20 text-sky-200'
+                  : 'bg-sky-50/85 border-sky-300/60 text-sky-900'
+                : isBgDark
+                  ? 'bg-purple-500/10 border-purple-500/20 text-purple-200'
+                  : 'bg-purple-50/85 border-purple-300/60 text-purple-900'
         }`}>
           <Activity className="w-3.5 h-3.5 animate-pulse" />
           <span>
@@ -958,15 +979,19 @@ export const ChakraVisualizer: React.FC<ChakraVisualizerProps> = ({
           <div className="flex items-center gap-2">
             <span className="text-lg">🕉️</span>
             <div>
-              <span className="text-[10px] font-mono tracking-widest uppercase opacity-70 block">
+              <span className={`text-[10px] font-mono tracking-widest uppercase block ${isBgDark ? 'text-pink-100/80' : 'text-[#61454a]'}`}>
                 {selectedChakra.sanskrit} • {language === 'en' ? 'Seed Sound' : '种子音'}: <span className="font-bold underline">{selectedChakra.bijaMantra}</span>
               </span>
-              <h3 className="text-sm font-bold font-serif" style={{ color: selectedChakra.color }}>
+              <h3 className="text-sm font-bold font-serif" style={{ color: chakraTextColor }}>
                 {language === 'en' ? selectedChakra.nameEn : selectedChakra.name}
               </h3>
             </div>
           </div>
-          <span className="text-[9.5px] px-2 py-0.5 rounded-full border border-white/10 font-mono opacity-80 bg-white/5">
+          <span className={`text-[9.5px] px-2 py-0.5 rounded-full border font-mono ${
+            isBgDark
+              ? 'border-white/15 bg-white/5 text-white/85'
+              : 'border-[#8e6d72]/20 bg-[#8e6d72]/10 text-[#4a2e31]'
+          }`}>
             📍 {language === 'en' ? selectedChakra.physicalLocationEn : selectedChakra.physicalLocation}
           </span>
         </div>
@@ -977,26 +1002,32 @@ export const ChakraVisualizer: React.FC<ChakraVisualizerProps> = ({
         </p>
 
         {/* Sacred Affirmation Board */}
-        <div className="p-3 rounded-xl border border-white/5 bg-gradient-to-r from-pink-500/5 to-purple-500/5 relative overflow-hidden mb-3">
-          <div className="absolute top-1 right-1 opacity-10">
-            <Sparkles className="w-8 h-8 text-yellow-300" />
+        <div className={`p-3 rounded-xl border relative overflow-hidden mb-3 ${
+          isBgDark
+            ? 'border-white/10 bg-gradient-to-r from-pink-500/10 to-purple-500/10'
+            : 'border-[#8e6d72]/20 bg-[#8e6d72]/5'
+        }`}>
+          <div className="absolute top-1 right-1 opacity-15">
+            <Sparkles className={`w-8 h-8 ${isBgDark ? 'text-yellow-300' : 'text-[#8e6d72]'}`} />
           </div>
           <span className={`text-[8.5px] font-bold tracking-widest uppercase block mb-1 ${isBgDark ? 'text-pink-300' : 'text-[#8e6d72]'}`}>
             {language === 'en' ? '🔮 CHAKRA AFFIRMATION' : '🔮 脉轮显化宣言 (Affirmation)'}
           </span>
-          <p className="text-xs font-serif font-bold italic tracking-wide text-center leading-relaxed text-yellow-300 dark:text-yellow-100 py-1">
+          <p className={`text-xs font-serif font-bold italic tracking-wide text-center leading-relaxed py-1 ${
+            isBgDark ? 'text-yellow-200' : 'text-[#4a2e31]'
+          }`}>
             {language === 'en' ? selectedChakra.affirmationEn : selectedChakra.affirmation}
           </p>
         </div>
 
         {/* SOLFEGGIO ACOUSTIC RESONANCE CALIBRATION (NEW EXPERIENTIAL WIDGET) */}
-        <div className={`p-3 rounded-xl border ${isBgDark ? 'bg-white/5 border-white/10' : 'bg-[#8e6d72]/5 border-[#8e6d72]/10'} flex flex-col gap-2`}>
+        <div className={`p-3 rounded-xl border ${isBgDark ? 'bg-white/5 border-white/10' : 'bg-[#8e6d72]/5 border-[#8e6d72]/15'} flex flex-col gap-2`}>
           <div className="flex items-center justify-between text-[10px] font-mono">
-            <span className="opacity-80 flex items-center gap-1">
-              <Zap className="w-3.5 h-3.5" style={{ color: selectedChakra.color }} />
+            <span className={`flex items-center gap-1 ${isBgDark ? 'text-white/80' : 'text-[#61454a]'}`}>
+              <Zap className="w-3.5 h-3.5" style={{ color: chakraTextColor }} />
               {language === 'en' ? 'Solfeggio Frequency' : '索尔菲乔频率 (Solfeggio)'}
             </span>
-            <span className="font-bold font-mono tracking-wider" style={{ color: selectedChakra.color }}>
+            <span className="font-bold font-mono tracking-wider" style={{ color: chakraTextColor }}>
               {selectedChakra.solfeggio} Hz
             </span>
           </div>
@@ -1030,7 +1061,9 @@ export const ChakraVisualizer: React.FC<ChakraVisualizerProps> = ({
               setTimeout(() => setIsResonating(false), 5000);
             }}
             disabled={isResonating}
-            className="relative w-full py-2 px-3 rounded-lg flex items-center justify-center gap-1.5 text-[11px] font-bold tracking-wide transition-all shadow-sm select-none overflow-hidden text-white"
+            className={`relative w-full py-2 px-3 rounded-lg flex items-center justify-center gap-1.5 text-[11px] font-bold tracking-wide transition-all shadow-sm select-none overflow-hidden ${
+              isResonating && !isBgDark ? 'text-[#4a2e31]' : 'text-white'
+            }`}
             style={{
               background: isResonating 
                 ? `linear-gradient(90deg, ${selectedChakra.color}25, ${selectedChakra.color}45)`
@@ -1052,7 +1085,7 @@ export const ChakraVisualizer: React.FC<ChakraVisualizerProps> = ({
         </div>
 
         {/* Quick Interaction Notice */}
-        <span className="text-[9px] text-center italic opacity-50 mt-2 block">
+        <span className={`text-[9px] text-center italic mt-2 block ${isBgDark ? 'text-white/65' : 'text-[#61454a]/80'}`}>
           {language === 'en' ? '💡 Click any circle on the left map to explore and align with other chakras' : '💡 点击左图中的任意圆圈可切换查看并对齐观想其他脉轮'}
         </span>
       </div>

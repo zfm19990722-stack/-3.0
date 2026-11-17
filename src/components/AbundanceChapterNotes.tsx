@@ -6,14 +6,17 @@ import {
   ChevronDown, ChevronUp, Share2, ArrowRight, Lightbulb, MessageSquare, Download
 } from 'lucide-react';
 import { ABUNDANCE_CHAPTERS_DATA, INITIAL_USER_NOTES, ChapterEssence, UserBookNote } from '../data/abundanceBookStructure';
+import {
+  READING_NOTES_STORAGE_KEY,
+  ABUNDANCE_NOTES_UPDATED_EVENT,
+  loadMergedReadingNotes,
+} from '../services/backupService';
 
 interface AbundanceChapterNotesProps {
   language?: 'zh' | 'en';
   onSpeak?: (text: string) => Promise<void>;
   onAddCustomWish?: (title: string, details: string, category: 'wealth' | 'love' | 'beauty' | 'career' | 'lifestyle') => void;
 }
-
-const STORAGE_KEY = 'ABUNDANCE_USER_READING_NOTES_V1';
 
 export default function AbundanceChapterNotes({ language = 'zh', onSpeak, onAddCustomWish }: AbundanceChapterNotesProps) {
   const isEn = language === 'en';
@@ -25,25 +28,48 @@ export default function AbundanceChapterNotes({ language = 'zh', onSpeak, onAddC
   const [selectedChapterId, setSelectedChapterId] = useState<string>('ch-1');
   const selectedChapter = ABUNDANCE_CHAPTERS_DATA.find(c => c.id === selectedChapterId) || ABUNDANCE_CHAPTERS_DATA[0];
 
-  // Notes state (localStorage backed)
+  // Notes state (localStorage backed, safely merging primary + legacy keys on initial load)
   const [notes, setNotes] = useState<UserBookNote[]>(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) return JSON.parse(saved);
+      return loadMergedReadingNotes(window.localStorage, INITIAL_USER_NOTES);
     } catch (e) {
       console.error('Failed to load user notes from storage', e);
     }
     return INITIAL_USER_NOTES;
   });
 
-  // Save notes to localStorage
+  // Save notes to primary localStorage key and notify summary counters
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
+      localStorage.setItem(READING_NOTES_STORAGE_KEY, JSON.stringify(notes));
     } catch (e) {
       console.error('Failed to persist user notes', e);
     }
   }, [notes]);
+
+  // Listen for backup import / snapshot restore events while mounted
+  useEffect(() => {
+    const syncFromStorage = () => {
+      try {
+        const raw = localStorage.getItem(READING_NOTES_STORAGE_KEY);
+        if (raw !== null) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) {
+            setNotes(parsed);
+            return;
+          }
+        }
+        setNotes(loadMergedReadingNotes(window.localStorage, INITIAL_USER_NOTES));
+      } catch (e) {
+        console.error('Failed to refresh notes after backup event:', e);
+      }
+    };
+
+    window.addEventListener(ABUNDANCE_NOTES_UPDATED_EVENT, syncFromStorage);
+    return () => {
+      window.removeEventListener(ABUNDANCE_NOTES_UPDATED_EVENT, syncFromStorage);
+    };
+  }, []);
 
   // Note editor form modal
   const [isEditorOpen, setIsEditorOpen] = useState(false);

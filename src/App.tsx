@@ -21,8 +21,9 @@ import {
   Compass,
   ArrowLeft,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
   Eye,
-  Info,
   RotateCcw,
   Play,
   Pause,
@@ -142,6 +143,7 @@ export default function App() {
   const [bgBrightness, setBgBrightness] = useState<number>(100); // 50% to 150%
   const [bgBlur, setBgBlur] = useState<number>(0); // 0px to 15px
   const [showFilterPanel, setShowFilterPanel] = useState<boolean>(false);
+  const [showMobileTools, setShowMobileTools] = useState<boolean>(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState<boolean>(false);
 
   // Lifted AudioPlayer states
@@ -1130,138 +1132,184 @@ export default function App() {
   const isBgDark = visualBg === 'sparkling-sky';
 
   return (
-    <div className="relative min-h-screen text-[#4a3a3a] transition-colors duration-1000 font-sans">
-      {/* Background Mesh Gradients */}
-      <div className="fixed inset-0 -z-20 pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-[#ffe4e9] rounded-full blur-[100px] opacity-60"></div>
-        <div className="absolute bottom-[0%] right-[-5%] w-[60%] h-[60%] bg-[#fcf0e2] rounded-full blur-[120px] opacity-50"></div>
-        <div className="absolute top-[20%] right-[10%] w-[40%] h-[40%] bg-[#f3e5f5] rounded-full blur-[100px] opacity-40"></div>
+    <div className="relative min-h-screen text-[var(--amnd-text-primary)] transition-colors duration-500 font-sans">
+      {/* Calm Warm Ivory Base Surface */}
+      <div className="fixed inset-0 -z-20 pointer-events-none bg-[var(--amnd-bg-primary)]" />
+
+      {/* Subtle Canvas Atmosphere Layer (kept subtle on editorial views; full-strength inside Meditation Space) */}
+      <div className={activeWishSession ? 'pointer-events-none' : 'opacity-[0.16] pointer-events-none transition-opacity duration-500'}>
+        <VisualizationBackground type={visualBg} intensity={3} saturation={bgSaturation} brightness={bgBrightness} blur={bgBlur} />
       </div>
 
-      {/* High-quality Canvas Visualizer Background */}
-      <VisualizationBackground type={visualBg} intensity={3} saturation={bgSaturation} brightness={bgBrightness} blur={bgBlur} />
-
       {/* Header Bar */}
-      <header className="sticky top-0 z-40 bg-white/20 backdrop-blur-xl border-b border-white/40 py-5 px-6 md:px-12 flex flex-col md:flex-row items-center justify-between gap-4">
-        <div>
-          <h1 className="font-serif text-3xl tracking-tight text-[#8e6d72]">Lumière Manifest</h1>
-          <p className="text-xs uppercase tracking-[0.2em] text-[#b49196] font-semibold mt-1">
-            {language === 'en' ? 'My Royal Sanctuary • Regal Manifestation' : 'My Royal Sanctuary • 公主风奢华显化'}
+      <header className="sticky top-0 z-40 bg-[var(--amnd-bg-elevated)]/95 border-b border-[var(--amnd-border)] py-2 md:py-1.5 px-4 sm:px-6 lg:px-10 flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-2 md:gap-2.5">
+        <div className="min-w-0 flex items-center justify-between gap-2 w-full xl:w-auto shrink-0">
+          <button
+            type="button"
+            onClick={() => {
+              setCurrentView('main');
+              setShowMobileTools(false);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className="flex items-center text-left cursor-pointer rounded-lg focus-visible:outline-2"
+            aria-label="AMND Manifestation Home"
+          >
+            <img
+              src="/logo-header.png"
+              alt="AMND Manifestation · Amanda 的学海魔法屋"
+              className="h-11 md:h-16 xl:h-[72px] w-auto object-contain select-none shrink-0"
+            />
+          </button>
+          <h1 className="sr-only">AMND Manifestation</h1>
+          <p className="sr-only">
+            {language === 'en'
+              ? "Amanda's Sanctuary · Learn, and Magic Manifests."
+              : 'Amanda 的学海魔法屋 · 学习了，魔法会显化。'}
           </p>
+
+          <button
+            type="button"
+            onClick={() => setShowMobileTools((prev) => !prev)}
+            aria-expanded={showMobileTools}
+            aria-controls="header-secondary-tools"
+            id="mobile-tools-toggle-btn"
+            className={`md:hidden inline-flex items-center gap-1.5 min-h-[40px] px-3 py-2 rounded-xl text-xs font-medium border transition-colors cursor-pointer shrink-0 ${
+              showMobileTools
+                ? 'bg-[var(--amnd-wood)] text-[var(--amnd-bg-elevated)] border-transparent'
+                : 'bg-[var(--amnd-bg-secondary)] hover:bg-[var(--amnd-bg-subtle)] text-[var(--amnd-text-primary)] border-[var(--amnd-border-strong)]'
+            }`}
+          >
+            <SlidersHorizontal className="w-3.5 h-3.5" />
+            <span>{language === 'en' ? 'Tools' : '工具'}</span>
+            {showMobileTools ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+          </button>
         </div>
 
-        {/* Background Visualizer Picker & Welcome */}
-        <div className="flex items-center gap-4 flex-wrap">
+        {/* Navigation, Canvas Controls & Local Backup Bar */}
+        <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-2.5 md:flex-wrap w-full xl:w-auto xl:justify-end">
           {/* Main Sanctuary vs Meditation Space vs Wisdom Sanctuary View Switcher */}
-          <div className="flex items-center space-x-1 bg-white/30 backdrop-blur-md p-1 rounded-full border border-white/40 shadow-sm">
+          <nav
+            aria-label={language === 'en' ? 'Primary navigation' : '主导航'}
+            className="grid grid-cols-3 md:flex items-center gap-1 bg-[var(--amnd-bg-secondary)] p-1 rounded-xl border border-[var(--amnd-border)] w-full md:w-auto max-w-full overflow-x-auto"
+          >
             <button
+              type="button"
               onClick={() => {
                 setCurrentView('main');
+                setShowMobileTools(false);
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
-              className={`px-3.5 py-1.5 rounded-full text-xs font-sans transition-all duration-300 flex items-center gap-1.5 cursor-pointer ${
+              className={`min-h-[40px] md:min-h-0 px-2.5 md:px-3 py-1.5 rounded-lg text-xs font-sans transition-colors duration-200 flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer ${
                 currentView === 'main'
-                  ? 'bg-white text-[#8e6d72] shadow-sm font-bold scale-[1.02]'
-                  : 'text-[#8e6d72]/70 hover:text-[#8e6d72] hover:bg-white/20'
+                  ? 'bg-[var(--amnd-bg-elevated)] text-[var(--amnd-text-primary)] shadow-2xs font-semibold border border-[var(--amnd-border)]'
+                  : 'text-[var(--amnd-text-secondary)] hover:text-[var(--amnd-text-primary)]'
               }`}
               id="nav-view-main"
             >
-              <span>🏰</span>
-              <span className="text-[11px]">
-                {language === 'en' ? 'Manifestation Oasis' : '显化圣殿'}
-              </span>
+              <span>{language === 'en' ? 'Manifestation' : '显化空间'}</span>
             </button>
             <button
+              type="button"
               onClick={() => {
+                setShowMobileTools(false);
                 handleEnterMeditationSpace();
               }}
-              className={`px-3.5 py-1.5 rounded-full text-xs font-sans transition-all duration-300 flex items-center gap-1.5 cursor-pointer ${
+              className={`min-h-[40px] md:min-h-0 px-2.5 md:px-3 py-1.5 rounded-lg text-xs font-sans transition-colors duration-200 flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer ${
                 currentView === 'meditation'
-                  ? 'bg-white text-[#8e6d72] shadow-sm font-bold scale-[1.02]'
-                  : 'text-[#8e6d72]/70 hover:text-[#8e6d72] hover:bg-white/20'
+                  ? 'bg-[var(--amnd-bg-elevated)] text-[var(--amnd-text-primary)] shadow-2xs font-semibold border border-[var(--amnd-border)]'
+                  : 'text-[var(--amnd-text-secondary)] hover:text-[var(--amnd-text-primary)]'
               }`}
               id="nav-view-meditation"
             >
-              <span className="text-sm">🧘</span>
-              <span className="text-[11px]">
-                {language === 'en' ? 'Meditation Space' : '沉浸冥想空间'}
-              </span>
+              <span>{language === 'en' ? 'Stillness' : '沉浸冥想'}</span>
             </button>
             <button
+              type="button"
               onClick={() => {
                 setCurrentView('wisdom');
+                setShowMobileTools(false);
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
-              className={`px-3.5 py-1.5 rounded-full text-xs font-sans transition-all duration-300 flex items-center gap-1.5 cursor-pointer ${
+              className={`min-h-[40px] md:min-h-0 px-2.5 md:px-3 py-1.5 rounded-lg text-xs font-sans transition-colors duration-200 flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer ${
                 currentView === 'wisdom'
-                  ? 'bg-white text-[#8e6d72] shadow-sm font-bold scale-[1.02]'
-                  : 'text-[#8e6d72]/70 hover:text-[#8e6d72] hover:bg-white/20'
+                  ? 'bg-[var(--amnd-bg-elevated)] text-[var(--amnd-text-primary)] shadow-2xs font-semibold border border-[var(--amnd-border)]'
+                  : 'text-[var(--amnd-text-secondary)] hover:text-[var(--amnd-text-primary)]'
               }`}
               id="nav-view-wisdom"
             >
-              <Compass className="w-3.5 h-3.5 text-amber-500 animate-spin" style={{ animationDuration: '16s' }} />
-              <span className="text-[11px]">
-                {language === 'en' ? 'Wisdom Space' : '丰盛智慧空间'}
+              <Compass className="w-3.5 h-3.5 text-[var(--amnd-gold)]" />
+              <span>{language === 'en' ? 'Wisdom' : '丰盛智慧'}</span>
+            </button>
+          </nav>
+
+          {/* Secondary Tools: collapsible drawer on mobile (<768px), inline flex siblings on tablet/desktop (>=768px) */}
+          <div
+            id="header-secondary-tools"
+            className={`${
+              showMobileTools ? 'flex' : 'hidden'
+            } md:contents flex-wrap items-center justify-between gap-2 w-full pt-2 border-t border-[var(--amnd-border)]`}
+          >
+            <div className="flex items-center gap-1 bg-[var(--amnd-bg-secondary)] px-2 py-1 rounded-xl border border-[var(--amnd-border)]">
+              <span className="text-[11px] font-medium text-[var(--amnd-text-muted)] px-1 hidden sm:inline whitespace-nowrap">
+                {language === 'en' ? 'Atmosphere:' : '心境画布:'}
+              </span>
+              {BACKGROUNDS_THEMES.map((theme) => (
+                <button
+                  key={theme.id}
+                  type="button"
+                  onClick={() => setVisualBg(theme.id)}
+                  className={`px-2 py-1 rounded-lg text-xs font-sans transition-colors duration-200 flex items-center gap-1 whitespace-nowrap cursor-pointer ${
+                    visualBg === theme.id
+                      ? 'bg-[var(--amnd-bg-elevated)] text-[var(--amnd-text-primary)] border border-[var(--amnd-border)] font-semibold'
+                      : 'text-[var(--amnd-text-secondary)] hover:text-[var(--amnd-text-primary)] border border-transparent'
+                  }`}
+                  title={language === 'en' ? theme.nameEn : theme.name}
+                  id={`theme-btn-${theme.id}`}
+                >
+                  <span aria-hidden="true">{theme.emoji}</span>
+                  <span className="hidden md:inline text-[11px]">
+                    {language === 'en' ? theme.nameEn : theme.name}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setShowFilterPanel(!showFilterPanel)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-sans transition-colors duration-200 flex items-center gap-1.5 border whitespace-nowrap shrink-0 cursor-pointer ${
+                showFilterPanel
+                  ? 'bg-[var(--amnd-wood)] text-[var(--amnd-bg-elevated)] border-transparent'
+                  : 'bg-[var(--amnd-bg-elevated)] hover:bg-[var(--amnd-bg-secondary)] text-[var(--amnd-text-secondary)] border-[var(--amnd-border-strong)]'
+              }`}
+              id="filter-toggle-btn"
+              title={language === 'en' ? 'Adjust canvas saturation, brightness, and blur' : '调节画布饱和度、亮度和模糊度'}
+            >
+              <SlidersHorizontal className="w-3.5 h-3.5" />
+              <span className="font-medium">
+                {language === 'en' ? 'Filter' : '氛围滤镜'}
               </span>
             </button>
+
+            <button
+              type="button"
+              onClick={() => setLanguage(l => l === 'zh' ? 'en' : 'zh')}
+              className="px-3 py-1.5 rounded-xl text-xs font-sans transition-colors duration-200 flex items-center gap-1.5 border bg-[var(--amnd-bg-elevated)] hover:bg-[var(--amnd-bg-secondary)] text-[var(--amnd-text-primary)] border-[var(--amnd-border-strong)] font-medium whitespace-nowrap shrink-0 cursor-pointer"
+              id="language-toggle-btn"
+            >
+              <span>{language === 'zh' ? 'English' : '中文'}</span>
+            </button>
+
+            {/* Local Private Storage & Share Controls */}
+            <div className="ml-auto md:ml-0 md:contents">
+              <UserSyncBar
+                wishes={wishes}
+                onOpenShareModal={() => setIsShareModalOpen(true)}
+                language={language}
+                onImportWishes={(imported) => saveWishesToStorage(imported)}
+              />
+            </div>
           </div>
-
-          <div className="flex items-center space-x-1.5 bg-white/30 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/40 shadow-sm">
-            <span className="text-[10px] font-bold text-[#8e6d72] uppercase tracking-wider px-1 hidden sm:inline">
-              {language === 'en' ? 'Canvas Theme:' : '可视化画布:'}
-            </span>
-            {BACKGROUNDS_THEMES.map((theme) => (
-              <button
-                key={theme.id}
-                onClick={() => setVisualBg(theme.id)}
-                className={`px-2.5 py-1 rounded-full text-xs font-sans transition-all duration-300 flex items-center gap-1 ${
-                  visualBg === theme.id
-                    ? 'bg-white/60 text-[#8e6d72] border border-white/80 shadow-sm font-semibold'
-                    : 'text-[#8e6d72]/70 hover:bg-white/20 border border-transparent'
-                }`}
-                title={language === 'en' ? theme.nameEn : theme.name}
-                id={`theme-btn-${theme.id}`}
-              >
-                <span>{theme.emoji}</span>
-                <span className="hidden md:inline text-[10.5px]">
-                  {language === 'en' ? theme.nameEn : theme.name}
-                </span>
-              </button>
-            ))}
-          </div>
-
-          <button
-            onClick={() => setShowFilterPanel(!showFilterPanel)}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-sans transition-all duration-300 flex items-center gap-1.5 shadow-sm border ${
-              showFilterPanel
-                ? 'bg-[#8e6d72] text-white border-transparent scale-105 shadow-md'
-                : 'bg-white/30 hover:bg-white/55 text-[#8e6d72] border-white/40'
-            }`}
-            id="filter-toggle-btn"
-            title={language === 'en' ? 'Adjust canvas saturation, brightness, and blur' : '调节画布饱和度、亮度和模糊度'}
-          >
-            <SlidersHorizontal className="w-3.5 h-3.5 animate-pulse" />
-            <span className="text-[10.5px] font-semibold">
-              {language === 'en' ? 'Filter' : '氛围滤镜'}
-            </span>
-          </button>
-
-          <button
-            onClick={() => setLanguage(l => l === 'zh' ? 'en' : 'zh')}
-            className="px-3.5 py-1.5 rounded-full text-xs font-sans transition-all duration-300 flex items-center gap-1.5 shadow-sm border bg-white/30 hover:bg-white/55 text-[#8e6d72] border-white/40 font-semibold cursor-pointer"
-            id="language-toggle-btn"
-          >
-            <span>🌐</span>
-            <span>{language === 'zh' ? 'English' : '中文'}</span>
-          </button>
-
-          {/* Local Private Storage & Share Controls */}
-          <UserSyncBar
-            wishes={wishes}
-            onOpenShareModal={() => setIsShareModalOpen(true)}
-            language={language}
-            onImportWishes={(imported) => saveWishesToStorage(imported)}
-          />
         </div>
       </header>
 
@@ -1270,45 +1318,46 @@ export default function App() {
         
         {/* Ambient Filter Control Panel */}
         {showFilterPanel && (
-          <div className="mb-6 p-5 rounded-[28px] bg-white/45 backdrop-blur-xl border border-white/40 shadow-xl shadow-pink-100/10 animate-fadeIn space-y-4" id="ambient-filters-panel">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-[#8e6d72]/15 pb-3 gap-2">
+          <div className="mb-6 p-5 amnd-surface animate-fadeIn space-y-4" id="ambient-filters-panel">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-[var(--amnd-border)] pb-3 gap-2">
               <div>
-                <h3 className="font-serif text-lg font-bold text-[#8e6d72] flex items-center gap-2">
-                  <SlidersHorizontal className="w-4 h-4 text-[#8e6d72]" />
+                <h3 className="font-serif text-lg font-semibold text-[var(--amnd-text-primary)] flex items-center gap-2">
+                  <SlidersHorizontal className="w-4 h-4 text-[var(--amnd-wood)]" />
                   <span>
                     {language === 'en' ? 'Canvas Filter Settings' : '画布氛围滤镜设置'}
                   </span>
                 </h3>
-                <p className="text-[10px] text-[#b49196] font-semibold uppercase tracking-wider">
-                  {language === 'en' ? 'Customize saturation, brightness, and blur to match your current meditation depth' : '根据您的冥想深度，自由调节画面饱和度、亮度和模糊度'}
+                <p className="text-xs text-[var(--amnd-text-muted)] mt-0.5">
+                  {language === 'en' ? 'Customize saturation, brightness, and blur to match your current meditation depth' : '根据您的静心深度，自由调节画面饱和度、亮度和模糊度'}
                 </p>
               </div>
 
               {/* Reset to defaults button */}
               <button
+                type="button"
                 onClick={() => {
                   setBgSaturation(100);
                   setBgBrightness(100);
                   setBgBlur(0);
                 }}
-                className="text-[10.5px] font-bold text-[#8e6d72] hover:text-white bg-[#8e6d72]/10 hover:bg-[#8e6d72] px-3.5 py-1.5 rounded-full border border-[#8e6d72]/20 transition-all active:scale-95 flex items-center gap-1.5 cursor-pointer"
+                className="text-xs font-medium text-[var(--amnd-wood)] hover:text-[var(--amnd-bg-elevated)] bg-[var(--amnd-bg-secondary)] hover:bg-[var(--amnd-wood)] px-3.5 py-1.5 rounded-lg border border-[var(--amnd-border-strong)] transition-colors flex items-center gap-1.5 cursor-pointer"
               >
-                <span>🔄</span>
+                <RotateCcw className="w-3.5 h-3.5" />
                 <span>{language === 'en' ? 'Reset to Default' : '重置原版'}</span>
               </button>
             </div>
 
             {/* Ambient Presets Grid */}
-            <div className="space-y-1.5">
-              <span className="text-[10.5px] font-bold text-[#8e6d72] uppercase tracking-wider block">
-                {language === 'en' ? '👑 Recommended Meditation Atmosphere Presets' : '👑 推荐深度冥想氛围预设'}
+            <div className="space-y-2">
+              <span className="text-xs font-medium text-[var(--amnd-text-secondary)] block">
+                {language === 'en' ? 'Recommended Meditation Atmosphere Presets' : '推荐静心氛围预设'}
               </span>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                 {[
-                  { name: language === 'en' ? '✨ Original Canvas' : '✨ 默认原版', saturation: 100, brightness: 100, blur: 0, desc: language === 'en' ? 'Original palette' : 'Original' },
-                  { name: language === 'en' ? '🌅 Tranquil Dawn' : '🌅 静谧晨曦', saturation: 80, brightness: 120, blur: 2, desc: language === 'en' ? 'Morning peace' : 'Morning peace' },
-                  { name: language === 'en' ? '🌌 Deep Dream' : '🌌 深沉梦境', saturation: 130, brightness: 75, blur: 4, desc: language === 'en' ? 'Deep dream space' : 'Deep dream' },
-                  { name: language === 'en' ? '🧘 Ethereal Void' : '🧘 无尘空灵', saturation: 40, brightness: 90, blur: 6, desc: language === 'en' ? 'Deep relaxation' : 'Deep relaxation' },
+                  { name: language === 'en' ? 'Original Canvas' : '默认原版', saturation: 100, brightness: 100, blur: 0, desc: language === 'en' ? 'Standard palette' : '均衡自然' },
+                  { name: language === 'en' ? 'Tranquil Dawn' : '静谧晨曦', saturation: 80, brightness: 120, blur: 2, desc: language === 'en' ? 'Morning peace' : '清朗平和' },
+                  { name: language === 'en' ? 'Deep Dream' : '深沉梦境', saturation: 130, brightness: 75, blur: 4, desc: language === 'en' ? 'Deep dream space' : '沉静内观' },
+                  { name: language === 'en' ? 'Ethereal Void' : '无尘空灵', saturation: 40, brightness: 90, blur: 6, desc: language === 'en' ? 'Deep relaxation' : '极简留白' },
                 ].map((preset) => (
                   <button
                     key={preset.name}
@@ -1318,31 +1367,26 @@ export default function App() {
                       setBgBrightness(preset.brightness);
                       setBgBlur(preset.blur);
                     }}
-                    className={`p-2.5 rounded-2xl border text-left transition-all hover:scale-[1.01] active:scale-95 flex flex-col justify-center cursor-pointer ${
+                    className={`p-3 rounded-xl border text-left transition-colors flex flex-col justify-center cursor-pointer ${
                       bgSaturation === preset.saturation && bgBrightness === preset.brightness && bgBlur === preset.blur
-                        ? 'bg-[#8e6d72]/15 text-[#8e6d72] border-[#8e6d72]/40 shadow-sm font-bold'
-                        : 'bg-white/40 hover:bg-white/60 text-[#4a3a3a] border-white/50'
+                        ? 'bg-[var(--amnd-wood-soft)] text-[var(--amnd-text-primary)] border-[var(--amnd-wood)] font-semibold'
+                        : 'bg-[var(--amnd-bg-secondary)]/60 hover:bg-[var(--amnd-bg-secondary)] text-[var(--amnd-text-secondary)] border-[var(--amnd-border)]'
                     }`}
                   >
                     <span className="text-xs font-semibold">{preset.name}</span>
-                    <span className="text-[8px] opacity-70 font-mono tracking-wider uppercase mt-0.5">{preset.desc}</span>
+                    <span className="text-[11px] text-[var(--amnd-text-muted)] mt-0.5">{preset.desc}</span>
                   </button>
                 ))}
               </div>
             </div>
 
             {/* Sliders Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
               {/* Saturation */}
-              <div className="space-y-1.5 p-3.5 rounded-2xl bg-white/30 border border-white/30">
-                <div className="flex items-center justify-between text-xs font-semibold text-[#8e6d72]">
-                  <span className="flex items-center gap-1.5">
-                    <span>🎨</span>
-                    <span>
-                      {language === 'en' ? 'Canvas Saturation' : '背景饱和度 (Saturation)'}
-                    </span>
-                  </span>
-                  <span className="font-mono text-[11px] bg-white/70 px-2 py-0.5 rounded-lg border border-white/80">{bgSaturation}%</span>
+              <div className="space-y-1.5 p-3.5 rounded-xl bg-[var(--amnd-bg-secondary)]/60 border border-[var(--amnd-border)]">
+                <div className="flex items-center justify-between text-xs font-medium text-[var(--amnd-text-primary)]">
+                  <span>{language === 'en' ? 'Canvas Saturation' : '背景饱和度'}</span>
+                  <span className="font-mono text-[11px] tabular-nums bg-[var(--amnd-bg-elevated)] px-2 py-0.5 rounded border border-[var(--amnd-border)]">{bgSaturation}%</span>
                 </div>
                 <input
                   type="range"
@@ -1351,25 +1395,20 @@ export default function App() {
                   step="5"
                   value={bgSaturation}
                   onChange={(e) => setBgSaturation(Number(e.target.value))}
-                  className="w-full accent-[#8e6d72] cursor-pointer h-1 bg-gray-200/50 rounded-lg appearance-none"
+                  className="w-full accent-[var(--amnd-wood)] cursor-pointer h-1.5 bg-[var(--amnd-border)] rounded-lg appearance-none"
                 />
-                <div className="flex justify-between text-[9px] text-[#b49196] font-medium">
-                  <span>{language === 'en' ? 'Gray / Muted' : '黑白极简'}</span>
-                  <span>{language === 'en' ? 'Standard 100%' : '原色 100%'}</span>
-                  <span>{language === 'en' ? 'Rich / Vivid' : '浓郁奢华'}</span>
+                <div className="flex justify-between text-[11px] text-[var(--amnd-text-muted)]">
+                  <span>{language === 'en' ? 'Muted' : '素雅低饱和'}</span>
+                  <span>100%</span>
+                  <span>{language === 'en' ? 'Vivid' : '丰润'}</span>
                 </div>
               </div>
 
               {/* Brightness */}
-              <div className="space-y-1.5 p-3.5 rounded-2xl bg-white/30 border border-white/30">
-                <div className="flex items-center justify-between text-xs font-semibold text-[#8e6d72]">
-                  <span className="flex items-center gap-1.5">
-                    <span>☀️</span>
-                    <span>
-                      {language === 'en' ? 'Canvas Brightness' : '背景亮度 (Brightness)'}
-                    </span>
-                  </span>
-                  <span className="font-mono text-[11px] bg-white/70 px-2 py-0.5 rounded-lg border border-white/80">{bgBrightness}%</span>
+              <div className="space-y-1.5 p-3.5 rounded-xl bg-[var(--amnd-bg-secondary)]/60 border border-[var(--amnd-border)]">
+                <div className="flex items-center justify-between text-xs font-medium text-[var(--amnd-text-primary)]">
+                  <span>{language === 'en' ? 'Canvas Brightness' : '背景亮度'}</span>
+                  <span className="font-mono text-[11px] tabular-nums bg-[var(--amnd-bg-elevated)] px-2 py-0.5 rounded border border-[var(--amnd-border)]">{bgBrightness}%</span>
                 </div>
                 <input
                   type="range"
@@ -1378,25 +1417,20 @@ export default function App() {
                   step="5"
                   value={bgBrightness}
                   onChange={(e) => setBgBrightness(Number(e.target.value))}
-                  className="w-full accent-[#8e6d72] cursor-pointer h-1 bg-gray-200/50 rounded-lg appearance-none"
+                  className="w-full accent-[var(--amnd-wood)] cursor-pointer h-1.5 bg-[var(--amnd-border)] rounded-lg appearance-none"
                 />
-                <div className="flex justify-between text-[9px] text-[#b49196] font-medium">
-                  <span>{language === 'en' ? 'Quiet Dark' : '静谧幽暗'}</span>
-                  <span>{language === 'en' ? 'Standard 100%' : '标准 100%'}</span>
-                  <span>{language === 'en' ? 'Bright / Luminous' : '明亮通透'}</span>
+                <div className="flex justify-between text-[11px] text-[var(--amnd-text-muted)]">
+                  <span>{language === 'en' ? 'Quiet Dark' : '静谧柔暗'}</span>
+                  <span>100%</span>
+                  <span>{language === 'en' ? 'Luminous' : '明亮通透'}</span>
                 </div>
               </div>
 
               {/* Blur */}
-              <div className="space-y-1.5 p-3.5 rounded-2xl bg-white/30 border border-white/30">
-                <div className="flex items-center justify-between text-xs font-semibold text-[#8e6d72]">
-                  <span className="flex items-center gap-1.5">
-                    <span>🌫️</span>
-                    <span>
-                      {language === 'en' ? 'Canvas Blur' : '背景模糊度 (Blur)'}
-                    </span>
-                  </span>
-                  <span className="font-mono text-[11px] bg-white/70 px-2 py-0.5 rounded-lg border border-white/80">{bgBlur}px</span>
+              <div className="space-y-1.5 p-3.5 rounded-xl bg-[var(--amnd-bg-secondary)]/60 border border-[var(--amnd-border)]">
+                <div className="flex items-center justify-between text-xs font-medium text-[var(--amnd-text-primary)]">
+                  <span>{language === 'en' ? 'Canvas Blur' : '背景模糊度'}</span>
+                  <span className="font-mono text-[11px] tabular-nums bg-[var(--amnd-bg-elevated)] px-2 py-0.5 rounded border border-[var(--amnd-border)]">{bgBlur}px</span>
                 </div>
                 <input
                   type="range"
@@ -1405,41 +1439,60 @@ export default function App() {
                   step="1"
                   value={bgBlur}
                   onChange={(e) => setBgBlur(Number(e.target.value))}
-                  className="w-full accent-[#8e6d72] cursor-pointer h-1 bg-gray-200/50 rounded-lg appearance-none"
+                  className="w-full accent-[var(--amnd-wood)] cursor-pointer h-1.5 bg-[var(--amnd-border)] rounded-lg appearance-none"
                 />
-                <div className="flex justify-between text-[9px] text-[#b49196] font-medium">
-                  <span>{language === 'en' ? 'Clear & Sharp' : '剔透清晰'}</span>
-                  <span>{language === 'en' ? 'Soft Frosted' : '温润毛玻璃'}</span>
-                  <span>{language === 'en' ? 'Deep Void' : '深度虚无'}</span>
+                <div className="flex justify-between text-[11px] text-[var(--amnd-text-muted)]">
+                  <span>{language === 'en' ? 'Clear' : '清透'}</span>
+                  <span>{language === 'en' ? 'Soft' : '柔和'}</span>
+                  <span>{language === 'en' ? 'Deep Blur' : '微茫虚化'}</span>
                 </div>
               </div>
             </div>
-          </div>)}
-        
-        {/* Intro Alert card */}
+          </div>
+        )}
+
+        {/* Intro Brand Sanctuary Card */}
         {showIntroduction && (
-          <div className="mb-6 p-5 rounded-[24px] bg-white/30 backdrop-blur-xl border border-white/40 shadow-xl shadow-pink-100/10 flex items-start gap-3 relative animate-fadeIn">
-            <div className="p-2 rounded-xl bg-white/50 text-[#8e6d72] shrink-0 border border-white">
-              <Info className="w-4 h-4" />
+          <div className="mb-8 p-5 md:p-6 amnd-surface-stone flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-5 relative animate-fadeIn">
+            <div className="p-2 rounded-xl bg-[var(--amnd-bg-elevated)] shrink-0 border border-[var(--amnd-border)]">
+              <img
+                src="/logo-hero.png"
+                alt="AMND Manifestation Logo"
+                className="w-16 sm:w-20 h-auto object-contain select-none"
+              />
             </div>
-            <div className="text-xs text-[#6d5b5e] leading-relaxed pr-6">
-              <p className="font-serif font-semibold text-lg text-[#8e6d72] mb-1">
-                {language === 'en' ? 'Welcome to Lumière Manifest Sanctuary ✨' : '欢迎来到 Lumière Manifest 奢华显化磁场 ✨'}
+            <div className="text-sm text-[var(--amnd-text-secondary)] leading-relaxed pr-7 space-y-1.5">
+              <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                <h2 className="font-serif font-semibold text-lg text-[var(--amnd-text-primary)]">
+                  {language === 'en' ? 'AMND Manifestation' : 'AMND Manifestation · Amanda 的学海魔法屋'}
+                </h2>
+                <span className="text-xs font-medium text-[var(--amnd-wood)]">
+                  {language === 'en' ? 'Learn, and Magic Manifests.' : '学习了，魔法会显化。'}
+                </span>
+              </div>
+              <p className="text-xs text-[var(--amnd-text-muted)]">
+                {language === 'en'
+                  ? 'Learning → Awareness → Stillness → Manifestation'
+                  : '学习 → 觉察 → 静心 → 显化'}
               </p>
-              {language === 'en' ? (
-                <>
-                  This is your exclusive sanctuary of deep relaxation and manifestation. Click <strong className="text-[#8e6d72]">"✨ Activate Visualization Details"</strong> on any wish, and the Gemini AI will immediately weave sensory details filled with colors, textures, and aromas. Coupled with the <strong className="text-[#8e6d72]">"Subconscious TTS Voice Guidance"</strong>, let abundance and beauty flow seamlessly into your life.
-                </>
-              ) : (
-                <>
-                  这是一个专属于您的舒缓疗愈殿堂。点击心愿中的 <strong className="text-[#8e6d72]">“✨ 激活具体显化细节”</strong>，Gemini 智能算法将为您实时编织饱含色彩、温度与香氛的可视化细节。配合 <strong className="text-[#8e6d72]">“深沉女声朗读”</strong> 浸润潜意识，让丰盛与美丽自如地流向您的生命。
-                </>
-              )}
+              <p className="text-xs md:text-[13px] text-[var(--amnd-text-secondary)] leading-relaxed pt-0.5">
+                {language === 'en' ? (
+                  <>
+                    A quiet space for Eastern wisdom, reflection, and mindful manifestation. Click <strong className="text-[var(--amnd-text-primary)] font-semibold">"Fast Activate"</strong> on any wish to compose rich sensory details, and pair it with <strong className="text-[var(--amnd-text-primary)] font-semibold">voice guidance</strong> to settle your attention.
+                  </>
+                ) : (
+                  <>
+                    在东方智慧与现代自我觉察中安顿身心。点击心愿卡片中的 <strong className="text-[var(--amnd-text-primary)] font-semibold">“快速激活细节”</strong>，即可为您编织具象感官画面，并配合 <strong className="text-[var(--amnd-text-primary)] font-semibold">语音朗读</strong> 与静坐声景进入深度专注。
+                  </>
+                )}
+              </p>
             </div>
             <button
+              type="button"
               onClick={() => setShowIntroduction(false)}
-              className="absolute top-4 right-4 text-[#8e6d72] hover:text-black transition-colors"
+              className="absolute top-4 right-4 p-1 text-[var(--amnd-text-muted)] hover:text-[var(--amnd-text-primary)] transition-colors cursor-pointer"
               id="close-intro-btn"
+              aria-label={language === 'en' ? 'Dismiss introduction' : '关闭简介'}
             >
               <X className="w-4 h-4" />
             </button>
@@ -1525,41 +1578,45 @@ export default function App() {
                 activeWishSession={activeWishSession}
               />
 
-              {/* Quick guidance tips */}
-              <div className="p-6 rounded-[32px] bg-[#8e6d72]/10 backdrop-blur-2xl border border-[#8e6d72]/20 shadow-xl shadow-pink-100/5">
-                <h4 className="font-serif text-lg mb-4 text-[#8e6d72] flex items-center gap-1.5">
-                  <span>🧘</span>
-                  <span>{language === 'en' ? 'Lumière Trilogy' : 'Lumière 三部曲'}</span>
+              {/* Practice Path guidance */}
+              <div className="p-6 amnd-surface-stone">
+                <h4 className="font-serif text-lg font-semibold mb-1 text-[var(--amnd-text-primary)]">
+                  {language === 'en' ? 'The AMND Practice' : 'AMND 静心与显化路径'}
                 </h4>
-                <ul className="text-xs text-[#6d5b5e] space-y-3.5 leading-relaxed font-sans">
+                <p className="text-xs text-[var(--amnd-wood)] mb-4">
+                  {language === 'en'
+                    ? 'Learning → Awareness → Stillness → Manifestation'
+                    : '学习 → 觉察 → 静心 → 显化'}
+                </p>
+                <ul className="text-xs text-[var(--amnd-text-secondary)] space-y-3 leading-relaxed font-sans">
                   {language === 'en' ? (
                     <>
-                      <li className="flex items-start gap-2">
-                        <span className="text-[#8e6d72] font-bold shrink-0">1.</span>
-                        <span>Write down specific wishes and activate Gemini AI to materialize every sensory detail (temperature, textures, aroma).</span>
+                      <li className="flex items-start gap-2.5">
+                        <span className="text-[var(--amnd-wood)] font-semibold shrink-0">01.</span>
+                        <span>Write down clear intentions and compose sensory details with gentle clarity.</span>
                       </li>
-                      <li className="flex items-start gap-2">
-                        <span className="text-[#8e6d72] font-bold shrink-0">2.</span>
-                        <span>Turn on the immersive music and enter full-screen meditation, following the deep voice to guide your subconsciousness.</span>
+                      <li className="flex items-start gap-2.5">
+                        <span className="text-[var(--amnd-wood)] font-semibold shrink-0">02.</span>
+                        <span>Enter the stillness space with breath pacing, natural soundscapes, and spoken guidance.</span>
                       </li>
-                      <li className="flex items-start gap-2">
-                        <span className="text-[#8e6d72] font-bold shrink-0">3.</span>
-                        <span>Relax completely and maintain a high sense of deservingness; the beautiful things you desire are already waiting for you in the warm future.</span>
+                      <li className="flex items-start gap-2.5">
+                        <span className="text-[var(--amnd-wood)] font-semibold shrink-0">03.</span>
+                        <span>Return to daily wisdom notes and cultivate steady, unhurried awareness.</span>
                       </li>
                     </>
                   ) : (
                     <>
-                      <li className="flex items-start gap-2">
-                        <span className="text-[#8e6d72] font-bold shrink-0">1.</span>
-                        <span>写下具体愿望，启动 Gemini 智能算法为您具象化每一个感官细节（温度、材质、气息）。</span>
+                      <li className="flex items-start gap-2.5">
+                        <span className="text-[var(--amnd-wood)] font-semibold shrink-0">01.</span>
+                        <span>写下清晰真诚的心愿，辅以具体的画面、温度与日常感官细节。</span>
                       </li>
-                      <li className="flex items-start gap-2">
-                        <span className="text-[#8e6d72] font-bold shrink-0">2.</span>
-                        <span>开启沉浸式音乐，进入全屏冥想，跟随着呼唤潜意识的深沉女声进行丰盛暗示注入。</span>
+                      <li className="flex items-start gap-2.5">
+                        <span className="text-[var(--amnd-wood)] font-semibold shrink-0">02.</span>
+                        <span>在静心空间中伴随自然声景、呼吸节律与温和引导语安住当下。</span>
                       </li>
-                      <li className="flex items-start gap-2">
-                        <span className="text-[#8e6d72] font-bold shrink-0">3.</span>
-                        <span>完全放松并保持极高配得感，相信您所想要的美丽，早已在温暖的未来微笑着等待。</span>
+                      <li className="flex items-start gap-2.5">
+                        <span className="text-[var(--amnd-wood)] font-semibold shrink-0">03.</span>
+                        <span>在《丰盛》智慧阅读与读书笔记中持续学习、觉察并沉淀日常实践。</span>
                       </li>
                     </>
                   )}
@@ -1583,8 +1640,12 @@ export default function App() {
 
           {/* Top Bar inside focus session */}
           <div className="flex items-center justify-between w-full relative z-10">
-            <div className={`flex items-center space-x-2 ${isBgDark ? 'text-white' : 'text-[#5c3e43]'}`}>
-              <span className="text-xl">🏰</span>
+            <div className={`flex items-center space-x-2.5 ${isBgDark ? 'text-white' : 'text-[#5c3e43]'}`}>
+              <img
+                src="/logo-icon.png"
+                alt="AMND Manifestation"
+                className="w-8 h-8 object-contain shrink-0 select-none"
+              />
               <div className="text-left">
                 <span className={`text-[10px] uppercase font-mono tracking-widest block font-bold ${isBgDark ? 'text-amber-200' : 'text-[#8e6d72]'}`}>Active Manifestation</span>
                 <span className={`text-xs font-semibold font-serif ${isBgDark ? 'text-white/95' : 'text-[#4a2e31]'}`}>
@@ -2531,14 +2592,19 @@ export default function App() {
       />
 
       {/* Footer credits */}
-      <footer className="text-center py-12 text-xs font-mono tracking-wider border-t border-white/30 mt-12 bg-white/15 backdrop-blur-md text-[#8e6d72]">
-        <p className="font-serif text-sm font-bold">
-          {language === 'en' ? '🦢 LUMIÈRE MANIFEST • Princess Royal Luxury Manifestation Oasis' : '🦢 LUMIÈRE MANIFEST • 公主风奢华显化小屋'}
+      <footer className="text-center py-10 px-4 text-xs border-t border-[var(--amnd-border)] mt-14 bg-[var(--amnd-bg-secondary)]/70 text-[var(--amnd-text-secondary)]">
+        <img
+          src="/logo-icon.png"
+          alt="AMND Manifestation"
+          className="w-10 h-10 mx-auto mb-2.5 object-contain select-none"
+        />
+        <p className="font-serif text-sm font-semibold text-[var(--amnd-text-primary)]">
+          AMND Manifestation · Amanda 的学海魔法屋
         </p>
-        <p className="mt-1.5 text-[10px] text-[#b49196]/80 font-semibold uppercase tracking-widest">
-          {language === 'en' 
-            ? 'Powered by Gemini Intelligent Acoustics TTS & Generative Subconscious Mind' 
-            : 'Powered by Gemini Intelligent Acoustics TTS & Generative Subconscious Mind'}
+        <p className="mt-1.5 text-xs text-[var(--amnd-text-muted)]">
+          {language === 'en'
+            ? 'Learn, and Magic Manifests. · Learning → Awareness → Stillness → Manifestation'
+            : '学习了，魔法会显化。 · 学习 → 觉察 → 静心 → 显化'}
         </p>
       </footer>
     </div>

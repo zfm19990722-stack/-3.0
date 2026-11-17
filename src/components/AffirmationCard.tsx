@@ -128,55 +128,51 @@ export default function AffirmationCard({
   return (
     <>
       <div
-        className="p-6 md:p-8 rounded-[32px] bg-white/40 backdrop-blur-2xl border border-white/40 shadow-xl shadow-pink-100/10 relative overflow-hidden flex flex-col justify-between"
+        className="p-6 md:p-7 amnd-surface relative overflow-hidden flex flex-col justify-between"
         id="daily-affirmation-card"
       >
-        {/* Decorative Ambient Radiance */}
-        <div className="absolute top-0 right-0 w-36 h-36 bg-radial from-[#ffe4e9]/50 via-transparent to-transparent -mr-12 -mt-12 pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-36 h-36 bg-radial from-[#fcf0e2]/60 via-transparent to-transparent -ml-12 -mb-12 pointer-events-none" />
-
         {/* Header with Title and Tools */}
         <div>
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center space-x-2">
-              <Sparkles className="w-4 h-4 text-[#8e6d72] animate-spin" style={{ animationDuration: '8s' }} />
+          <div className="flex items-start justify-between gap-2 mb-4">
+            <div className="flex items-start gap-2">
+              <Sparkles className="w-4 h-4 text-[var(--amnd-gold)] shrink-0 mt-0.5" />
               <div>
-                <span className="text-[10px] uppercase tracking-widest text-[#8e6d72] font-bold block">
-                  {isEn ? 'Daily Affirmation from 《Abundance》' : '每日正向暗示 • 《丰盛》精选'}
+                <span className="text-xs font-semibold text-[var(--amnd-text-primary)] block">
+                  {isEn ? 'Daily Affirmation · Abundance' : '每日静心语录 ·《丰盛》精选'}
                 </span>
-                <span className="text-[9px] text-[#b49196] font-medium">
+                <span className="text-[11px] text-[var(--amnd-text-muted)] tabular-nums">
                   {isEn
                     ? `Quote ${currentIndex + 1} of ${ABUNDANCE_BOOK_QUOTES.length}`
-                    : `第 ${currentIndex + 1} / ${ABUNDANCE_BOOK_QUOTES.length} 句 • 杨定一博士原书`}
+                    : `第 ${currentIndex + 1} / ${ABUNDANCE_BOOK_QUOTES.length} 句 · 杨定一博士`}
                 </span>
               </div>
             </div>
 
-            <div className="flex items-center space-x-1.5">
+            <div className="flex items-center gap-1 shrink-0">
               <button
                 type="button"
                 onClick={() => setIsLibraryOpen(true)}
-                className="flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-white/60 hover:bg-white border border-[#8e6d72]/15 text-[#8e6d72] text-[10px] font-bold transition-all shadow-2xs hover:scale-105 cursor-pointer"
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[var(--amnd-bg-secondary)] hover:bg-[var(--amnd-bg-subtle)] border border-[var(--amnd-border)] text-[var(--amnd-text-primary)] text-[11px] font-medium transition-colors cursor-pointer whitespace-nowrap"
                 title={isEn ? 'Browse all 55+ quotes' : '浏览全部 55 句原书金句'}
                 id="open-abundance-library-btn"
               >
-                <BookOpen className="w-3 h-3" />
-                <span className="hidden sm:inline">{isEn ? '55 Quotes Library' : '典藏书库 (55句)'}</span>
+                <BookOpen className="w-3.5 h-3.5 text-[var(--amnd-wood)]" />
+                <span className="hidden sm:inline">{isEn ? '55 Quotes' : '典藏书库 (55句)'}</span>
               </button>
 
               <button
                 type="button"
                 onClick={handleCopy}
-                className="p-1.5 rounded-full hover:bg-white/60 text-[#8e6d72] transition-colors cursor-pointer"
+                className="p-1.5 rounded-lg hover:bg-[var(--amnd-bg-secondary)] text-[var(--amnd-text-secondary)] transition-colors cursor-pointer"
                 title={isEn ? 'Copy quote text' : '复制金句'}
               >
-                {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                {copied ? <Check className="w-3.5 h-3.5 text-[var(--amnd-success)]" /> : <Copy className="w-3.5 h-3.5" />}
               </button>
 
               <button
                 type="button"
                 onClick={handleRandom}
-                className="p-1.5 rounded-full hover:bg-white/60 text-[#8e6d72] transition-colors cursor-pointer"
+                className="p-1.5 rounded-lg hover:bg-[var(--amnd-bg-secondary)] text-[var(--amnd-text-secondary)] transition-colors cursor-pointer"
                 title={isEn ? 'Random Affirmation' : '随机换一句'}
                 id="rotate-affirmation-btn"
               >
@@ -185,15 +181,16 @@ export default function AffirmationCard({
             </div>
           </div>
 
-          {/* Theme Tag & Book Chapter */}
-          <div className="flex items-center gap-2 mb-3">
-            <span className="px-2.5 py-0.5 rounded-full bg-[#8e6d72]/10 text-[#8e6d72] text-[9.5px] font-bold tracking-wide border border-[#8e6d72]/15">
+          {/* Unboxed Theme & Book Chapter Metadata */}
+          <div className="flex items-center gap-2 text-xs text-[var(--amnd-text-muted)] mb-3">
+            <span className="font-medium text-[var(--amnd-wood)]">
               {isEn ? currentQuote.themeEn : currentQuote.themeZh}
             </span>
             {currentQuote.bookChapter && (
-              <span className="text-[9.5px] text-[#b49196] italic">
-                {isEn ? `Chapter: ${currentQuote.bookChapter}` : `篇章：${currentQuote.bookChapter}`}
-              </span>
+              <>
+                <span aria-hidden="true">·</span>
+                <span>{isEn ? currentQuote.bookChapter : `篇章：${currentQuote.bookChapter}`}</span>
+              </>
             )}
           </div>
         </div>
@@ -202,60 +199,60 @@ export default function AffirmationCard({
         <AnimatePresence mode="wait">
           <motion.div
             key={currentQuote.id}
-            initial={{ opacity: 0, y: 8 }}
+            initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.35 }}
-            className="my-3 flex flex-col justify-center text-center px-1 md:px-3"
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.25 }}
+            className="my-3 flex flex-col justify-center text-center px-1 md:px-2"
           >
-            <blockquote className="font-serif italic text-base md:text-lg text-[#8e6d72] leading-relaxed tracking-wide font-medium">
+            <blockquote className="font-serif text-base md:text-lg text-[var(--amnd-text-primary)] leading-relaxed font-medium">
               “ {isEn ? currentQuote.translation : currentQuote.text} ”
             </blockquote>
 
-            {/* Translation & Insight */}
-            <p className="text-[11px] text-[#b49196] font-medium mt-3 font-sans tracking-wide leading-relaxed">
+            {/* Translation */}
+            <p className="text-xs text-[var(--amnd-text-muted)] mt-3 font-sans leading-relaxed">
               {isEn ? currentQuote.text : currentQuote.translation}
             </p>
 
             {/* Spiritual Insight Note */}
             {(currentQuote.insight || currentQuote.insightEn) && (
-              <div className="mt-3.5 px-3 py-2 rounded-xl bg-white/40 border border-white/50 text-[10px] text-[#6d5b5e] italic leading-normal">
-                <span className="text-[#8e6d72] font-semibold not-italic">
-                  {isEn ? '💡 Wisdom Touch: ' : '💡 觉醒指引：'}
+              <div className="mt-4 px-3.5 py-2.5 rounded-xl bg-[var(--amnd-bg-secondary)] border border-[var(--amnd-border)] text-xs text-[var(--amnd-text-secondary)] leading-relaxed text-left">
+                <span className="text-[var(--amnd-wood)] font-semibold">
+                  {isEn ? 'Insight: ' : '觉察指引：'}
                 </span>
                 {isEn ? currentQuote.insightEn : currentQuote.insight}
               </div>
             )}
 
             {/* Source Attribution */}
-            <div className="mt-3 flex items-center justify-center gap-2">
-              <span className="h-px w-5 bg-[#8e6d72]/20" />
-              <span className="text-[9.5px] font-bold text-[#8e6d72]/80 tracking-widest font-serif">
-                {isEn ? `Dr. Yang Ding-I • ${currentQuote.source}` : `杨定一博士 • ${currentQuote.source}`}
+            <div className="mt-3.5 flex items-center justify-center gap-2.5">
+              <span className="h-px w-5 bg-[var(--amnd-border-strong)]" />
+              <span className="text-[11px] text-[var(--amnd-text-muted)] font-serif">
+                {isEn ? `Dr. Yang Ding-I · ${currentQuote.source}` : `杨定一博士 · ${currentQuote.source}`}
               </span>
-              <span className="h-px w-5 bg-[#8e6d72]/20" />
+              <span className="h-px w-5 bg-[var(--amnd-border-strong)]" />
             </div>
           </motion.div>
         </AnimatePresence>
 
         {/* Bottom Switcher & Audio Read-Aloud */}
-        <div className="mt-4 pt-4 border-t border-white/40 flex items-center justify-between">
-          <div className="flex items-center space-x-1">
+        <div className="mt-4 pt-4 border-t border-[var(--amnd-border)] flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1">
             <button
               type="button"
               onClick={handlePrev}
-              className="p-1.5 rounded-full hover:bg-white/60 text-[#8e6d72] transition-all hover:scale-110 active:scale-95 cursor-pointer"
+              className="p-1.5 rounded-lg hover:bg-[var(--amnd-bg-secondary)] text-[var(--amnd-text-secondary)] transition-colors cursor-pointer"
               title={isEn ? 'Previous Quote' : '上一句'}
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
-            <span className="text-[10px] text-[#b49196] font-mono font-bold px-1">
+            <span className="text-xs text-[var(--amnd-text-muted)] font-mono tabular-nums px-1">
               {currentIndex + 1} / {ABUNDANCE_BOOK_QUOTES.length}
             </span>
             <button
               type="button"
               onClick={handleNext}
-              className="p-1.5 rounded-full hover:bg-white/60 text-[#8e6d72] transition-all hover:scale-110 active:scale-95 cursor-pointer"
+              className="p-1.5 rounded-lg hover:bg-[var(--amnd-bg-secondary)] text-[var(--amnd-text-secondary)] transition-colors cursor-pointer"
               title={isEn ? 'Next Quote' : '下一句'}
             >
               <ChevronRight className="w-4 h-4" />
@@ -264,24 +261,25 @@ export default function AffirmationCard({
 
           {/* Audio TTS Speech Button */}
           <button
+            type="button"
             onClick={handleSpeakToggle}
             disabled={speakProgress}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-full font-sans text-xs font-bold transition-all shadow-sm cursor-pointer ${
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl font-sans text-xs font-medium transition-colors cursor-pointer whitespace-nowrap ${
               isSpeaking
-                ? 'bg-[#8e6d72] text-white hover:bg-[#8e6d72]/95 animate-pulse'
-                : 'bg-white/70 text-[#8e6d72] hover:bg-white border border-[#8e6d72]/20 hover:scale-105'
+                ? 'bg-[var(--amnd-wood)] text-[var(--amnd-bg-elevated)]'
+                : 'amnd-btn-secondary'
             }`}
             id="affirmation-speech-btn"
           >
             {isSpeaking ? (
               <>
-                <VolumeX className="w-3.5 h-3.5 animate-bounce" />
+                <VolumeX className="w-3.5 h-3.5" />
                 <span>{isEn ? 'Stop' : '停止朗读'}</span>
               </>
             ) : (
               <>
-                <Volume2 className="w-3.5 h-3.5" />
-                <span>{speakProgress ? (isEn ? 'Connecting wave...' : '感应声波中...') : (isEn ? 'Listen' : '深沉女声朗读')}</span>
+                <Volume2 className="w-3.5 h-3.5 text-[var(--amnd-wood)]" />
+                <span>{speakProgress ? (isEn ? 'Connecting...' : '准备朗读中...') : (isEn ? 'Listen' : '语音朗读')}</span>
               </>
             )}
           </button>
@@ -290,23 +288,23 @@ export default function AffirmationCard({
 
       {/* Full 55+ Quotes Library Modal */}
       {isLibraryOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/45 backdrop-blur-md animate-fadeIn">
-          <div className="relative w-full max-w-2xl max-h-[85vh] bg-white/95 backdrop-blur-2xl rounded-[32px] p-6 md:p-8 shadow-2xl border border-white/80 overflow-hidden flex flex-col text-[#4a3a3a]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 animate-fadeIn">
+          <div className="relative w-full max-w-2xl max-h-[85vh] bg-[var(--amnd-bg-elevated)] rounded-2xl p-6 md:p-8 shadow-[var(--amnd-shadow-md)] border border-[var(--amnd-border-strong)] overflow-hidden flex flex-col text-[var(--amnd-text-primary)]">
             
             {/* Header */}
-            <div className="flex items-center justify-between pb-4 border-b border-[#8e6d72]/15">
-              <div className="flex items-center gap-2">
-                <div className="w-9 h-9 rounded-xl bg-[#8e6d72]/10 flex items-center justify-center text-[#8e6d72]">
+            <div className="flex items-center justify-between pb-4 border-b border-[var(--amnd-border)]">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-[var(--amnd-bg-secondary)] border border-[var(--amnd-border)] flex items-center justify-center text-[var(--amnd-wood)]">
                   <BookOpen className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-serif text-lg font-bold text-[#8e6d72]">
+                  <h3 className="font-serif text-lg font-semibold text-[var(--amnd-text-primary)]">
                     {isEn ? '《Abundance》 55 Golden Quotes Library' : '《丰盛》全书 55 句原书金句典藏'}
                   </h3>
-                  <p className="text-[10px] text-[#b49196]">
+                  <p className="text-xs text-[var(--amnd-text-muted)]">
                     {isEn
                       ? 'Select any quote to apply directly to your daily affirmation card'
-                      : '杨定一博士经典灵性巨著 • 点击任意金句可直接切换至卡片与朗读'}
+                      : '杨定一博士著作精选 · 点击任意金句可直接切换至卡片与朗读'}
                   </p>
                 </div>
               </div>
@@ -314,7 +312,7 @@ export default function AffirmationCard({
               <button
                 type="button"
                 onClick={() => setIsLibraryOpen(false)}
-                className="p-2 text-gray-400 hover:text-[#8e6d72] hover:bg-gray-100 rounded-full transition-colors"
+                className="p-2 text-[var(--amnd-text-muted)] hover:text-[var(--amnd-text-primary)] hover:bg-[var(--amnd-bg-secondary)] rounded-lg transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -322,24 +320,24 @@ export default function AffirmationCard({
 
             {/* Search Input */}
             <div className="my-4 relative">
-              <Search className="absolute left-3.5 top-2.5 w-4 h-4 text-[#b49196]" />
+              <Search className="absolute left-3.5 top-2.5 w-4 h-4 text-[var(--amnd-text-muted)]" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={isEn ? 'Search keywords, chapters, or themes...' : '搜索金句内容、篇章或主题（如：感恩、放手、配得感）...'}
-                className="w-full text-xs pl-10 pr-4 py-2.5 rounded-xl border border-[#8e6d72]/20 bg-white/80 focus:ring-2 focus:ring-[#8e6d72]/30 focus:outline-none"
+                className="w-full text-xs pl-10 pr-4 py-2.5 amnd-input"
               />
             </div>
 
             {/* Scrollable Quotes List */}
             <div className="flex-1 overflow-y-auto custom-scrollbar space-y-3 pr-1">
               {modalFilteredQuotes.length === 0 ? (
-                <div className="py-12 text-center text-xs text-[#b49196]">
+                <div className="py-12 text-center text-xs text-[var(--amnd-text-muted)]">
                   {isEn ? 'No quotes matching your search.' : '未找到匹配的金句'}
                 </div>
               ) : (
-                modalFilteredQuotes.map((quote, idx) => {
+                modalFilteredQuotes.map((quote) => {
                   const originalIndex = ABUNDANCE_BOOK_QUOTES.findIndex((q) => q.id === quote.id);
                   const isSelected = originalIndex === currentIndex;
 
@@ -350,37 +348,38 @@ export default function AffirmationCard({
                         setCurrentIndex(originalIndex);
                         setIsLibraryOpen(false);
                       }}
-                      className={`p-4 rounded-2xl border transition-all cursor-pointer ${
+                      className={`p-4 rounded-xl border transition-colors cursor-pointer ${
                         isSelected
-                          ? 'bg-[#8e6d72]/10 border-[#8e6d72] shadow-sm ring-1 ring-[#8e6d72]/30'
-                          : 'bg-white/60 hover:bg-white border-white/60 hover:border-[#8e6d72]/30 shadow-2xs'
+                          ? 'bg-[var(--amnd-wood-soft)] border-[var(--amnd-wood)]'
+                          : 'bg-[var(--amnd-bg-primary)] hover:bg-[var(--amnd-bg-secondary)] border-[var(--amnd-border)]'
                       }`}
                     >
-                      <div className="flex items-center justify-between mb-1.5">
-                        <div className="flex items-center gap-2">
-                          <span className="text-[9.5px] font-bold text-[#8e6d72] px-2 py-0.5 rounded-full bg-white/70 border border-[#8e6d72]/10">
+                      <div className="flex items-center justify-between mb-1.5 text-xs">
+                        <div className="flex items-center gap-2 text-[var(--amnd-text-muted)]">
+                          <span className="font-semibold text-[var(--amnd-wood)] tabular-nums">
                             #{originalIndex + 1} {isEn ? quote.themeEn : quote.themeZh}
                           </span>
                           {quote.bookChapter && (
-                            <span className="text-[9px] text-[#b49196] italic">
-                              {quote.bookChapter}
-                            </span>
+                            <>
+                              <span aria-hidden="true">·</span>
+                              <span>{quote.bookChapter}</span>
+                            </>
                           )}
                         </div>
 
                         {isSelected && (
-                          <span className="text-[9.5px] font-bold text-[#8e6d72] flex items-center gap-1">
-                            <Check className="w-3 h-3 text-emerald-600" />
-                            {isEn ? 'Active' : '当前卡片展示中'}
+                          <span className="text-[11px] font-medium text-[var(--amnd-success)] flex items-center gap-1">
+                            <Check className="w-3 h-3" />
+                            {isEn ? 'Active' : '当前展示中'}
                           </span>
                         )}
                       </div>
 
-                      <blockquote className="font-serif text-xs md:text-sm text-[#4a3a3a] leading-relaxed mb-1">
+                      <blockquote className="font-serif text-sm text-[var(--amnd-text-primary)] leading-relaxed mb-1">
                         “ {quote.text} ”
                       </blockquote>
                       {quote.translation && (
-                        <p className="text-[10.5px] text-[#b49196] font-sans italic">
+                        <p className="text-xs text-[var(--amnd-text-muted)] font-sans">
                           {quote.translation}
                         </p>
                       )}
@@ -391,8 +390,8 @@ export default function AffirmationCard({
             </div>
 
             {/* Modal Footer */}
-            <div className="pt-3 border-t border-[#8e6d72]/15 flex items-center justify-between text-xs text-[#b49196]">
-              <span>
+            <div className="pt-3 mt-2 border-t border-[var(--amnd-border)] flex items-center justify-between text-xs text-[var(--amnd-text-muted)]">
+              <span className="tabular-nums">
                 {isEn
                   ? `Showing ${modalFilteredQuotes.length} of ${ABUNDANCE_BOOK_QUOTES.length} quotes`
                   : `共收录 ${ABUNDANCE_BOOK_QUOTES.length} 句《丰盛》原书经典金句`}
@@ -400,7 +399,7 @@ export default function AffirmationCard({
               <button
                 type="button"
                 onClick={() => setIsLibraryOpen(false)}
-                className="px-4 py-1.5 rounded-full bg-[#8e6d72] text-white text-xs font-semibold hover:bg-[#8e6d72]/90 cursor-pointer"
+                className="px-4 py-1.5 amnd-btn-primary text-xs font-medium cursor-pointer"
               >
                 {isEn ? 'Close' : '关闭'}
               </button>

@@ -1,41 +1,78 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>3.1Amanda‘s 丰盛显化辅助器</title>
-    <meta name="description" content="一款公主风舒适奢华的显化APP。包含梦幻愿望清单、每日暖心正向暗示，支持自定义冥想背景音乐与高画质可视化漫天星辰花海背景。并结合 Gemini 智能声学 TTS 技术，通过温柔、深沉的女声进行沉浸式暗示语朗读，引导您进入深度专注的显化磁场。" />
-    <meta property="og:title" content="3.1Amanda‘s 丰盛显化辅助器" />
-    <meta property="og:description" content="一款公主风舒适奢华的显化APP。包含梦幻愿望清单、每日暖心正向暗示，支持自定义冥想背景音乐与高画质可视化漫天星辰花海背景。并结合 Gemini 智能声学 TTS 技术，通过温柔、深沉的女声进行沉浸式暗示语朗读，引导您进入深度专注的显化磁场。" />
     <script>
       (function () {
-        try {
-          var desc = Object.getOwnPropertyDescriptor(window, 'fetch');
-          if (desc && desc.get && !desc.set && desc.configurable) {
-            var currentFetch = window.fetch;
-            Object.defineProperty(window, 'fetch', {
-              value: currentFetch,
-              writable: true,
-              enumerable: desc.enumerable,
-              configurable: true,
-            });
-          } else if (!desc && window.Window && Window.prototype) {
-            var protoDesc = Object.getOwnPropertyDescriptor(Window.prototype, 'fetch');
-            if (protoDesc && protoDesc.get && !protoDesc.set) {
-              var protoFetch = window.fetch;
-              Object.defineProperty(window, 'fetch', {
-                value: protoFetch,
-                writable: true,
-                enumerable: true,
-                configurable: true,
-              });
+        function ensureWritableFetch() {
+          try {
+            var ownDesc = Object.getOwnPropertyDescriptor(window, 'fetch');
+            if (ownDesc) {
+              if (ownDesc.get && !ownDesc.set && ownDesc.configurable) {
+                var getter = ownDesc.get;
+                var override;
+                var hasOverride = false;
+                Object.defineProperty(window, 'fetch', {
+                  get: function () {
+                    return hasOverride ? override : getter.call(window);
+                  },
+                  set: function (val) {
+                    override = val;
+                    hasOverride = true;
+                  },
+                  enumerable: ownDesc.enumerable,
+                  configurable: true,
+                });
+              } else if ('value' in ownDesc && !ownDesc.writable && ownDesc.configurable) {
+                Object.defineProperty(window, 'fetch', {
+                  value: ownDesc.value,
+                  writable: true,
+                  enumerable: ownDesc.enumerable,
+                  configurable: true,
+                });
+              }
+              return;
             }
+            var proto = Object.getPrototypeOf(window);
+            while (proto && proto !== Object.prototype) {
+              var protoDesc = Object.getOwnPropertyDescriptor(proto, 'fetch');
+              if (protoDesc && protoDesc.get && !protoDesc.set) {
+                var protoGetter = protoDesc.get;
+                var protoOverride;
+                var hasProtoOverride = false;
+                Object.defineProperty(window, 'fetch', {
+                  get: function () {
+                    return hasProtoOverride ? protoOverride : protoGetter.call(window);
+                  },
+                  set: function (val) {
+                    protoOverride = val;
+                    hasProtoOverride = true;
+                  },
+                  enumerable: true,
+                  configurable: true,
+                });
+                break;
+              }
+              proto = Object.getPrototypeOf(proto);
+            }
+          } catch (e) {
+            // Ignore when host runtime enforces a non-configurable fetch property
           }
-        } catch (e) {
-          // Ignore if environment enforces a non-configurable fetch descriptor
         }
+        ensureWritableFetch();
+        window.__amndEnsureWritableFetch = ensureWritableFetch;
       })();
     </script>
+    <title>AMND Manifestation · Amanda 的学海魔法屋</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <meta name="description" content="AMND Manifestation（Amanda 的学海魔法屋）—— 东方智慧与现代自我觉察平台。学习了，魔法会显化。整合静心练习、显化记录、智慧阅读与自然声景，陪伴你在学习、觉察与静心中显化清晰的生活秩序。" />
+    <meta property="og:title" content="AMND Manifestation · Amanda 的学海魔法屋" />
+    <meta property="og:description" content="东方智慧与现代自我觉察平台。学习了，魔法会显化。Learning → Awareness → Stillness → Manifestation。" />
+    <meta property="og:image" content="/icon-512.png" />
   </head>
   <body>
     <div id="root"></div>

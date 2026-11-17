@@ -124,11 +124,11 @@ export default function Wishlist({
   };
 
   const categoryIcons = {
-    love: <Heart className="w-3.5 h-3.5 text-[#8e6d72]" />,
-    wealth: <DollarSign className="w-3.5 h-3.5 text-amber-600" />,
-    beauty: <Sparkle className="w-3.5 h-3.5 text-pink-500" />,
-    career: <Briefcase className="w-3.5 h-3.5 text-purple-600" />,
-    lifestyle: <Sofa className="w-3.5 h-3.5 text-emerald-600" />,
+    love: <Heart className="w-3.5 h-3.5 text-[var(--amnd-wood)]" />,
+    wealth: <DollarSign className="w-3.5 h-3.5 text-[var(--amnd-gold)]" />,
+    beauty: <Sparkle className="w-3.5 h-3.5 text-[var(--amnd-wood)]" />,
+    career: <Briefcase className="w-3.5 h-3.5 text-[var(--amnd-text-secondary)]" />,
+    lifestyle: <Sofa className="w-3.5 h-3.5 text-[var(--amnd-success)]" />,
   };
 
   const categoryLabels = {
@@ -146,7 +146,7 @@ export default function Wishlist({
       { title: "Elegant Harmony", text: "【My Ultimate Manifestation State】\nMaintain an open, romantic connection where every thought is met with care and appreciation.\n\n【Immersive Sensory Imagery】\nWaking up to a beautiful bouquet of white roses and a delicate breakfast, feeling absolute peace, pampered joy, and deep trust.\n\n【My Affirmation of Deservedness】\nI am a precious soul worthy of the world's finest care. I radiate noble, attracting magnetism." }
     ],
     wealth: [
-      { title: "Flowing Abundance", text: "【My Ultimate Manifestation State】\nMoney and infinite abundance flow easily and unimpeded into my life.\n\n【Immersive Sensory Imagery】\nResting on a soft velvet chaise lounge, watching account balances steadily grow, feeling complete relaxation and financial freedom.\n\n://My Affirmation of Deservedness】\nWealth flows to me in the most effortless and honorable ways. I am always in harmony with the cosmos." },
+      { title: "Flowing Abundance", text: "【My Ultimate Manifestation State】\nMoney and infinite abundance flow easily and unimpeded into my life.\n\n【Immersive Sensory Imagery】\nResting on a soft velvet chaise lounge, watching account balances steadily grow, feeling complete relaxation and financial freedom.\n\n【My Affirmation of Deservedness】\nWealth flows to me in the most effortless and honorable ways. I am always in harmony with the cosmos." },
       { title: "Lakeside Villa", text: "【My Ultimate Manifestation State】\nOwn a refined, tranquil garden estate overlooking a serene lake.\n\n【Immersive Sensory Imagery】\nWalking barefoot on warm plush rugs, watching sunlight scatter rainbows through a crystal chandelier, listening to soft piano notes.\n\n【My Affirmation of Deservedness】\nI fully deserve to live a life of comfort, elegance, and pristine leisure." }
     ],
     beauty: [
@@ -268,24 +268,25 @@ export default function Wishlist({
   };
 
   return (
-    <div className="bg-white/40 backdrop-blur-2xl rounded-[32px] p-6 md:p-8 border border-white/40 shadow-xl shadow-pink-100/10 space-y-6" id="manifestation-wishlist-module">
-      <div className="flex items-center justify-between">
+    <div className="amnd-surface p-6 md:p-7 space-y-6" id="manifestation-wishlist-module">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
-          <h2 className="font-serif text-2xl text-[#8e6d72] flex items-center gap-2">
-            <span>Wishlist Palace</span>
+          <h2 className="font-serif text-2xl font-semibold text-[var(--amnd-text-primary)]">
+            {language === 'en' ? 'Wish & Intention Journal' : '心愿与显化记录'}
           </h2>
-          <p className="text-[10px] uppercase tracking-widest text-[#b49196] font-semibold">
-            {language === 'en' ? 'My Royal Manifestation Board' : 'My Royal Manifestation Board • 梦幻愿望清单'}
+          <p className="text-xs text-[var(--amnd-text-muted)] mt-0.5">
+            {language === 'en' ? 'Clarity of Intention · Daily Manifestation Board' : '澄清意图 · 写下具体生动的感官画卷'}
           </p>
         </div>
         
         <button
+          type="button"
           onClick={() => setShowAddForm(!showAddForm)}
-          className="flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-[#8e6d72] hover:bg-[#8e6d72]/90 text-white font-sans text-xs font-bold shadow-lg shadow-pink-900/10 transition-all duration-300 hover:scale-[1.03] active:scale-[0.97]"
+          className="flex items-center gap-1.5 px-4 py-2 amnd-btn-primary font-sans text-xs font-medium cursor-pointer whitespace-nowrap"
           id="toggle-add-wish-btn"
         >
           <Plus className="w-4 h-4" />
-          {language === 'en' ? 'New Wish' : '写下新愿望'}
+          <span>{language === 'en' ? 'New Wish' : '写下新愿望'}</span>
         </button>
       </div>
 
@@ -293,62 +294,62 @@ export default function Wishlist({
       {showAddForm && (
         <form
           onSubmit={handleSubmit}
-          className="p-6 rounded-[24px] bg-white/60 border border-white/60 shadow-sm space-y-4 animate-fadeIn"
+          className="p-5 md:p-6 amnd-surface-stone space-y-4 animate-fadeIn"
           id="add-wish-form"
         >
-          <div className="p-3 bg-[#8e6d72]/5 rounded-2xl border border-[#8e6d72]/10 text-[11px] text-[#6d5b5e] leading-relaxed">
+          <div className="p-3 bg-[var(--amnd-bg-elevated)] rounded-xl border border-[var(--amnd-border)] text-xs text-[var(--amnd-text-secondary)] leading-relaxed">
             {language === 'en' ? (
               <>
-                <span className="font-bold text-[#8e6d72]">✨ Guide</span>: Manifestation is not "wanting", but "having in advance". Pick a high-vibe template below, or click <strong>"✨ Import 3D Framework"</strong> to activate your subconscious!
+                <span className="font-semibold text-[var(--amnd-wood)]">Guide</span>: Manifestation begins with calm presence rather than anxious striving. Pick a template below or click <strong>"Import 3D Framework"</strong> to compose sensory details.
               </>
             ) : (
               <>
-                <span className="font-bold text-[#8e6d72]">✨ 显化指南</span>：显化并不是“期待”，而是“提前体验拥有”。在下方挑选一个高频模板，或者点击 <strong>“✨ 导入显化框架”</strong>，用具体的感官、温度、气息去唤醒潜意识吧！
+                <span className="font-semibold text-[var(--amnd-wood)]">觉察提示</span>：显化并非焦虑地“向外抓取”，而是在当下清晰地“安住与体验”。可在下方挑选参考范本，或点击 <strong>“导入三维显化框架”</strong>，用具体的感官、温度与气息描绘场景。
               </>
             )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Title */}
-            <div className="space-y-1">
-              <label className="text-xs font-semibold text-[#8e6d72] block">
-                {language === 'en' ? '🌸 Wish Theme' : '🌸 愿望主题'}
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-[var(--amnd-text-primary)] block">
+                {language === 'en' ? 'Wish Theme' : '愿望主题'}
               </label>
               <input
                 type="text"
                 required
-                placeholder={language === 'en' ? 'e.g., Attract a soulmate companion' : '例如：收获灵魂契合的浪漫伴侣'}
+                placeholder={language === 'en' ? 'e.g., Attract a soulmate companion' : '例如：收获灵魂契合的伴侣 / 平和丰足的生活'}
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="w-full text-xs px-3.5 py-2.5 rounded-xl border border-white/40 bg-white/50 text-[#4a3a3a] placeholder-[#b49196]/60 focus:ring-2 focus:ring-[#8e6d72]/30 focus:outline-none transition-all"
+                className="w-full text-xs px-3.5 py-2.5 amnd-input"
                 id="wish-title-input"
               />
             </div>
 
             {/* Category */}
-            <div className="space-y-1">
-              <label className="text-xs font-semibold text-[#8e6d72] block">
-                {language === 'en' ? '🎀 Wish Category' : '🎀 愿望分类'}
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-[var(--amnd-text-primary)] block">
+                {language === 'en' ? 'Wish Category' : '愿望分类'}
               </label>
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value as any)}
-                className="w-full text-xs px-3.5 py-2.5 rounded-xl border border-white/40 bg-white/50 text-[#4a3a3a] focus:ring-2 focus:ring-[#8e6d72]/30 focus:outline-none appearance-none transition-all"
+                className="w-full text-xs px-3.5 py-2.5 amnd-input appearance-none"
                 id="wish-category-select"
               >
                 <option value="love">{language === 'en' ? 'Love & Harmony' : '浪漫情缘 (Love & Harmony)'}</option>
                 <option value="wealth">{language === 'en' ? 'Abundance & Wealth' : '丰盛财富 (Abundance & Wealth)'}</option>
                 <option value="beauty">{language === 'en' ? 'Beauty & Glow' : '健康焕颜 (Beauty & Glow)'}</option>
                 <option value="career">{language === 'en' ? 'Graceful Career' : '优雅事业 (Graceful Career)'}</option>
-                <option value="lifestyle">{language === 'en' ? 'Royal Lifestyle' : '理想生活 (Royal Lifestyle)'}</option>
+                <option value="lifestyle">{language === 'en' ? 'Peaceful Lifestyle' : '理想生活 (Peaceful Lifestyle)'}</option>
               </select>
             </div>
           </div>
 
           {/* Quick High Vibration Seed Templates based on active Category */}
-          <div className="space-y-1.5">
-            <span className="text-[10px] font-bold text-[#b49196] uppercase tracking-wider block">
-              {language === 'en' ? '👑 High-Vibration Templates (Click to apply)' : '👑 推荐的高频显化范本 (点击一键填入并微调)'}
+          <div className="space-y-2">
+            <span className="text-xs font-medium text-[var(--amnd-text-muted)] block">
+              {language === 'en' ? 'Reference Templates (Click to fill)' : '参考显化范本（点击一键填入并微调）'}
             </span>
             <div className="flex flex-wrap gap-2">
               {MANIFESTATION_TEMPLATES[category].map((tpl, i) => (
@@ -356,9 +357,8 @@ export default function Wishlist({
                   key={i}
                   type="button"
                   onClick={() => applyTemplate(tpl)}
-                  className="px-3.5 py-1.5 rounded-xl text-xs bg-white/45 hover:bg-[#8e6d72]/10 border border-[#8e6d72]/20 text-[#8e6d72] transition-all hover:scale-[1.02] flex items-center gap-1.5 font-medium shadow-sm active:scale-95"
+                  className="px-3 py-1.5 rounded-lg text-xs bg-[var(--amnd-bg-elevated)] hover:bg-[var(--amnd-bg-subtle)] border border-[var(--amnd-border-strong)] text-[var(--amnd-text-primary)] transition-colors flex items-center gap-1.5 font-medium cursor-pointer"
                 >
-                  <span>✨</span>
                   <span>{tpl.title}</span>
                 </button>
               ))}
@@ -366,64 +366,61 @@ export default function Wishlist({
           </div>
 
           {/* Raw Description */}
-          <div className="space-y-1">
+          <div className="space-y-1.5">
             <div className="flex items-center justify-between flex-wrap gap-2">
-              <label className="text-xs font-semibold text-[#8e6d72] block">
-                {language === 'en' ? '🕊️ Describe Your Wish' : '🕊️ 你的心愿描绘（写得越真切，显化越快哦）'}
+              <label className="text-xs font-medium text-[var(--amnd-text-primary)] block">
+                {language === 'en' ? 'Describe Your Intention' : '心愿描绘（越具象真实越好）'}
               </label>
               <div className="flex items-center gap-1.5 flex-wrap">
                 <button
                   type="button"
                   onClick={handleOpenChannelingForNewWish}
-                  className="text-[10px] font-bold text-pink-700 hover:text-pink-800 flex items-center gap-1 bg-pink-100/60 hover:bg-pink-200/70 px-2.5 py-1 rounded-lg border border-pink-300/40 transition-all hover:scale-105 active:scale-95 shadow-xs cursor-pointer"
+                  className="text-[11px] font-medium text-[var(--amnd-wood)] hover:text-[var(--amnd-text-primary)] flex items-center gap-1 bg-[var(--amnd-bg-elevated)] hover:bg-[var(--amnd-bg-subtle)] px-2.5 py-1 rounded-lg border border-[var(--amnd-border-strong)] transition-colors cursor-pointer"
                 >
-                  <Wand2 className="w-3 h-3 text-pink-600 animate-pulse" />
-                  <span>{language === 'en' ? '🔮 AI Sensory Channeling Studio' : '🔮 AI 辅助五感感应工坊'}</span>
+                  <Wand2 className="w-3 h-3 text-[var(--amnd-gold)]" />
+                  <span>{language === 'en' ? 'AI Sensory Studio' : 'AI 辅助五感工坊'}</span>
                 </button>
                 <button
                   type="button"
                   onClick={insertFramework}
-                  className="text-[10px] font-bold text-[#8e6d72] hover:text-[#8e6d72]/80 flex items-center gap-1 bg-[#8e6d72]/5 px-2.5 py-1 rounded-lg border border-[#8e6d72]/10 transition-all hover:scale-105 active:scale-95"
+                  className="text-[11px] font-medium text-[var(--amnd-text-secondary)] hover:text-[var(--amnd-text-primary)] flex items-center gap-1 bg-[var(--amnd-bg-elevated)] px-2.5 py-1 rounded-lg border border-[var(--amnd-border)] transition-colors cursor-pointer"
                 >
-                  <span>🖋️</span>
-                  <span>{language === 'en' ? '✨ Import 3D Framework' : '✨ 导入三维显化框架'}</span>
+                  <span>{language === 'en' ? 'Import 3D Framework' : '导入三维显化框架'}</span>
                 </button>
               </div>
             </div>
             <textarea
-              placeholder={language === 'en' ? "Please describe the fine canvas of your heart. It is recommended to include the ultimate state and sensory details..." : "请描述您内心深处的精细画卷。建议包含期望达到的终极状态，以及画面感（如闻到红茶清香、温暖清风、心中的无限笃定与配得感等）..."}
+              placeholder={language === 'en' ? "Please describe the fine canvas of your heart. It is recommended to include the ultimate state and sensory details..." : "请描述您内心深处的精细画卷。建议包含期望达到的状态，以及声音、光线、气息与心境细节..."}
               value={details}
               onChange={(e) => setDetails(e.target.value)}
               rows={6}
-              className="w-full text-xs p-3.5 rounded-xl border border-white/40 bg-white/50 text-[#4a3a3a] placeholder-[#b49196]/60 focus:ring-2 focus:ring-[#8e6d72]/30 focus:outline-none resize-none transition-all font-sans"
+              className="w-full text-xs p-3.5 amnd-input resize-none font-sans"
               id="wish-details-textarea"
             />
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mt-1 px-1">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mt-1">
               <div className="flex items-center gap-2 flex-wrap">
                 <button
                   type="button"
                   onClick={handleOpenChannelingForNewWish}
-                  className="text-[10px] font-bold text-white bg-gradient-to-r from-[#b49196] to-[#8e6d72] hover:opacity-95 px-3.5 py-1.5 rounded-xl shadow-xs transition-all hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer"
+                  className="text-[11px] font-medium px-3.5 py-1.5 amnd-btn-primary flex items-center justify-center gap-1.5 cursor-pointer"
                 >
-                  <span>🔮</span>
-                  <span>{language === 'en' ? '🔮 AI Multi-Sensory Sensing & Auto-Writing' : '🔮 AI 五感感应与自动书写记录'}</span>
+                  <span>{language === 'en' ? 'AI Multi-Sensory Scribe' : 'AI 五感感应与书写'}</span>
                 </button>
                 <button
                   type="button"
                   onClick={handleExpandDetails}
                   disabled={isExpanding}
-                  className="text-[10px] font-bold text-[#8e6d72] hover:text-white bg-[#8e6d72]/10 hover:bg-[#8e6d72] disabled:bg-[#8e6d72]/20 disabled:text-[#8e6d72]/50 px-3 py-1.5 rounded-xl border border-[#8e6d72]/20 transition-all hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer disabled:cursor-not-allowed"
+                  className="text-[11px] font-medium px-3 py-1.5 amnd-btn-secondary flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <span>✨</span>
-                  <span>{isExpanding ? (language === 'en' ? 'Expanding details...' : '正在深度扩写细节...') : (language === 'en' ? '✨ Fast AI Expand' : '✨ 极速智能扩写')}</span>
+                  <span>{isExpanding ? (language === 'en' ? 'Expanding...' : '正在扩写细节...') : (language === 'en' ? 'Fast AI Expand' : '智能扩写细节')}</span>
                 </button>
               </div>
-              <span className="text-[9px] text-[#b49196] italic text-right">
-                {language === 'en' ? 'AI can automatically sense and scribe rich 5D details' : 'AI 辅助全息感应五感，自动书写并记录至愿望'}
+              <span className="text-[11px] text-[var(--amnd-text-muted)] text-right">
+                {language === 'en' ? 'AI can help organize sensory details' : '支持 AI 辅助整理五感与意象'}
               </span>
             </div>
             {expandError && (
-              <p className="text-[10px] text-rose-500 font-medium animate-pulse mt-1.5 bg-rose-500/5 px-3 py-1.5 rounded-xl border border-rose-500/10">{expandError}</p>
+              <p className="text-xs text-[var(--amnd-danger)] font-medium mt-1.5 bg-[var(--amnd-danger-soft)] px-3 py-1.5 rounded-xl border border-[var(--amnd-danger)]/20">{expandError}</p>
             )}
           </div>
 
@@ -432,17 +429,17 @@ export default function Wishlist({
             <button
               type="button"
               onClick={() => setShowAddForm(false)}
-              className="px-4.5 py-2 rounded-full border border-gray-200 text-[#8e6d72] text-xs font-medium hover:bg-white/40 transition-all"
+              className="px-4 py-2 amnd-btn-secondary text-xs font-medium cursor-pointer"
               id="cancel-add-wish-btn"
             >
               {language === 'en' ? 'Cancel' : '取消'}
             </button>
             <button
               type="submit"
-              className="px-5.5 py-2 rounded-full bg-[#8e6d72] hover:bg-[#8e6d72]/90 text-white text-xs font-semibold shadow-sm transition-all"
+              className="px-5 py-2 amnd-btn-primary text-xs font-medium cursor-pointer"
               id="submit-wish-btn"
             >
-              {language === 'en' ? 'Add to Wishlist Palace' : '优雅注入愿望清单'}
+              {language === 'en' ? 'Save Wish' : '存入心愿记录'}
             </button>
           </div>
         </form>
@@ -451,10 +448,9 @@ export default function Wishlist({
       {/* Wishes List */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         {wishes.length === 0 ? (
-          <div className="col-span-1 md:col-span-2 py-16 text-center bg-white/20 border border-dashed border-[#b49196]/40 rounded-3xl">
-            <span className="text-3xl"> Swan </span>
-            <p className="text-xs text-[#b49196] font-serif mt-3 tracking-wide">
-              {language === 'en' ? 'Your Wishlist Palace is empty. Click New Wish above to start manifesting.' : '您还没有写下任何心愿，点击右上角开启显化吧'}
+          <div className="col-span-1 md:col-span-2 py-14 text-center bg-[var(--amnd-bg-secondary)]/60 border border-dashed border-[var(--amnd-border-strong)] rounded-2xl">
+            <p className="text-sm text-[var(--amnd-text-muted)] font-serif">
+              {language === 'en' ? 'Your intention journal is empty. Click New Wish above to begin.' : '尚未写下心愿记录，可点击右上方「写下新愿望」开始。'}
             </p>
           </div>
         ) : (
@@ -465,27 +461,29 @@ export default function Wishlist({
             return (
               <div
                 key={wish.id}
-                className="p-5 rounded-[24px] bg-white/60 hover:bg-white/70 border border-white/60 shadow-sm hover:shadow-md transition-all duration-300 relative group flex flex-col justify-between min-h-[240px]"
+                className="p-5 rounded-2xl bg-[var(--amnd-bg-primary)] hover:border-[var(--amnd-border-strong)] border border-[var(--amnd-border)] transition-colors duration-200 relative group flex flex-col justify-between min-h-[240px]"
                 id={`wish-card-${wish.id}`}
               >
                 <div>
                   <div className="flex items-center justify-between mb-3">
-                    <span className="flex items-center gap-1.5 text-[10.5px] font-bold text-[#8e6d72] px-3 py-1 rounded-full bg-white/60 border border-white/60 uppercase tracking-wide">
+                    <span className="flex items-center gap-1.5 text-xs font-medium text-[var(--amnd-text-secondary)]">
                       {categoryIcons[wish.category]}
-                      {categoryLabels[wish.category]}
+                      <span>{categoryLabels[wish.category]}</span>
                     </span>
                     <div className="flex items-center gap-1">
                       <button
+                        type="button"
                         onClick={() => setManualEditWish(wish)}
-                        className="p-1.5 rounded-full hover:bg-pink-50 text-[#8e6d72] hover:text-[#6d5055] transition-colors"
+                        className="p-1.5 rounded-lg hover:bg-[var(--amnd-bg-secondary)] text-[var(--amnd-text-muted)] hover:text-[var(--amnd-text-primary)] transition-colors cursor-pointer"
                         title={language === 'en' ? "Manually edit and record wish details" : "手动修改与记录心愿细节"}
                         id={`manual-edit-wish-${wish.id}`}
                       >
                         <Edit3 className="w-3.5 h-3.5" />
                       </button>
                       <button
+                        type="button"
                         onClick={() => onDeleteWish(wish.id)}
-                        className="p-1.5 rounded-full hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors"
+                        className="p-1.5 rounded-lg hover:bg-[var(--amnd-danger-soft)] text-[var(--amnd-text-muted)] hover:text-[var(--amnd-danger)] transition-colors cursor-pointer"
                         title={language === 'en' ? "Delete this wish" : "清除此心愿"}
                         id={`delete-wish-${wish.id}`}
                       >
@@ -494,20 +492,20 @@ export default function Wishlist({
                     </div>
                   </div>
 
-                  <h3 className="font-serif font-bold text-base text-[#4a3a3a] leading-snug tracking-wide group-hover:text-[#8e6d72] transition-colors flex items-center justify-between gap-2">
+                  <h3 className="font-serif font-semibold text-base text-[var(--amnd-text-primary)] leading-snug group-hover:text-[var(--amnd-wood)] transition-colors">
                     <span>{wish.title}</span>
                   </h3>
 
-                  <div className="relative mt-2">
-                    <div className={`text-xs text-[#6d5b5e] leading-relaxed font-sans bg-white/30 p-2.5 rounded-xl border border-white/20 transition-all duration-300 overflow-y-auto custom-scrollbar ${isDetailsExpanded ? 'max-h-[250px]' : 'max-h-[85px]'}`}>
-                      {wish.details || (language === 'en' ? '（No initial description written yet...）' : '（未写下初始描述，等待直接显化...）')}
+                  <div className="relative mt-2.5">
+                    <div className={`text-xs text-[var(--amnd-text-secondary)] leading-relaxed font-sans bg-[var(--amnd-bg-elevated)] p-3 rounded-xl border border-[var(--amnd-border)] transition-all duration-300 overflow-y-auto custom-scrollbar ${isDetailsExpanded ? 'max-h-[250px]' : 'max-h-[85px]'}`}>
+                      {wish.details || (language === 'en' ? '（No initial description written yet...）' : '（未写下初始描述，等待补充细节...）')}
                     </div>
-                    <div className="flex items-center justify-between mt-1">
+                    <div className="flex items-center justify-between mt-1.5">
                       {wish.details && wish.details.length > 80 ? (
                         <button
                           type="button"
                           onClick={() => setExpandedDetailsMap(prev => ({ ...prev, [wish.id]: !isDetailsExpanded }))}
-                          className="text-[10px] text-[#8e6d72] hover:underline font-semibold flex items-center gap-0.5 ml-1"
+                          className="text-[11px] text-[var(--amnd-wood)] hover:underline font-medium flex items-center gap-0.5 cursor-pointer"
                         >
                           {isDetailsExpanded ? (language === 'en' ? 'Collapse' : '收起描述') : (language === 'en' ? 'Show full description' : '展开全部描述')}
                         </button>
@@ -515,10 +513,10 @@ export default function Wishlist({
                       <button
                         type="button"
                         onClick={() => setManualEditWish(wish)}
-                        className="text-[10px] text-[#8e6d72] hover:underline font-semibold flex items-center gap-0.5 ml-auto cursor-pointer"
+                        className="text-[11px] text-[var(--amnd-wood)] hover:underline font-medium flex items-center gap-1 ml-auto cursor-pointer"
                         title={language === 'en' ? 'Edit description' : '手动修改描述'}
                       >
-                        <Edit3 className="w-2.5 h-2.5" />
+                        <Edit3 className="w-3 h-3" />
                         <span>{language === 'en' ? 'Edit' : '修改描述'}</span>
                       </button>
                     </div>
@@ -526,86 +524,86 @@ export default function Wishlist({
 
                   {/* Enhanced Details */}
                   {wish.visualizationDetails ? (
-                    <div className="mt-3 p-3 rounded-xl bg-gradient-to-br from-[#fcf0e2]/40 to-[#ffe4e9]/30 border border-[#b49196]/20">
-                      <div className="flex items-center justify-between gap-1 border-b border-[#b49196]/10 pb-1.5 mb-2">
-                        <div className="flex items-center gap-1 text-[10px] font-bold text-[#8e6d72] uppercase tracking-widest">
-                          <Sparkles className="w-3 h-3 text-amber-500 animate-pulse" />
-                          <span>{language === 'en' ? 'Sensory Details (Manifestation Canvas)' : '显化感官细节 (Sensory Details)'}</span>
+                    <div className="mt-3.5 p-3.5 rounded-xl bg-[var(--amnd-bg-secondary)] border border-[var(--amnd-border)]">
+                      <div className="flex items-center justify-between gap-1 border-b border-[var(--amnd-border)] pb-2 mb-2.5">
+                        <div className="flex items-center gap-1.5 text-[11px] font-semibold text-[var(--amnd-text-primary)]">
+                          <Sparkles className="w-3.5 h-3.5 text-[var(--amnd-gold)]" />
+                          <span>{language === 'en' ? 'Sensory Details' : '感官与觉察细节'}</span>
                         </div>
                         <div className="flex items-center gap-1.5">
                           <button
                             type="button"
                             onClick={() => handleStartEditAll(wish.id)}
-                            className="p-1 text-[#8e6d72] hover:bg-white/60 rounded-md border border-transparent hover:border-[#b49196]/15 transition-all flex items-center gap-1 font-semibold"
+                            className="p-1 text-[var(--amnd-wood)] hover:bg-[var(--amnd-bg-elevated)] rounded-md border border-transparent hover:border-[var(--amnd-border)] transition-colors flex items-center gap-1 font-medium cursor-pointer"
                             title={language === 'en' ? 'Directly edit all texts' : '直接修改全部文本'}
                           >
                             <Edit3 className="w-3 h-3" />
-                            <span className="text-[9px] hidden sm:inline">{language === 'en' ? 'Edit All' : '修改全部'}</span>
+                            <span className="text-[10px] hidden sm:inline">{language === 'en' ? 'Edit All' : '修改全部'}</span>
                           </button>
                           
-                          <div className="flex items-center gap-1 bg-white/40 p-0.5 rounded-lg border border-[#b49196]/15">
+                          <div className="flex items-center gap-0.5 bg-[var(--amnd-bg-elevated)] p-0.5 rounded-lg border border-[var(--amnd-border)]">
                             <button
                               type="button"
                               onClick={() => setSelectedLangs(prev => ({ ...prev, [wish.id]: 'zh' }))}
-                              className={`px-1.5 py-0.5 text-[9px] font-bold rounded-md transition-all ${
+                              className={`px-1.5 py-0.5 text-[10px] font-medium rounded transition-colors cursor-pointer ${
                                 (selectedLangs[wish.id] || 'zh') === 'zh'
-                                  ? 'bg-[#8e6d72]/15 text-[#8e6d72] font-semibold'
-                                  : 'text-gray-400 hover:text-[#8e6d72]'
+                                  ? 'bg-[var(--amnd-wood-soft)] text-[var(--amnd-text-primary)] font-semibold'
+                                  : 'text-[var(--amnd-text-muted)] hover:text-[var(--amnd-text-primary)]'
                               }`}
                             >
-                              🇨🇳 中文
+                              中文
                             </button>
                             <button
                               type="button"
                               onClick={() => setSelectedLangs(prev => ({ ...prev, [wish.id]: 'en' }))}
-                              className={`px-1.5 py-0.5 text-[9px] font-bold rounded-md transition-all ${
+                              className={`px-1.5 py-0.5 text-[10px] font-medium rounded transition-colors cursor-pointer ${
                                 selectedLangs[wish.id] === 'en'
-                                  ? 'bg-[#8e6d72]/15 text-[#8e6d72] font-semibold'
-                                  : 'text-gray-400 hover:text-[#8e6d72]'
+                                  ? 'bg-[var(--amnd-wood-soft)] text-[var(--amnd-text-primary)] font-semibold'
+                                  : 'text-[var(--amnd-text-muted)] hover:text-[var(--amnd-text-primary)]'
                               }`}
                             >
-                              🇬🇧 English
+                              EN
                             </button>
                           </div>
                         </div>
                       </div>
                       
                       {isEditingAll[wish.id] ? (
-                        <div className="space-y-3 p-1.5">
+                        <div className="space-y-3 p-1">
                           <div className="space-y-1">
-                            <label className="text-[9.5px] font-bold text-[#8e6d72] uppercase block">
-                              {language === 'en' ? '🇨🇳 Chinese Scenario Content' : '🇨🇳 中文场景内容'}
+                            <label className="text-[11px] font-medium text-[var(--amnd-text-primary)] block">
+                              {language === 'en' ? 'Chinese Scenario Content' : '中文场景内容'}
                             </label>
                             <textarea
                               value={editingText[wish.id] || ''}
                               onChange={(e) => setEditingText(prev => ({ ...prev, [wish.id]: e.target.value }))}
                               rows={5}
-                              className="w-full text-xs p-2.5 rounded-xl border border-gray-200/60 bg-white/80 text-[#4a3a3a] focus:ring-1 focus:ring-[#8e6d72] focus:outline-none"
+                              className="w-full text-xs p-2.5 amnd-input"
                             />
                           </div>
                           <div className="space-y-1">
-                            <label className="text-[9.5px] font-bold text-[#8e6d72] uppercase block">
-                              {language === 'en' ? '🇬🇧 English Scenario Content' : '🇬🇧 英文场景内容 (English)'}
+                            <label className="text-[11px] font-medium text-[var(--amnd-text-primary)] block">
+                              {language === 'en' ? 'English Scenario Content' : '英文场景内容'}
                             </label>
                             <textarea
                               value={editingTextEn[wish.id] || ''}
                               onChange={(e) => setEditingTextEn(prev => ({ ...prev, [wish.id]: e.target.value }))}
                               rows={5}
-                              className="w-full text-xs p-2.5 rounded-xl border border-gray-200/60 bg-white/80 text-[#4a3a3a] focus:ring-1 focus:ring-[#8e6d72] focus:outline-none"
+                              className="w-full text-xs p-2.5 amnd-input"
                             />
                           </div>
                           <div className="flex justify-end gap-2 pt-1">
                             <button
                               type="button"
                               onClick={() => handleCancelEditAll(wish.id)}
-                              className="px-3 py-1.5 text-[10px] font-bold bg-white text-gray-600 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+                              className="px-3 py-1.5 text-[11px] font-medium amnd-btn-secondary cursor-pointer"
                             >
                               {language === 'en' ? 'Cancel' : '取消'}
                             </button>
                             <button
                               type="button"
                               onClick={() => handleSaveEditAll(wish.id)}
-                              className="px-3 py-1.5 text-[10px] font-bold bg-[#8e6d72] text-white rounded-lg hover:bg-[#8e6d72]/90 transition-colors flex items-center gap-1 shadow-sm"
+                              className="px-3 py-1.5 text-[11px] font-medium amnd-btn-primary flex items-center gap-1 cursor-pointer"
                             >
                               <Save className="w-3 h-3" />
                               <span>{language === 'en' ? 'Save Changes' : '保存修改'}</span>
@@ -617,7 +615,7 @@ export default function Wishlist({
                           <div className={`space-y-2.5 overflow-y-auto custom-scrollbar transition-all duration-300 pr-1 ${isVisualDetailsExpanded ? 'max-h-[350px]' : 'max-h-[140px]'}`}>
                             {((selectedLangs[wish.id] || 'zh') === 'zh' 
                               ? (wish.visualizationDetails || '')
-                              : (wish.visualizationDetailsEn || (language === 'en' ? '【Please click Activate Sensory Details below to generate the English scenario with Gemini】' : '【Please click stack generation/regeneration to trigger English scenario】'))
+                              : (wish.visualizationDetailsEn || (language === 'en' ? '【Please click Activate Sensory Details below to generate the English scenario with Gemini】' : '【点击下方“极速重绘”即可补充对应英文内容】'))
                             ).split('\n\n').filter(p => p.trim() !== '').map((para, paraIdx) => {
                               const hasHeader = para.startsWith('【') && para.indexOf('】') !== -1;
                               let headerText = '';
@@ -631,14 +629,14 @@ export default function Wishlist({
                               return (
                                 <div 
                                   key={paraIdx} 
-                                  className="relative group/para p-2.5 rounded-xl bg-white/40 border border-white/30 hover:bg-white/70 hover:border-[#b49196]/20 transition-all duration-300 shadow-xs"
+                                  className="relative group/para p-2.5 rounded-lg bg-[var(--amnd-bg-elevated)] border border-[var(--amnd-border)] transition-colors duration-200"
                                 >
                                   {/* Hover Delete Button */}
-                                  <div className="absolute top-1.5 right-1.5 opacity-0 group-hover/para:opacity-100 transition-opacity duration-300 flex gap-1 z-10">
+                                  <div className="absolute top-1.5 right-1.5 opacity-0 group-hover/para:opacity-100 transition-opacity duration-200 flex gap-1 z-10">
                                     <button
                                       type="button"
                                       onClick={() => handleDeleteSegment(wish.id, paraIdx, selectedLangs[wish.id] || 'zh')}
-                                      className="p-1 rounded bg-red-50 text-red-500 border border-red-100 hover:bg-red-100 transition-colors shadow-sm"
+                                      className="p-1 rounded bg-[var(--amnd-danger-soft)] text-[var(--amnd-danger)] border border-[var(--amnd-danger)]/20 hover:opacity-90 transition-opacity cursor-pointer"
                                       title={language === 'en' ? "Delete this segment" : "删除此段落"}
                                     >
                                       <Trash className="w-3 h-3" />
@@ -646,12 +644,11 @@ export default function Wishlist({
                                   </div>
 
                                   {headerText && (
-                                    <div className="text-[9.5px] font-bold text-[#8e6d72] mb-0.5 uppercase tracking-wide flex items-center gap-1">
-                                      <span className="w-1.5 h-1.5 rounded-full bg-[#8e6d72]/60 animate-pulse"></span>
+                                    <div className="text-[11px] font-semibold text-[var(--amnd-wood)] mb-1">
                                       <span>{headerText}</span>
                                     </div>
                                   )}
-                                  <p className="text-[11px] text-[#6d5b5e] leading-relaxed italic font-sans whitespace-pre-line">
+                                  <p className="text-xs text-[var(--amnd-text-secondary)] leading-relaxed font-sans whitespace-pre-line">
                                     {bodyText}
                                   </p>
                                 </div>
@@ -662,7 +659,7 @@ export default function Wishlist({
                             <button
                               type="button"
                               onClick={() => setExpandedVisualDetailsMap(prev => ({ ...prev, [wish.id]: !isVisualDetailsExpanded }))}
-                              className="text-[10px] text-[#8e6d72] hover:underline font-semibold mt-1 flex items-center gap-0.5 ml-1"
+                              className="text-[11px] text-[var(--amnd-wood)] hover:underline font-medium mt-2 flex items-center gap-0.5 cursor-pointer"
                             >
                               {isVisualDetailsExpanded ? (language === 'en' ? 'Collapse details' : '收起感官细节') : (language === 'en' ? 'Show all details' : '展开全部感官细节')}
                             </button>
@@ -671,50 +668,50 @@ export default function Wishlist({
                       )}
                     </div>
                   ) : (
-                    <div className="mt-3 text-center py-3 bg-white/20 border border-dashed border-[#b49196]/20 rounded-xl">
-                      <p className="text-[10px] text-[#b49196] uppercase tracking-widest">
-                        {language === 'en' ? 'Sensory details not active. Click below to manifest.' : '具体的细节还未开启，请激活显化'}
+                    <div className="mt-3.5 text-center py-3.5 bg-[var(--amnd-bg-secondary)]/50 border border-dashed border-[var(--amnd-border-strong)] rounded-xl">
+                      <p className="text-xs text-[var(--amnd-text-muted)]">
+                        {language === 'en' ? 'Sensory details not yet added. Click below to generate.' : '感官细节尚未生成，可点击下方按钮激活'}
                       </p>
                     </div>
                   )}
 
                   {/* Stacking & Multiple Generations Panel */}
                   {wish.visualizationDetails && (
-                    <div className="mt-3.5 border-t border-[#b49196]/15 pt-3 animate-fadeIn">
+                    <div className="mt-3.5 border-t border-[var(--amnd-border)] pt-3 animate-fadeIn">
                       <button
                         type="button"
                         onClick={() => setIsRefinementOpen(prev => ({ ...prev, [wish.id]: !isRefinementOpen[wish.id] }))}
-                        className="flex items-center justify-between w-full text-[10px] font-bold text-[#8e6d72] bg-white/40 hover:bg-white/70 px-3 py-1.5 rounded-lg border border-white/50 transition-all shadow-xs"
+                        className="flex items-center justify-between w-full text-[11px] font-medium text-[var(--amnd-text-primary)] bg-[var(--amnd-bg-secondary)] hover:bg-[var(--amnd-bg-subtle)] px-3 py-1.5 rounded-lg border border-[var(--amnd-border)] transition-colors cursor-pointer"
                       >
                         <span className="flex items-center gap-1.5">
-                          <Wand2 className="w-3 h-3 text-pink-500 animate-pulse" />
+                          <Wand2 className="w-3 h-3 text-[var(--amnd-gold)]" />
                           <span>
-                            {language === 'en' ? '🔮 Stack Generation Panel (Layer Sensory Details)' : '🔮 场景多次叠加与智能完善阁 (Stack Generation Panel)'}
+                            {language === 'en' ? 'Layer & Refine Sensory Details' : '场景多次叠加与微调'}
                           </span>
                         </span>
-                        {isRefinementOpen[wish.id] ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                        {isRefinementOpen[wish.id] ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
                       </button>
 
                       {isRefinementOpen[wish.id] && (
-                        <div className="mt-2 p-2.5 rounded-xl bg-white/50 border border-white/60 space-y-2.5 animate-slideDown">
-                          <div className="text-[9px] text-[#6d5b5e] leading-normal font-semibold">
+                        <div className="mt-2 p-3 rounded-xl bg-[var(--amnd-bg-elevated)] border border-[var(--amnd-border)] space-y-2.5">
+                          <div className="text-[11px] text-[var(--amnd-text-secondary)] leading-normal">
                             {language === 'en' ? (
                               <>
-                                💡 <span className="text-[#8e6d72]">Instructions:</span> Write additional details below (e.g. "add sparkling morning sun, a cat purring on my lap"). Click <strong>"➕ Stack Append"</strong> to weave it dynamically into the end.
+                                Write additional details below and click <strong>"Stack Append"</strong> to weave them into the end.
                               </>
                             ) : (
                               <>
-                                💡 <span className="text-[#8e6d72]">操作指引：</span>在下方写下追加指定的感官/细节（如“增加几缕晨曦、手边有一只金斑波斯猫在打呼噜”），点击<strong>“➕ 叠加生成”</strong>可生成全新段落拼接至已有场景末尾，实现无限完善。
+                                在下方写下希望追加的感官细节（如“微风拂过窗帘、桌上温热的清茶”），点击<strong>“叠加生成”</strong>拼接到现有场景末尾。
                               </>
                             )}
                           </div>
 
                           <textarea
-                            placeholder={language === 'en' ? "(Optional) Describe additional feelings or elements to weave in..." : "（选填）在这里写下您希望追加的心境或感官意图描述..."}
+                            placeholder={language === 'en' ? "(Optional) Describe additional feelings or elements..." : "（选填）写下希望追加的心境或感官意象..."}
                             value={refineInputs[wish.id] || ''}
                             onChange={(e) => setRefineInputs(prev => ({ ...prev, [wish.id]: e.target.value }))}
                             rows={2}
-                            className="w-full text-xs p-2 rounded-lg border border-gray-200 bg-white/80 text-[#4a3a3a] placeholder-[#b49196]/40 focus:ring-1 focus:ring-[#8e6d72] focus:outline-none resize-none font-sans"
+                            className="w-full text-xs p-2.5 amnd-input resize-none font-sans"
                           />
 
                           <div className="flex justify-end gap-2">
@@ -725,9 +722,9 @@ export default function Wishlist({
                                 setRefineInputs(prev => ({ ...prev, [wish.id]: '' }));
                               }}
                               disabled={isGenerating}
-                              className="px-2.5 py-1.5 text-[9.5px] font-bold rounded-lg border border-[#b49196]/20 text-[#8e6d72] bg-white hover:bg-pink-50/10 transition-all flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                              className="px-3 py-1.5 text-[11px] font-medium amnd-btn-secondary cursor-pointer disabled:opacity-50"
                             >
-                              <span>{language === 'en' ? '🔮 Overwrite Generate' : '🔮 覆盖生成 (Replace)'}</span>
+                              <span>{language === 'en' ? 'Overwrite Generate' : '覆盖生成'}</span>
                             </button>
                             
                             <button
@@ -737,9 +734,9 @@ export default function Wishlist({
                                 setRefineInputs(prev => ({ ...prev, [wish.id]: '' }));
                               }}
                               disabled={isGenerating}
-                              className="px-2.5 py-1.5 text-[9.5px] font-bold rounded-lg bg-gradient-to-r from-[#b49196] to-[#8e6d72] text-white hover:opacity-95 transition-all flex items-center gap-1 shadow-xs cursor-pointer disabled:opacity-50"
+                              className="px-3 py-1.5 text-[11px] font-medium amnd-btn-primary cursor-pointer disabled:opacity-50"
                             >
-                              <span>{language === 'en' ? '➕ Stack Append' : '➕ 叠加生成 (Stack Append)'}</span>
+                              <span>{language === 'en' ? 'Stack Append' : '叠加生成'}</span>
                             </button>
                           </div>
                         </div>
@@ -748,55 +745,55 @@ export default function Wishlist({
                   )}
                 </div>
 
-                <div className="mt-4 pt-3.5 border-t border-white/50 flex items-center justify-between gap-2 flex-wrap">
+                <div className="mt-4 pt-3.5 border-t border-[var(--amnd-border)] flex items-center justify-between gap-2 flex-wrap">
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <button
+                      type="button"
                       onClick={() => setManualEditWish(wish)}
-                      className="text-[10.5px] font-bold px-3 py-1.5 rounded-full border border-[#8e6d72]/30 bg-white/70 text-[#8e6d72] hover:bg-white hover:scale-[1.02] transition-all flex items-center gap-1 cursor-pointer shadow-2xs"
+                      className="text-[11px] font-medium px-2.5 py-1.5 rounded-lg border border-[var(--amnd-border-strong)] bg-[var(--amnd-bg-elevated)] text-[var(--amnd-text-primary)] hover:bg-[var(--amnd-bg-secondary)] transition-colors flex items-center gap-1 cursor-pointer"
                       title={language === 'en' ? 'Manually edit and record all details' : '手动输入、修改并记录心愿细节'}
                     >
-                      <Edit3 className="w-3 h-3 text-[#8e6d72]" />
-                      <span>{language === 'en' ? '✍️ Manual Edit' : '✍️ 手动修改记录'}</span>
+                      <Edit3 className="w-3 h-3 text-[var(--amnd-wood)]" />
+                      <span>{language === 'en' ? 'Manual Edit' : '手动修改'}</span>
                     </button>
 
                     <button
+                      type="button"
                       onClick={() => handleOpenChannelingForWish(wish)}
-                      className="text-[10.5px] font-bold px-3 py-1.5 rounded-full border border-pink-300/40 bg-pink-50/50 text-pink-700 hover:bg-pink-100/70 hover:scale-[1.02] transition-all flex items-center gap-1 cursor-pointer shadow-2xs"
-                      title={language === 'en' ? 'AI Sensory Channeling: Sense visual, acoustic, aroma, tactile & worthiness' : 'AI 五感全息感应：感应视觉、声场、气味、体感与配得誓言'}
+                      className="text-[11px] font-medium px-2.5 py-1.5 rounded-lg border border-[var(--amnd-gold)]/35 bg-[var(--amnd-gold-soft)] text-[var(--amnd-text-primary)] hover:bg-[var(--amnd-gold)]/20 transition-colors flex items-center gap-1 cursor-pointer"
+                      title={language === 'en' ? 'AI Sensory Channeling' : 'AI 五感辅助感应'}
                     >
-                      <Wand2 className="w-3 h-3 text-pink-600" />
-                      <span>{language === 'en' ? '🔮 AI Channeling' : '🔮 AI 辅助感应'}</span>
+                      <Wand2 className="w-3 h-3 text-[var(--amnd-wood)]" />
+                      <span>{language === 'en' ? 'AI Channeling' : 'AI 五感感应'}</span>
                     </button>
 
                     <button
+                      type="button"
                       onClick={() => onGenerateDetails(wish.id, 'overwrite')}
                       disabled={isGenerating}
-                      className={`text-[10.5px] font-bold px-3 py-1.5 rounded-full border transition-all ${
-                        wish.visualizationDetails
-                          ? 'border-amber-200 bg-amber-50/40 text-amber-800 hover:bg-amber-50'
-                          : 'border-[#b49196]/30 bg-white/50 text-[#8e6d72] hover:bg-white/80'
-                      } disabled:opacity-50`}
+                      className="text-[11px] font-medium px-2.5 py-1.5 rounded-lg border border-[var(--amnd-border-strong)] bg-[var(--amnd-bg-elevated)] text-[var(--amnd-wood)] hover:bg-[var(--amnd-bg-secondary)] transition-colors disabled:opacity-50 cursor-pointer"
                       id={`generate-details-btn-${wish.id}`}
                     >
                       {isGenerating ? (
                         <span className="flex items-center gap-1">
-                          <span className="animate-spin text-xs">✨</span> {language === 'en' ? 'Tuning into Universe...' : '宇宙感应中...'}
+                          <span>{language === 'en' ? 'Generating...' : '生成中...'}</span>
                         </span>
                       ) : wish.visualizationDetails ? (
-                        language === 'en' ? '✨ Fast Regenerate' : '✨ 极速重绘'
+                        language === 'en' ? 'Regenerate' : '重新生成'
                       ) : (
-                        language === 'en' ? '✨ Fast Activate' : '✨ 快速激活细节'
+                        language === 'en' ? 'Fast Activate' : '快速激活细节'
                       )}
                     </button>
                   </div>
 
                   <button
+                    type="button"
                     disabled={!wish.visualizationDetails}
                     onClick={() => onStartSession(wish)}
-                    className="text-[10.5px] font-bold text-white px-4 py-1.5 rounded-full bg-gradient-to-r from-[#b49196] to-[#8e6d72] hover:scale-105 active:scale-95 shadow-md shadow-pink-900/10 transition-all disabled:opacity-40 disabled:scale-100"
+                    className="text-xs font-medium px-4 py-1.5 amnd-btn-primary cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
                     id={`start-session-btn-${wish.id}`}
                   >
-                    {language === 'en' ? '🧘 Immerse in Manifestation' : '🧘 进入沉浸显化'}
+                    {language === 'en' ? 'Enter Stillness' : '进入沉浸冥想'}
                   </button>
                 </div>
               </div>

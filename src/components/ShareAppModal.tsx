@@ -1,9 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Share2, Copy, Check, Download, Upload, QrCode, 
-  Sparkles, Globe, Smartphone, Heart, Users, ArrowRight, ShieldCheck 
+  Sparkles, Globe, Users, RotateCcw, AlertCircle
 } from 'lucide-react';
 import { Wish } from '../types';
+import {
+  ABUNDANCE_NOTES_UPDATED_EVENT,
+  downloadBackupFile,
+  getReadingNotesCount,
+  hasPreImportSnapshot,
+  importBackupFromJsonText,
+  restorePreImportSnapshot,
+} from '../services/backupService';
 
 interface ShareAppModalProps {
   isOpen: boolean;
@@ -24,7 +32,22 @@ export default function ShareAppModal({
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedText, setCopiedText] = useState(false);
   const [showQr, setShowQr] = useState(false);
-  const [importStatus, setImportStatus] = useState<string | null>(null);
+  const [notesCount, setNotesCount] = useState<number>(() => getReadingNotesCount());
+  const [hasSnapshot, setHasSnapshot] = useState<boolean>(() => Boolean(hasPreImportSnapshot()));
+  const [importStatus, setImportStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const refresh = () => {
+      setNotesCount(getReadingNotesCount());
+      setHasSnapshot(Boolean(hasPreImportSnapshot()));
+    };
+    refresh();
+    window.addEventListener(ABUNDANCE_NOTES_UPDATED_EVENT, refresh);
+    return () => {
+      window.removeEventListener(ABUNDANCE_NOTES_UPDATED_EVENT, refresh);
+    };
+  }, [isOpen, wishes]);
 
   if (!isOpen) return null;
 
@@ -49,62 +72,90 @@ export default function ShareAppModal({
     setTimeout(() => setCopiedText(false), 3000);
   };
 
-  // Export current wishes & data as JSON
+  // Export current wishes & reading notes as unified JSON
   const handleExportDataPackage = () => {
-    try {
-      const abundanceNotes = localStorage.getItem('lumiere_abundance_notes_v1') || '[]';
-      const exportPayload = {
-        app: 'LUMIERE_MANIFEST',
-        version: '1.0',
-        exportedAt: new Date().toISOString(),
-        wishes,
-        abundanceNotes: JSON.parse(abundanceNotes),
-      };
-
-      const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(exportPayload, null, 2));
-      const downloadAnchor = document.createElement('a');
-      downloadAnchor.setAttribute('href', dataStr);
-      downloadAnchor.setAttribute('download', `lumiere_manifest_data_${new Date().toISOString().slice(0, 10)}.json`);
-      document.body.appendChild(downloadAnchor);
-      downloadAnchor.click();
-      downloadAnchor.remove();
-    } catch (e) {
-      console.error('Export error:', e);
+    const ok = downloadBackupFile(wishes, 'lumiere_manifest_data');
+    if (ok) {
+      setImportStatus({
+        type: 'success',
+        message: isEn
+          ? `Exported ${wishes.length} wishes & ${getReadingNotesCount()} reading notes.`
+          : `📦 已导出 ${wishes.length} 个愿望与 ${getReadingNotesCount()} 条读书笔记！`,
+      });
+    } else {
+      setImportStatus({
+        type: 'error',
+        message: isEn ? 'Failed to export backup file.' : '❌ 导出备份失败，请重试。',
+      });
     }
   };
 
-  // Import JSON data file
+  // Validate & import JSON data file using unified backupService
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+    const inputEl = e.target;
+    const file = inputEl.files?.[0];
     if (!file) return;
 
     const reader = new FileReader();
     reader.onload = (event) => {
-      try {
-        const content = event.target?.result as string;
-        const parsed = JSON.parse(content);
-        
-        if (parsed.wishes && Array.isArray(parsed.wishes)) {
-          if (onImportData) {
-            onImportData(parsed.wishes);
-          }
-          if (parsed.abundanceNotes && Array.isArray(parsed.abundanceNotes)) {
-            localStorage.setItem('lumiere_abundance_notes_v1', JSON.stringify(parsed.abundanceNotes));
-          }
-          setImportStatus(isEn ? 'Data imported successfully!' : '🎉 成功导入数据包！已同步心愿与读书笔记');
-          setTimeout(() => {
-            setImportStatus(null);
-            onClose();
-          }, 2000);
-        } else {
-          setImportStatus(isEn ? 'Invalid data format.' : '❌ 文件格式不匹配');
+      const content = typeof event.target?.result === 'string' ? event.target.result : '';
+      const result = importBackupFromJsonText(content, wishes, (importedWishes) => {
+        if (onImportData) {
+          onImportData(importedWishes);
         }
-      } catch (err) {
-        console.error('Import parse error:', err);
-        setImportStatus(isEn ? 'Failed to parse file.' : '❌ 解析文件失败，请检查文件');
+      });
+
+      if ('errorZh' in result) {
+        setImportStatus({
+          type: 'error',
+          message: isEn ? result.errorEn : result.errorZh,
+        });
+      } else {
+        setNotesCount(getReadingNotesCount());
+        setHasSnapshot(Boolean(hasPreImportSnapshot()));
+        setImportStatus({
+          type: 'success',
+          message: isEn
+            ? `Imported ${result.wishesCount} wishes${result.notesImported ? ` & ${result.notesCount} reading notes` : ''}. Pre-import snapshot saved.`
+            : `🎉 成功导入！已恢复 ${result.wishesCount} 个愿望${result.notesImported ? `与 ${result.notesCount} 条读书笔记` : ''}（已自动保存导入前快照）。`,
+        });
+        setTimeout(() => {
+          setImportStatus(null);
+          onClose();
+        }, 2200);
       }
+      inputEl.value = '';
+    };
+    reader.onerror = () => {
+      setImportStatus({
+        type: 'error',
+        message: isEn ? 'Failed to read selected file.' : '❌ 读取文件失败，请检查文件。',
+      });
+      inputEl.value = '';
     };
     reader.readAsText(file);
+  };
+
+  const handleRestoreSnapshot = () => {
+    const res = restorePreImportSnapshot((restoredWishes) => {
+      if (onImportData) {
+        onImportData(restoredWishes);
+      }
+    });
+    if ('errorZh' in res) {
+      setImportStatus({
+        type: 'error',
+        message: isEn ? res.errorEn : res.errorZh,
+      });
+    } else {
+      setNotesCount(getReadingNotesCount());
+      setImportStatus({
+        type: 'success',
+        message: isEn
+          ? `Restored pre-import snapshot (${res.wishesCount} wishes).`
+          : `↩️ 已恢复至导入前备份快照（${res.wishesCount} 个愿望与原笔记）。`,
+      });
+    }
   };
 
   return (
@@ -252,14 +303,14 @@ export default function ShareAppModal({
               <span>{isEn ? 'Sync My Data to Another Device / Friend' : '跨设备迁移 / 将我的心愿与心得分享给好友'}</span>
             </span>
             <span className="text-[10px] text-[#b49196] font-mono font-medium">
-              {wishes.length} {isEn ? 'Wishes' : '个心愿'}
+              {wishes.length} {isEn ? 'Wishes' : '个心愿'} • {notesCount} {isEn ? 'Notes' : '条笔记'}
             </span>
           </div>
 
           <p className="text-[11px] text-[#6d5b5e] leading-relaxed">
             {isEn
-              ? 'Export your wishes, Gemini imagery details, and Abundance notes as a portable JSON backup to load on any device.'
-              : '您可以将您当前的心愿列表、AI 具象化场景与读书笔记一键导出为数据文件，发给好友导入或在您的其他设备上同步。'}
+              ? 'Export your wishes, Gemini imagery details, and Abundance notes as a portable JSON backup to load on any device. Importing automatically saves a safety snapshot of your current data first.'
+              : '您可以将您当前的心愿列表、AI 具象化场景与读书笔记一键导出为数据文件；导入前会自动留存当前数据快照，防止误覆盖。'}
           </p>
 
           <div className="flex flex-col sm:flex-row items-center gap-2.5 pt-1">
@@ -291,9 +342,29 @@ export default function ShareAppModal({
             </label>
           </div>
 
+          {hasSnapshot && (
+            <button
+              type="button"
+              onClick={handleRestoreSnapshot}
+              className="w-full py-2 px-3 rounded-xl bg-gray-50 hover:bg-gray-100 border border-gray-200 text-[11px] font-semibold text-[#6d5b5e] flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+              id="modal-restore-snapshot-btn"
+            >
+              <RotateCcw className="w-3.5 h-3.5 text-[#8e6d72]" />
+              <span>{isEn ? 'Restore Pre-Import Snapshot' : '↩️ 撤销导入（恢复导入前数据快照）'}</span>
+            </button>
+          )}
+
           {importStatus && (
-            <div className="p-2.5 rounded-xl bg-pink-100/70 text-xs text-[#8e6d72] font-bold text-center animate-fadeIn">
-              {importStatus}
+            <div
+              className={`p-2.5 rounded-xl text-xs font-bold text-center animate-fadeIn flex items-center justify-center gap-1.5 ${
+                importStatus.type === 'error'
+                  ? 'bg-rose-50 text-rose-700 border border-rose-200'
+                  : 'bg-pink-100/70 text-[#8e6d72]'
+              }`}
+              id="share-modal-import-status"
+            >
+              {importStatus.type === 'error' && <AlertCircle className="w-3.5 h-3.5 shrink-0" />}
+              <span>{importStatus.message}</span>
             </div>
           )}
         </div>

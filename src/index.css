@@ -1,80 +1,260 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Inter:wght@300;400;500;600;700&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --font-serif: "Playfair Display", Georgia, serif;
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Songti SC", "STSong", "Noto Serif SC", "Source Han Serif SC", Georgia, "Times New Roman", serif;
+  --font-sans: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", -apple-system, BlinkMacSystemFont, "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+:root {
+  /* Core Surfaces — Warm Ivory & Soft Stone */
+  --amnd-bg-primary: #faf7f2;
+  --amnd-bg-secondary: #f3efe7;
+  --amnd-bg-elevated: #fffdf9;
+  --amnd-bg-subtle: #ebe5d9;
+
+  /* Typography — Deep Charcoal */
+  --amnd-text-primary: #262320;
+  --amnd-text-secondary: #544e46;
+  --amnd-text-muted: #7a7267;
+
+  /* Brand Accents — Natural Wood & Muted Gold */
+  --amnd-wood: #7c624c;
+  --amnd-wood-hover: #654f3d;
+  --amnd-wood-soft: rgba(124, 98, 76, 0.08);
+  --amnd-gold: #a98948;
+  --amnd-gold-soft: rgba(169, 137, 72, 0.12);
+
+  /* Hairlines & Dividers */
+  --amnd-border: #e5dec9;
+  --amnd-border-strong: #d4cbb5;
+
+  /* Semantic Status */
+  --amnd-success: #4a6b53;
+  --amnd-success-soft: rgba(74, 107, 83, 0.1);
+  --amnd-danger: #9b4d46;
+  --amnd-danger-soft: rgba(155, 77, 70, 0.1);
+
+  /* Radius, Spacing & Elevation */
+  --amnd-radius-sm: 8px;
+  --amnd-radius-md: 12px;
+  --amnd-radius-lg: 16px;
+  --amnd-radius-xl: 20px;
+  --amnd-space-card: 1.5rem;
+  --amnd-space-section: 2rem;
+  --amnd-shadow-sm: 0 1px 2px rgba(38, 35, 32, 0.04);
+  --amnd-shadow-md: 0 4px 16px rgba(38, 35, 32, 0.05);
+}
+
+@layer base {
+  html {
+    background-color: var(--amnd-bg-primary);
+    color: var(--amnd-text-primary);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    margin: 0;
+    background-color: var(--amnd-bg-primary);
+    color: var(--amnd-text-primary);
+    font-family: var(--font-sans);
+    line-height: 1.65;
+    overflow-x: hidden;
+  }
+
+  ::selection {
+    background-color: var(--amnd-gold-soft);
+    color: var(--amnd-text-primary);
+  }
+
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    outline: 2px solid var(--amnd-gold);
+    outline-offset: 2px;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fadeIn {
+    animation: none !important;
+  }
+}
+
+@layer components {
+  .amnd-surface {
+    background-color: var(--amnd-bg-elevated);
+    border: 1px solid var(--amnd-border);
+    border-radius: var(--amnd-radius-xl);
+    box-shadow: var(--amnd-shadow-sm);
+  }
+
+  .amnd-surface-stone {
+    background-color: var(--amnd-bg-secondary);
+    border: 1px solid var(--amnd-border);
+    border-radius: var(--amnd-radius-lg);
+  }
+
+  .amnd-divider {
+    border-color: var(--amnd-border);
+  }
+
+  .amnd-section-title {
+    font-family: var(--font-serif);
+    color: var(--amnd-text-primary);
+    letter-spacing: -0.01em;
+    font-weight: 600;
+  }
+
+  .amnd-body-text {
+    color: var(--amnd-text-secondary);
+    line-height: 1.7;
+  }
+
+  .amnd-kicker {
+    font-size: 0.75rem;
+    color: var(--amnd-text-muted);
+    letter-spacing: 0.04em;
+  }
+
+  .amnd-btn-primary {
+    background-color: var(--amnd-wood);
+    color: var(--amnd-bg-elevated);
+    border: 1px solid transparent;
+    border-radius: var(--amnd-radius-md);
+    transition: background-color 180ms ease, border-color 180ms ease, opacity 180ms ease;
+  }
+
+  .amnd-btn-primary:hover:not(:disabled) {
+    background-color: var(--amnd-wood-hover);
+  }
+
+  .amnd-btn-secondary {
+    background-color: var(--amnd-bg-elevated);
+    color: var(--amnd-text-primary);
+    border: 1px solid var(--amnd-border-strong);
+    border-radius: var(--amnd-radius-md);
+    transition: background-color 180ms ease, border-color 180ms ease;
+  }
+
+  .amnd-btn-secondary:hover:not(:disabled) {
+    background-color: var(--amnd-bg-secondary);
+    border-color: var(--amnd-wood);
+  }
+
+  .amnd-input {
+    background-color: var(--amnd-bg-elevated);
+    color: var(--amnd-text-primary);
+    border: 1px solid var(--amnd-border-strong);
+    border-radius: var(--amnd-radius-md);
+    transition: border-color 180ms ease, box-shadow 180ms ease;
+  }
+
+  .amnd-input::placeholder {
+    color: var(--amnd-text-muted);
+    opacity: 0.75;
+  }
+
+  .amnd-input:focus {
+    outline: none;
+    border-color: var(--amnd-wood);
+    box-shadow: 0 0 0 2px var(--amnd-wood-soft);
+  }
+
+  .amnd-nav-link {
+    color: var(--amnd-text-secondary);
+    border-radius: var(--amnd-radius-sm);
+    transition: color 180ms ease, background-color 180ms ease;
+  }
+
+  .amnd-nav-link:hover {
+    color: var(--amnd-text-primary);
+    background-color: var(--amnd-bg-secondary);
+  }
 }
 
 @layer utilities {
+  .animate-fadeIn {
+    animation: fadeIn 220ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  /* Compatibility tokens mapped to Modern Zen surfaces (non-glass, quiet hierarchy) */
   .frosted-glass-card {
-    background: rgba(255, 255, 255, 0.4);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-    border: 1px solid rgba(255, 255, 255, 0.45);
-    box-shadow: 0 8px 32px 0 rgba(142, 109, 114, 0.08);
+    background-color: var(--amnd-bg-elevated);
+    border: 1px solid var(--amnd-border);
+    box-shadow: var(--amnd-shadow-sm);
   }
 
   .frosted-glass-card-dark {
-    background: rgba(142, 109, 114, 0.1);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-    border: 1px solid rgba(142, 109, 114, 0.15);
+    background-color: var(--amnd-bg-secondary);
+    border: 1px solid var(--amnd-border);
   }
 
   .frosted-glass-input {
-    background: rgba(255, 255, 255, 0.55);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.6);
+    background-color: var(--amnd-bg-elevated);
+    border: 1px solid var(--amnd-border-strong);
   }
 
   .frosted-glass-inner {
-    background: rgba(255, 255, 255, 0.6);
-    border: 1px solid rgba(255, 255, 255, 0.7);
+    background-color: var(--amnd-bg-secondary);
+    border: 1px solid var(--amnd-border);
   }
 
   .text-luxury-primary {
-    color: #8e6d72;
+    color: var(--amnd-wood);
   }
 
   .text-luxury-muted {
-    color: #b49196;
+    color: var(--amnd-text-muted);
   }
 
   .text-luxury-dark {
-    color: #4a3a3a;
+    color: var(--amnd-text-primary);
   }
 
   .text-shadow {
-    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.65), 0 1px 2px rgba(0, 0, 0, 0.5);
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.55), 0 1px 2px rgba(0, 0, 0, 0.45);
   }
 
   .text-shadow-sm {
-    text-shadow: 0 1px 4px rgba(255, 255, 255, 0.6);
+    text-shadow: 0 1px 3px rgba(250, 247, 242, 0.7);
   }
 
-  /* Custom scrollbar utility matching royal/princess rose gold theme */
+  /* Custom scrollbar utility matching Warm Ivory & Natural Wood palette */
   .custom-scrollbar::-webkit-scrollbar {
     width: 6px;
     height: 6px;
   }
   .custom-scrollbar::-webkit-scrollbar-track {
-    background: rgba(142, 109, 114, 0.05);
+    background: var(--amnd-bg-secondary);
     border-radius: 9999px;
   }
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: rgba(142, 109, 114, 0.3);
+    background: rgba(124, 98, 76, 0.28);
     border-radius: 9999px;
-    transition: background 0.3s ease;
+    transition: background 0.2s ease;
   }
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: rgba(142, 109, 114, 0.55);
+    background: rgba(124, 98, 76, 0.5);
   }
 
   /* For firefox */
   .custom-scrollbar {
     scrollbar-width: thin;
-    scrollbar-color: rgba(142, 109, 114, 0.3) rgba(142, 109, 114, 0.05);
+    scrollbar-color: rgba(124, 98, 76, 0.28) var(--amnd-bg-secondary);
   }
 }

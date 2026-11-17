@@ -940,25 +940,26 @@ export default function AudioPlayer({
 
   return (
     <div
-      className="relative p-5 md:p-6 rounded-[32px] bg-white/40 backdrop-blur-2xl border border-white/40 shadow-xl shadow-pink-100/10 transition-all duration-300"
+      className="relative p-5 md:p-6 amnd-surface transition-colors duration-200"
       id="custom-audio-player"
     >
       {/* Non-blocking Toast notification banner */}
       {toastMsg && (
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-2xl bg-[#4a3a3a] text-white text-xs font-semibold shadow-xl border border-white/20 animate-fadeIn flex items-center gap-2 pointer-events-none whitespace-nowrap">
-          <Sparkles className="w-3.5 h-3.5 text-pink-300 animate-pulse" />
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-xl bg-[var(--amnd-text-primary)] text-[var(--amnd-bg-elevated)] text-xs font-medium shadow-[var(--amnd-shadow-md)] animate-fadeIn flex items-center gap-2 pointer-events-none whitespace-nowrap">
+          <Sparkles className="w-3.5 h-3.5 text-[var(--amnd-gold)]" />
           <span>{toastMsg}</span>
         </div>
       )}
       {/* Header Tabs Navigation */}
-      <div className="flex items-center justify-between border-b border-[#8e6d72]/15 pb-3.5 mb-4 flex-wrap gap-2">
-        <div className="flex gap-1 bg-white/30 p-1 rounded-full border border-white/40 shadow-inner">
+      <div className="flex items-center justify-between border-b border-[var(--amnd-border)] pb-3.5 mb-4 flex-wrap gap-2">
+        <div className="flex gap-1 bg-[var(--amnd-bg-secondary)] p-1 rounded-xl border border-[var(--amnd-border)]">
           <button
+            type="button"
             onClick={() => setActiveTab('tracks')}
-            className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1 ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-1 cursor-pointer whitespace-nowrap ${
               activeTab === 'tracks'
-                ? 'bg-white text-[#8e6d72] shadow-sm font-bold'
-                : 'text-[#8e6d72]/70 hover:bg-white/10'
+                ? 'bg-[var(--amnd-bg-elevated)] text-[var(--amnd-text-primary)] shadow-2xs font-semibold border border-[var(--amnd-border)]'
+                : 'text-[var(--amnd-text-secondary)] hover:text-[var(--amnd-text-primary)]'
             }`}
             id="tab-tracks"
           >
@@ -966,24 +967,25 @@ export default function AudioPlayer({
             <span>{language === 'en' ? 'Music' : '音乐精选'}</span>
           </button>
           <button
+            type="button"
             onClick={() => setActiveTab('composer')}
-            className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1 ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-1 cursor-pointer whitespace-nowrap ${
               activeTab === 'composer'
-                ? 'bg-white text-[#8e6d72] shadow-sm font-bold'
-                : 'text-[#8e6d72]/70 hover:bg-white/10'
+                ? 'bg-[var(--amnd-bg-elevated)] text-[var(--amnd-text-primary)] shadow-2xs font-semibold border border-[var(--amnd-border)]'
+                : 'text-[var(--amnd-text-secondary)] hover:text-[var(--amnd-text-primary)]'
             }`}
             id="tab-composer"
           >
             <Sliders className="w-3.5 h-3.5" />
-            <span>{language === 'en' ? 'Composer' : '智能编曲器'}</span>
-            <span className="w-1.5 h-1.5 rounded-full bg-pink-400"></span>
+            <span>{language === 'en' ? 'Composer' : '声景编曲'}</span>
           </button>
           <button
+            type="button"
             onClick={() => setActiveTab('voice')}
-            className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1 ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-1 cursor-pointer whitespace-nowrap ${
               activeTab === 'voice'
-                ? 'bg-white text-[#8e6d72] shadow-sm font-bold'
-                : 'text-[#8e6d72]/70 hover:bg-white/10'
+                ? 'bg-[var(--amnd-bg-elevated)] text-[var(--amnd-text-primary)] shadow-2xs font-semibold border border-[var(--amnd-border)]'
+                : 'text-[var(--amnd-text-secondary)] hover:text-[var(--amnd-text-primary)]'
             }`}
             id="tab-voice"
           >
@@ -994,12 +996,13 @@ export default function AudioPlayer({
 
         {activeTab === 'tracks' && (
           <button
+            type="button"
             onClick={() => setShowAddForm(!showAddForm)}
-            className="text-[10px] text-[#8e6d72] font-bold px-2.5 py-1.5 rounded-full bg-white/50 hover:bg-white/80 border border-white/60 transition-all flex items-center gap-1 shadow-sm"
+            className="text-[11px] text-[var(--amnd-wood)] font-medium px-2.5 py-1.5 rounded-lg bg-[var(--amnd-bg-secondary)] hover:bg-[var(--amnd-bg-subtle)] border border-[var(--amnd-border)] transition-colors flex items-center gap-1 cursor-pointer whitespace-nowrap"
             id="btn-add-music"
           >
             <Plus className="w-3.5 h-3.5" />
-            {language === 'en' ? 'Import Custom' : '导入自定义'}
+            <span>{language === 'en' ? 'Import Custom' : '导入自定义'}</span>
           </button>
         )}
       </div>
@@ -1011,23 +1014,24 @@ export default function AudioPlayer({
           <div className="grid grid-cols-2 gap-2">
             {tracks.map((track) => (
               <button
+                type="button"
                 key={track.id}
                 onClick={() => {
                   onTrackChange(track);
                   setIsPlaying(true);
                 }}
-                className={`p-3 rounded-xl text-left text-xs transition-all duration-300 flex flex-col justify-between border ${
+                className={`p-3 rounded-xl text-left text-xs transition-colors duration-200 flex flex-col justify-between border cursor-pointer ${
                   currentTrack.id === track.id
-                    ? 'bg-white/85 border-white text-[#8e6d72] shadow-sm font-bold scale-[1.01]'
-                    : 'bg-white/20 border-white/20 text-[#4a3a3a] hover:bg-white/40'
+                    ? 'bg-[var(--amnd-wood-soft)] border-[var(--amnd-wood)] text-[var(--amnd-text-primary)] font-semibold'
+                    : 'bg-[var(--amnd-bg-primary)] border-[var(--amnd-border)] text-[var(--amnd-text-secondary)] hover:bg-[var(--amnd-bg-secondary)]'
                 }`}
                 id={`track-select-${track.id}`}
               >
                 <span className="truncate w-full block font-medium">{track.name}</span>
-                <span className="text-[8.5px] text-[#b49196] uppercase font-mono tracking-wider mt-1.5 font-bold block">
+                <span className="text-[11px] text-[var(--amnd-text-muted)] mt-1 block">
                   {track.id === 'princess-synth' || track.id.startsWith('custom-synth-')
-                    ? (language === 'en' ? '✨ Web Synth' : '✨ Web 智能合成')
-                    : (language === 'en' ? '🎵 Audio Stream' : '🎵 音频通道')}
+                    ? (language === 'en' ? 'Web Synth' : 'Web 实时合成')
+                    : (language === 'en' ? 'Audio Stream' : '音频轨道')}
                 </span>
               </button>
             ))}
@@ -1035,20 +1039,20 @@ export default function AudioPlayer({
 
           {/* Custom Track Import Modal */}
           {showAddForm && (
-            <div className="p-4 rounded-[20px] border border-white/60 bg-white/40 space-y-3 animate-fadeIn">
-              <div className="flex items-center justify-between pb-1.5 border-b border-[#8e6d72]/10">
-                <span className="text-[11px] font-bold text-[#8e6d72] uppercase tracking-wide">
-                  {language === 'en' ? 'Add External Music Link' : '添加外部音乐链接'}
+            <div className="p-4 amnd-surface-stone space-y-3 animate-fadeIn">
+              <div className="flex items-center justify-between pb-1.5 border-b border-[var(--amnd-border)]">
+                <span className="text-xs font-semibold text-[var(--amnd-text-primary)]">
+                  {language === 'en' ? 'Add External Music Link' : '添加本地或网络音频'}
                 </span>
-                <button onClick={() => setShowAddForm(false)} className="text-[#8e6d72] hover:text-black">
+                <button type="button" onClick={() => setShowAddForm(false)} className="text-[var(--amnd-text-muted)] hover:text-[var(--amnd-text-primary)] cursor-pointer">
                   <X className="w-3.5 h-3.5" />
                 </button>
               </div>
 
               {/* Upload File */}
               <div className="space-y-1">
-                <span className="text-[9px] font-bold text-[#8e6d72] block">
-                  {language === 'en' ? 'Method 1: Upload Local Audio' : '方法一: 上传本地音频'}
+                <span className="text-[11px] font-medium text-[var(--amnd-text-secondary)] block">
+                  {language === 'en' ? 'Method 1: Upload Local Audio' : '方式一：选择本地音频文件'}
                 </span>
                 <div className="relative">
                   <input
@@ -1057,45 +1061,45 @@ export default function AudioPlayer({
                     onChange={handleFileUpload}
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                   />
-                  <div className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border border-dashed border-[#b49196]/40 hover:border-[#8e6d72] bg-white/45 text-xs text-[#8e6d72] font-semibold transition-all">
+                  <div className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border border-dashed border-[var(--amnd-border-strong)] hover:border-[var(--amnd-wood)] bg-[var(--amnd-bg-elevated)] text-xs text-[var(--amnd-wood)] font-medium transition-colors">
                     <Upload className="w-3.5 h-3.5" />
                     <span>{language === 'en' ? 'Select MP3 or WAV file' : '选择 MP3 或 WAV 音乐'}</span>
                   </div>
                 </div>
               </div>
 
-              <div className="flex items-center justify-center text-[8.5px] text-[#b49196] font-mono font-bold">OR</div>
+              <div className="flex items-center justify-center text-[11px] text-[var(--amnd-text-muted)] font-mono">OR</div>
 
               {/* Form Input URL */}
               <form onSubmit={handleAddUrl} className="space-y-2.5">
                 <div className="space-y-1">
-                  <span className="text-[9px] font-bold text-[#8e6d72] block">
-                    {language === 'en' ? 'Method 2: Enter MP3 URL' : '方法二: 输入网络 MP3 链接'}
+                  <span className="text-[11px] font-medium text-[var(--amnd-text-secondary)] block">
+                    {language === 'en' ? 'Method 2: Enter MP3 URL' : '方式二：输入网络 MP3 链接'}
                   </span>
                   <div className="relative">
-                    <Link2 className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <Link2 className="w-3.5 h-3.5 text-[var(--amnd-text-muted)] absolute left-3 top-1/2 -translate-y-1/2" />
                     <input
                       type="url"
                       placeholder="https://example.com/sound.mp3"
                       value={customUrl}
                       onChange={(e) => setCustomUrl(e.target.value)}
-                      className="w-full text-xs pl-8.5 pr-2.5 py-2 rounded-xl border border-white/50 bg-white/45 focus:outline-none focus:ring-1 focus:ring-[#8e6d72]/30"
+                      className="w-full text-xs pl-8.5 pr-2.5 py-2 amnd-input"
                     />
                   </div>
                 </div>
 
                 <input
                   type="text"
-                  placeholder={language === 'en' ? 'Name this custom track (Optional)' : '给此定制曲目命名 (可选)'}
+                  placeholder={language === 'en' ? 'Name this custom track (Optional)' : '给此曲目命名（可选）'}
                   value={customName}
                   onChange={(e) => setCustomName(e.target.value)}
-                  className="w-full text-xs px-3 py-2 rounded-xl border border-white/50 bg-white/45 focus:outline-none focus:ring-1 focus:ring-[#8e6d72]/30"
+                  className="w-full text-xs px-3 py-2 amnd-input"
                 />
 
                 <button
                   type="submit"
                   disabled={!customUrl}
-                  className="w-full py-2 rounded-xl bg-[#8e6d72] hover:bg-[#8e6d72]/90 text-white font-bold text-xs shadow transition-all disabled:opacity-40"
+                  className="w-full py-2 amnd-btn-primary font-medium text-xs disabled:opacity-40 cursor-pointer"
                 >
                   {language === 'en' ? 'Confirm Import' : '确认导入曲目'}
                 </button>
@@ -1104,32 +1108,32 @@ export default function AudioPlayer({
           )}
 
           {/* TTS Tone Choices */}
-          <div className="pt-2 border-t border-[#8e6d72]/10">
-            <label className="text-[10px] uppercase tracking-widest text-[#8e6d72] font-bold block mb-2">
-              {language === 'en' ? '🗣️ Affirmation Narration Tone' : '🗣️ 智能朗读配音风格 (Affirmation Narration Tone)'}
+          <div className="pt-3 border-t border-[var(--amnd-border)]">
+            <label className="text-xs text-[var(--amnd-text-primary)] font-medium block mb-2">
+              {language === 'en' ? 'Narration Voice Style' : '朗读配音音色选择'}
             </label>
             <div className="grid grid-cols-2 gap-2">
               {[
-                { id: 'deep-female', name: '静谧深沉女声', nameEn: 'Serene Deep Female', desc: 'Serene Deep', emoji: '🪐' },
-                { id: 'royal-lady', name: '温婉贵族女声', nameEn: 'Royal Elegant Female', desc: 'Royal Elegant', emoji: '👑' },
-                { id: 'magnetic-male', name: '古雅磁性男声', nameEn: 'Magnetic Deep Male', desc: 'Magnetic Deep', emoji: '🌌' },
-                { id: 'grounding-male', name: '低频疗愈男声', nameEn: 'Grounding Low Male', desc: 'Grounding Low', emoji: '🧘' },
+                { id: 'deep-female', name: '静谧深沉女声', nameEn: 'Serene Deep Female', desc: 'Serene Deep' },
+                { id: 'royal-lady', name: '温婉清雅女声', nameEn: 'Gentle Elegant Female', desc: 'Gentle Elegant' },
+                { id: 'magnetic-male', name: '古雅磁性男声', nameEn: 'Magnetic Deep Male', desc: 'Magnetic Deep' },
+                { id: 'grounding-male', name: '低频沉稳男声', nameEn: 'Grounding Low Male', desc: 'Grounding Low' },
               ].map((tone) => (
                 <button
+                  type="button"
                   key={tone.id}
                   onClick={() => onVoiceToneChange(tone.id as any)}
-                  className={`p-2 rounded-xl text-center text-xs transition-all duration-300 flex flex-col items-center justify-center border ${
+                  className={`p-2.5 rounded-xl text-center text-xs transition-colors duration-200 flex flex-col items-center justify-center border cursor-pointer ${
                     voiceTone === tone.id
-                      ? 'bg-white/85 border-white text-[#8e6d72] shadow-sm font-semibold'
-                      : 'bg-white/20 border-white/20 text-[#4a3a3a]/80 hover:bg-white/40'
+                      ? 'bg-[var(--amnd-wood-soft)] border-[var(--amnd-wood)] text-[var(--amnd-text-primary)] font-semibold'
+                      : 'bg-[var(--amnd-bg-primary)] border-[var(--amnd-border)] text-[var(--amnd-text-secondary)] hover:bg-[var(--amnd-bg-secondary)]'
                   }`}
                   id={`tone-select-${tone.id}`}
                 >
-                  <span className="text-sm mb-0.5">{tone.emoji}</span>
-                  <span className="font-bold text-[10.5px] block">
+                  <span className="font-medium text-xs block">
                     {language === 'en' ? tone.nameEn : tone.name}
                   </span>
-                  <span className="text-[7.5px] text-[#b49196] font-mono block">{tone.desc}</span>
+                  <span className="text-[10px] text-[var(--amnd-text-muted)] font-mono block mt-0.5">{tone.desc}</span>
                 </button>
               ))}
             </div>
@@ -1141,15 +1145,15 @@ export default function AudioPlayer({
       {activeTab === 'composer' && (
         <div className="space-y-4 animate-fadeIn text-left">
           {/* Top description */}
-          <div className="bg-[#ffe4e9]/30 rounded-2xl p-3 border border-[#8e6d72]/10">
-            <p className="text-[11px] text-[#6d5b5e] leading-relaxed">
+          <div className="bg-[var(--amnd-bg-secondary)] rounded-xl p-3 border border-[var(--amnd-border)]">
+            <p className="text-xs text-[var(--amnd-text-secondary)] leading-relaxed">
               {language === 'en' ? (
                 <>
-                  <strong>🎹 Cosmic Synthesizer</strong>: Design custom brainwave resonances with precision Web Audio algorithms. Click [Start Synthesis] to preview, [Save as Preset] or [Record & Download].
+                  <strong>Soundscape Synthesizer</strong>: Design custom frequency resonances with Web Audio synthesis. Preview live, save as a preset, or record &amp; download.
                 </>
               ) : (
                 <>
-                  <strong>🎹 宇宙频率合成引擎</strong>：通过高精度 Web Audio 原声算法，设计专属您的脑电波共鸣。点击【开始实时演奏】预览，调整后可以【保存为预设】加入音乐精选，或【录音并下载】。
+                  <strong>自然声景与频率编曲器</strong>：通过 Web Audio 实时合成专属频率与自然环境声。可点击【开始实时演奏】试听，调整后【存至音馆】或【录音并下载】。
                 </>
               )}
             </p>
@@ -1158,32 +1162,33 @@ export default function AudioPlayer({
           <div className="space-y-3">
             {/* 1. Base Frequency */}
             <div>
-              <span className="text-[10px] uppercase font-bold tracking-wider text-[#8e6d72] block mb-1.5">
-                {language === 'en' ? '🌸 Choose Solfeggio Frequency' : '🌸 选择神圣赫兹频率 (Solfeggio Frequencies)'}
+              <span className="text-xs font-medium text-[var(--amnd-text-primary)] block mb-1.5">
+                {language === 'en' ? 'Choose Resonance Frequency' : '选择谐振频率 (Hz)'}
               </span>
               <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
                 {[
-                  { hz: 396, name: '消除恐惧', nameEn: 'Release Fear' },
-                  { hz: 432, name: '宇宙共振', nameEn: 'Cosmic Unity' },
-                  { hz: 528, name: '奇迹显化', nameEn: 'Manifest' },
-                  { hz: 639, name: '爱与连接', nameEn: 'Love & Connect' },
-                  { hz: 741, name: '清理解毒', nameEn: 'Cleanse' },
-                  { hz: 963, name: '神圣顶轮', nameEn: 'Divine Crown' },
+                  { hz: 396, name: '释怀安定', nameEn: 'Release Fear' },
+                  { hz: 432, name: '自然共振', nameEn: 'Cosmic Unity' },
+                  { hz: 528, name: '转化平衡', nameEn: 'Manifest' },
+                  { hz: 639, name: '心轮连接', nameEn: 'Love & Connect' },
+                  { hz: 741, name: '清明觉察', nameEn: 'Cleanse' },
+                  { hz: 963, name: '澄澈安住', nameEn: 'Stillness' },
                 ].map((item) => (
                   <button
+                    type="button"
                     key={item.hz}
                     onClick={() => {
                       setComposerHz(item.hz);
                       handleUpdateComposerSetting(item.hz, composerWave, composerBeat, composerNature);
                     }}
-                    className={`py-2 px-1 rounded-xl text-center border transition-all ${
+                    className={`py-2 px-1 rounded-xl text-center border transition-colors cursor-pointer ${
                       composerHz === item.hz
-                        ? 'bg-white border-[#8e6d72] text-[#8e6d72] shadow-sm font-bold scale-[1.03]'
-                        : 'bg-white/20 border-white/20 text-[#4a3a3a] hover:bg-white/40'
+                        ? 'bg-[var(--amnd-wood-soft)] border-[var(--amnd-wood)] text-[var(--amnd-text-primary)] font-semibold'
+                        : 'bg-[var(--amnd-bg-primary)] border-[var(--amnd-border)] text-[var(--amnd-text-secondary)] hover:bg-[var(--amnd-bg-secondary)]'
                     }`}
                   >
-                    <div className="text-[10px] font-bold font-mono">{item.hz}Hz</div>
-                    <div className="text-[8px] text-[#b49196] scale-90 origin-center truncate">
+                    <div className="text-xs font-semibold font-mono tabular-nums">{item.hz}Hz</div>
+                    <div className="text-[10px] text-[var(--amnd-text-muted)] truncate mt-0.5">
                       {language === 'en' ? item.nameEn : item.name}
                     </div>
                   </button>
@@ -1194,8 +1199,8 @@ export default function AudioPlayer({
             {/* 2. Waveshape & Binaural Beat */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <span className="text-[10px] uppercase font-bold tracking-wider text-[#8e6d72] block mb-1">
-                  {language === 'en' ? '🎻 Timbre Shape' : '🎻 乐器合唱音色 (Timbre Shape)'}
+                <span className="text-xs font-medium text-[var(--amnd-text-primary)] block mb-1">
+                  {language === 'en' ? 'Timbre Shape' : '共振音色'}
                 </span>
                 <select
                   value={composerWave}
@@ -1204,17 +1209,17 @@ export default function AudioPlayer({
                     setComposerWave(wave);
                     handleUpdateComposerSetting(composerHz, wave, composerBeat, composerNature);
                   }}
-                  className="w-full text-xs px-2.5 py-2 rounded-xl border border-white/60 bg-white/50 text-[#4a3a3a] focus:outline-none focus:ring-1 focus:ring-[#8e6d72]/30"
+                  className="w-full text-xs px-2.5 py-2 amnd-input"
                 >
-                  <option value="sine">{language === 'en' ? '🎐 Tibetan Bowl (Sine)' : '🎐 空灵藏传金钵 (Sine)'}</option>
-                  <option value="triangle">{language === 'en' ? '🌸 Royal Harp (Triangle)' : '🌸 皇家竖琴古筝 (Triangle)'}</option>
-                  <option value="sawtooth">{language === 'en' ? '🌌 Cosmic Pad' : '🌌 神圣太空合唱 (Pad)'}</option>
+                  <option value="sine">{language === 'en' ? 'Singing Bowl (Sine)' : '颂钵清音 (Sine)'}</option>
+                  <option value="triangle">{language === 'en' ? 'Warm Strings (Triangle)' : '木琴弦音 (Triangle)'}</option>
+                  <option value="sawtooth">{language === 'en' ? 'Ambient Pad' : '和声声场 (Pad)'}</option>
                 </select>
               </div>
 
               <div>
-                <span className="text-[10px] uppercase font-bold tracking-wider text-[#8e6d72] block mb-1">
-                  {language === 'en' ? '🧘 Binaural Beat' : '🧘 脑波注入 (Binaural Beat)'}
+                <span className="text-xs font-medium text-[var(--amnd-text-primary)] block mb-1">
+                  {language === 'en' ? 'Binaural Beat' : '脑波节律'}
                 </span>
                 <select
                   value={composerBeat}
@@ -1223,12 +1228,12 @@ export default function AudioPlayer({
                     setComposerBeat(beat);
                     handleUpdateComposerSetting(composerHz, composerWave, beat, composerNature);
                   }}
-                  className="w-full text-xs px-2.5 py-2 rounded-xl border border-white/60 bg-white/50 text-[#4a3a3a] focus:outline-none focus:ring-1 focus:ring-[#8e6d72]/30"
+                  className="w-full text-xs px-2.5 py-2 amnd-input"
                 >
-                  <option value="theta">{language === 'en' ? '🧠 Theta 4Hz (Subconscious)' : '🧠 Theta 4Hz (潜意识显化)'}</option>
-                  <option value="alpha">{language === 'en' ? '🍃 Alpha 8Hz (Deep Relax)' : '🍃 Alpha 8Hz (深度放松)'}</option>
-                  <option value="delta">{language === 'en' ? '😴 Delta 2Hz (Deep Sleep)' : '😴 Delta 2Hz (辅助无梦眠)'}</option>
-                  <option value="none">{language === 'en' ? '🚫 No Resonance' : '🚫 无脑波共鸣'}</option>
+                  <option value="theta">{language === 'en' ? 'Theta 4Hz (Deep Calm)' : 'Theta 4Hz（深沉内观）'}</option>
+                  <option value="alpha">{language === 'en' ? 'Alpha 8Hz (Relaxation)' : 'Alpha 8Hz（放松专注）'}</option>
+                  <option value="delta">{language === 'en' ? 'Delta 2Hz (Restorative)' : 'Delta 2Hz（静谧安眠）'}</option>
+                  <option value="none">{language === 'en' ? 'No Resonance' : '无脑波节律'}</option>
                 </select>
               </div>
             </div>
@@ -1236,10 +1241,10 @@ export default function AudioPlayer({
             {/* 3. Soundscapes Overlay */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] uppercase font-bold tracking-wider text-[#8e6d72] block">
-                  {language === 'en' ? '🌿 Organic Nature Soundscapes' : '🌿 模拟高保真大自然环境音浪 (Organic Soundscapes)'}
+                <span className="text-xs font-medium text-[var(--amnd-text-primary)] block">
+                  {language === 'en' ? 'Organic Nature Soundscapes' : '自然环境音景'}
                 </span>
-                <div className="flex items-center gap-1.5 text-[10px] text-[#8e6d72]">
+                <div className="flex items-center gap-1.5 text-xs text-[var(--amnd-text-secondary)]">
                   <span>{language === 'en' ? 'Nature Vol:' : '环境音量:'}</span>
                   <input
                     type="range"
@@ -1248,9 +1253,9 @@ export default function AudioPlayer({
                     step="0.05"
                     value={composerNatureVol}
                     onChange={(e) => handleNatureVolumeChange(parseFloat(e.target.value))}
-                    className="w-16 h-1 accent-[#8e6d72] cursor-pointer"
+                    className="w-16 h-1.5 accent-[var(--amnd-wood)] cursor-pointer"
                   />
-                  <span className="font-mono text-[9px] w-6 text-right">{Math.round(composerNatureVol * 100)}%</span>
+                  <span className="font-mono text-[11px] tabular-nums w-8 text-right">{Math.round(composerNatureVol * 100)}%</span>
                 </div>
               </div>
 
@@ -1262,16 +1267,16 @@ export default function AudioPlayer({
                       key={item.id}
                       type="button"
                       onClick={() => handleSelectNature(item.id)}
-                      className={`p-2.5 rounded-xl border text-left transition-all ${
+                      className={`p-2.5 rounded-xl border text-left transition-colors cursor-pointer ${
                         isSelected
-                          ? 'bg-white border-[#8e6d72] text-[#8e6d72] shadow-sm font-semibold ring-1 ring-[#8e6d72]/30'
-                          : 'bg-white/20 border-white/20 text-[#4a3a3a] hover:bg-white/40'
+                          ? 'bg-[var(--amnd-wood-soft)] border-[var(--amnd-wood)] text-[var(--amnd-text-primary)] font-semibold'
+                          : 'bg-[var(--amnd-bg-primary)] border-[var(--amnd-border)] text-[var(--amnd-text-secondary)] hover:bg-[var(--amnd-bg-secondary)]'
                       }`}
                     >
-                      <div className="text-[11px] font-bold truncate">
+                      <div className="text-xs font-medium truncate">
                         {language === 'en' ? item.nameEn : item.name}
                       </div>
-                      <div className="text-[8px] font-mono text-[#b49196] truncate mt-0.5">
+                      <div className="text-[10px] text-[var(--amnd-text-muted)] truncate mt-0.5">
                         {language === 'en' ? item.descEn : item.desc}
                       </div>
                     </button>
@@ -1281,13 +1286,13 @@ export default function AudioPlayer({
             </div>
 
             {/* Name and Composing buttons */}
-            <div className="pt-2.5 border-t border-[#8e6d72]/10 space-y-2">
+            <div className="pt-2.5 border-t border-[var(--amnd-border)] space-y-2">
               <input
                 type="text"
-                placeholder={language === 'en' ? 'Name this custom mix (e.g. Dream Repair...)' : '给这首冥想曲起个名字 (如：夜间修复波...)'}
+                placeholder={language === 'en' ? 'Name this custom mix (e.g. Evening Calm...)' : '给这首声景曲目起个名字（如：晚风静坐...）'}
                 value={composerName}
                 onChange={(e) => setComposerName(e.target.value)}
-                className="w-full text-xs px-3.5 py-2.5 rounded-xl border border-white/60 bg-white/45 placeholder-[#b49196]/80 text-[#4a3a3a] focus:outline-none focus:ring-2 focus:ring-[#8e6d72]/15"
+                className="w-full text-xs px-3.5 py-2.5 amnd-input"
               />
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
@@ -1295,9 +1300,9 @@ export default function AudioPlayer({
                 <button
                   type="button"
                   onClick={handleSaveComposerPreset}
-                  className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-white hover:bg-white/80 text-[#8e6d72] border border-[#8e6d72]/30 font-semibold text-xs shadow-sm transition-all"
+                  className="flex items-center justify-center gap-1.5 px-3 py-2.5 amnd-btn-secondary font-medium text-xs cursor-pointer"
                 >
-                  <Save className="w-3.5 h-3.5" />
+                  <Save className="w-3.5 h-3.5 text-[var(--amnd-wood)]" />
                   <span>{language === 'en' ? 'Save Preset' : '存至背景音馆'}</span>
                 </button>
 
@@ -1306,17 +1311,17 @@ export default function AudioPlayer({
                   type="button"
                   onClick={handleRecordComposer}
                   disabled={isRecordingComposer}
-                  className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-pink-50 hover:bg-pink-100 text-pink-700 border border-pink-200 font-semibold text-xs shadow-sm transition-all disabled:opacity-50"
+                  className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-[var(--amnd-gold-soft)] hover:bg-[var(--amnd-gold)]/20 text-[var(--amnd-text-primary)] border border-[var(--amnd-gold)]/30 font-medium text-xs transition-colors disabled:opacity-50 cursor-pointer"
                 >
                   {isRecordingComposer ? (
                     <>
-                      <div className="w-3 h-3 border-2 border-pink-700 border-t-transparent rounded-full animate-spin"></div>
+                      <div className="w-3 h-3 border-2 border-[var(--amnd-wood)] border-t-transparent rounded-full animate-spin"></div>
                       <span>{language === 'en' ? `Recording (${recordingProgress}s)` : `录制中 (${recordingProgress}s)`}</span>
                     </>
                   ) : (
                     <>
-                      <Download className="w-3.5 h-3.5" />
-                      <span>{language === 'en' ? 'Record & Download' : '录音并下载音乐'}</span>
+                      <Download className="w-3.5 h-3.5 text-[var(--amnd-wood)]" />
+                      <span>{language === 'en' ? 'Record & Download' : '录音并下载'}</span>
                     </>
                   )}
                 </button>
@@ -1334,10 +1339,10 @@ export default function AudioPlayer({
                       runProceduralSynth(composerHz, composerWave, composerBeat, composerNature, composerNatureVol);
                     }
                   }}
-                  className={`flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-white font-semibold text-xs shadow transition-all ${
+                  className={`flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl font-medium text-xs transition-colors cursor-pointer ${
                     isLiveComposing
-                      ? 'bg-rose-500 hover:bg-rose-600 animate-pulse'
-                      : 'bg-[#8e6d72] hover:bg-[#8e6d72]/90'
+                      ? 'bg-[var(--amnd-danger)] text-[var(--amnd-bg-elevated)]'
+                      : 'amnd-btn-primary'
                   }`}
                 >
                   {isLiveComposing ? <Square className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
@@ -1353,31 +1358,30 @@ export default function AudioPlayer({
       {activeTab === 'voice' && (
         <div className="space-y-4 animate-fadeIn text-left">
           {/* Instructions */}
-          <div className="bg-[#ffe4e9]/30 rounded-2xl p-3 border border-[#8e6d72]/10">
-            <p className="text-[11px] text-[#6d5b5e] leading-relaxed">
+          <div className="bg-[var(--amnd-bg-secondary)] rounded-xl p-3 border border-[var(--amnd-border)]">
+            <p className="text-xs text-[var(--amnd-text-secondary)] leading-relaxed">
               {language === 'en' ? (
                 <>
-                  <strong>🎙️ Personal Voice Studio</strong>: Record yourself reading your wishes or affirmations aloud. Once enabled, your voice will loop during the meditation countdown alongside background tracks to reach your subconscious!
+                  <strong>Personal Voice Studio</strong>: Record yourself reading your intentions aloud. Once enabled, your recording will loop softly during the meditation timer alongside background soundscapes.
                 </>
               ) : (
                 <>
-                  <strong>🎙️ 我的声线肯定句馆</strong>：在这里亲口朗读您的心愿或显化口令（如：<em>“我有无尽的财富、健康的身体与包容一切的爱”</em>），app将为您录音建档。开启下方设置后，<strong>您录制的亲口声音将在全屏冥想倒计时中自动循环播放</strong>，配合背景梵音直击您的深层潜意识！
+                  <strong>个人声音肯定句馆</strong>：在此亲口录下您的心愿或觉察短句，并自动本地保存。开启下方设置后，<strong>您录制的声音将在静坐倒计时中温和循环</strong>，配合自然声景陪伴练习。
                 </>
               )}
             </p>
           </div>
 
           {/* Voice recorder box */}
-          <div className="bg-white/30 rounded-2xl p-3.5 border border-white/60 space-y-2.5">
+          <div className="bg-[var(--amnd-bg-primary)] rounded-xl p-3.5 border border-[var(--amnd-border)] space-y-2.5">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] uppercase font-bold tracking-wider text-[#8e6d72] flex items-center gap-1">
-                <Activity className="w-3.5 h-3.5 text-pink-400 animate-pulse" />
-                <span>{language === 'en' ? 'Record Voice Affirmation' : '录制我的神圣声音 (Record Voice Affirmation)'}</span>
+              <span className="text-xs font-medium text-[var(--amnd-text-primary)] flex items-center gap-1.5">
+                <Activity className="w-3.5 h-3.5 text-[var(--amnd-wood)]" />
+                <span>{language === 'en' ? 'Record Voice Affirmation' : '录制个人声音片段'}</span>
               </span>
               {isRecordingVoice && (
-                <span className="text-[10px] font-bold text-red-500 font-mono flex items-center gap-1 animate-pulse">
-                  <span className="w-2 h-2 rounded-full bg-red-500"></span>
-                  <span>RECORDING {voiceRecordSeconds}s</span>
+                <span className="text-xs font-semibold text-[var(--amnd-danger)] font-mono tabular-nums flex items-center gap-1">
+                  <span>REC {voiceRecordSeconds}s</span>
                 </span>
               )}
             </div>
@@ -1385,18 +1389,18 @@ export default function AudioPlayer({
             <div className="flex gap-2">
               <input
                 type="text"
-                placeholder={language === 'en' ? 'Give your recording an empowering name...' : '给您录音肯定句取个能量名字 (例如：我的富足配得感)'}
+                placeholder={language === 'en' ? 'Give your recording a name...' : '给这段录音命名（例如：清晨静心自我提醒）'}
                 value={voiceRecordName}
                 disabled={isRecordingVoice}
                 onChange={(e) => setVoiceRecordName(e.target.value)}
-                className="flex-1 text-xs px-3.5 py-2 rounded-xl border border-white/60 bg-white/50 text-[#4a3a3a] placeholder-[#b49196]/80 focus:outline-none focus:ring-1 focus:ring-[#8e6d72]/30 disabled:opacity-60"
+                className="flex-1 text-xs px-3.5 py-2 amnd-input disabled:opacity-60"
               />
 
               {isRecordingVoice ? (
                 <button
                   type="button"
                   onClick={stopRecordingVoice}
-                  className="px-4 py-2 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold flex items-center gap-1 animate-pulse shadow-md"
+                  className="px-4 py-2 rounded-xl bg-[var(--amnd-danger)] text-[var(--amnd-bg-elevated)] text-xs font-medium flex items-center gap-1 cursor-pointer"
                 >
                   <Square className="w-3.5 h-3.5 fill-current" />
                   <span>{language === 'en' ? 'Stop' : '停止'}</span>
@@ -1405,7 +1409,7 @@ export default function AudioPlayer({
                 <button
                   type="button"
                   onClick={startRecordingVoice}
-                  className="px-4 py-2 rounded-xl bg-[#8e6d72] hover:bg-[#8e6d72]/90 text-white text-xs font-bold flex items-center gap-1 shadow"
+                  className="px-4 py-2 amnd-btn-primary text-xs font-medium flex items-center gap-1 cursor-pointer"
                 >
                   <Mic className="w-3.5 h-3.5" />
                   <span>{language === 'en' ? 'Record' : '录音'}</span>
@@ -1416,35 +1420,35 @@ export default function AudioPlayer({
 
           {/* Saved Voices Library */}
           <div className="space-y-2">
-            <span className="text-[10px] uppercase font-bold tracking-wider text-[#8e6d72] block">
-              {language === 'en' ? '📁 My Voice Archive' : '📁 我的建档声波库 (My Voice Archive)'}
+            <span className="text-xs font-medium text-[var(--amnd-text-primary)] block">
+              {language === 'en' ? 'My Voice Archive' : '已存声音列表'}
             </span>
 
             {customVoices.length === 0 ? (
-              <div className="py-6 text-center border border-dashed border-white/30 rounded-2xl bg-white/10">
-                <span className="text-2xl block mb-1">🎧</span>
-                <span className="text-[10.5px] text-[#b49196] font-medium">
-                  {language === 'en' ? 'No recordings yet. Record a short clip to align with your inner self.' : '尚无录制音频。录制一小段来开启您的灵魂共振吧。'}
+              <div className="py-6 text-center border border-dashed border-[var(--amnd-border-strong)] rounded-xl bg-[var(--amnd-bg-secondary)]/40">
+                <span className="text-xs text-[var(--amnd-text-muted)] font-medium">
+                  {language === 'en' ? 'No recordings yet. Record a short clip to begin.' : '尚无录制音频，录制一小段即可保存在本地使用。'}
                 </span>
               </div>
             ) : (
-              <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+              <div className="space-y-1.5 max-h-48 overflow-y-auto custom-scrollbar pr-1">
                 {customVoices.map((voice) => (
                   <div
                     key={voice.id}
-                    className={`flex items-center justify-between p-2.5 rounded-xl border transition-all ${
+                    className={`flex items-center justify-between p-2.5 rounded-xl border transition-colors ${
                       selectedVoiceMantraId === voice.id
-                        ? 'bg-white/80 border-[#8e6d72]/30 shadow-sm'
-                        : 'bg-white/20 border-white/10 hover:bg-white/40'
+                        ? 'bg-[var(--amnd-wood-soft)] border-[var(--amnd-wood)]'
+                        : 'bg-[var(--amnd-bg-primary)] border-[var(--amnd-border)] hover:bg-[var(--amnd-bg-secondary)]'
                     }`}
                   >
                     <div className="flex items-center gap-2 flex-1 min-w-0">
                       <button
+                        type="button"
                         onClick={() => setSelectedVoiceMantraId(voice.id)}
-                        className={`p-1.5 rounded-full transition-all ${
+                        className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
                           selectedVoiceMantraId === voice.id
-                            ? 'bg-[#8e6d72] text-white shadow-inner'
-                            : 'bg-white/50 text-[#8e6d72]/60 hover:text-[#8e6d72]'
+                            ? 'bg-[var(--amnd-wood)] text-[var(--amnd-bg-elevated)]'
+                            : 'bg-[var(--amnd-bg-secondary)] text-[var(--amnd-text-muted)] hover:text-[var(--amnd-text-primary)]'
                         }`}
                         title={language === 'en' ? 'Use in Meditation' : '设为冥想背景伴奏'}
                       >
@@ -1452,13 +1456,13 @@ export default function AudioPlayer({
                       </button>
 
                       <div className="text-left min-w-0">
-                        <p className="text-[11.5px] font-bold text-[#4a3a3a] truncate">{voice.name}</p>
-                        <div className="flex items-center gap-1.5 text-[8.5px] text-[#b49196] font-mono mt-0.5">
+                        <p className="text-xs font-medium text-[var(--amnd-text-primary)] truncate">{voice.name}</p>
+                        <div className="flex items-center gap-1.5 text-[11px] text-[var(--amnd-text-muted)] font-mono tabular-nums mt-0.5">
                           <span className="flex items-center gap-0.5">
                             <Clock className="w-2.5 h-2.5" />
                             {voice.duration}{language === 'en' ? 's' : '秒'}
                           </span>
-                          <span>•</span>
+                          <span>·</span>
                           <span>{voice.createdAt}</span>
                         </div>
                       </div>
@@ -1467,11 +1471,12 @@ export default function AudioPlayer({
                     <div className="flex items-center gap-1">
                       {/* Play Preview */}
                       <button
+                        type="button"
                         onClick={() => playVoicePreview(voice)}
-                        className={`p-1.5 rounded-full border transition-all ${
+                        className={`p-1.5 rounded-lg border transition-colors cursor-pointer ${
                           isPlayingVoicePreview === voice.id
-                            ? 'bg-rose-500 text-white border-transparent animate-pulse'
-                            : 'bg-white/60 border-white/80 text-[#8e6d72] hover:bg-white'
+                            ? 'bg-[var(--amnd-wood)] text-[var(--amnd-bg-elevated)] border-transparent'
+                            : 'bg-[var(--amnd-bg-elevated)] border-[var(--amnd-border)] text-[var(--amnd-wood)] hover:bg-[var(--amnd-bg-secondary)]'
                         }`}
                         title={language === 'en' ? 'Preview' : '播放预览'}
                       >
@@ -1484,8 +1489,9 @@ export default function AudioPlayer({
 
                       {/* Download */}
                       <button
+                        type="button"
                         onClick={() => downloadVoiceClip(voice)}
-                        className="p-1.5 rounded-full border bg-white/60 border-white/80 text-[#8e6d72]/80 hover:text-[#8e6d72] hover:bg-white transition-all"
+                        className="p-1.5 rounded-lg border bg-[var(--amnd-bg-elevated)] border-[var(--amnd-border)] text-[var(--amnd-text-secondary)] hover:text-[var(--amnd-text-primary)] hover:bg-[var(--amnd-bg-secondary)] transition-colors cursor-pointer"
                         title={language === 'en' ? 'Download' : '下载录音'}
                       >
                         <Download className="w-3 h-3" />
@@ -1493,8 +1499,9 @@ export default function AudioPlayer({
 
                       {/* Delete */}
                       <button
+                        type="button"
                         onClick={() => deleteVoiceClip(voice.id)}
-                        className="p-1.5 rounded-full border bg-white/40 border-transparent text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all"
+                        className="p-1.5 rounded-lg border bg-[var(--amnd-bg-elevated)] border-transparent text-[var(--amnd-text-muted)] hover:text-[var(--amnd-danger)] hover:bg-[var(--amnd-danger-soft)] transition-colors cursor-pointer"
                         title={language === 'en' ? 'Delete' : '删除肯定句'}
                       >
                         <Trash2 className="w-3 h-3" />
@@ -1508,7 +1515,7 @@ export default function AudioPlayer({
 
           {/* Interactive Meditation loop configuration toggle */}
           {customVoices.length > 0 && (
-            <div className="bg-[#ffe4e9]/20 border border-[#8e6d72]/15 rounded-2xl p-3 flex items-start gap-2 pt-2.5 shadow-inner">
+            <div className="bg-[var(--amnd-bg-secondary)] border border-[var(--amnd-border)] rounded-xl p-3 flex items-start gap-2">
               <input
                 type="checkbox"
                 id="checkbox-loop-mantra"
@@ -1520,17 +1527,17 @@ export default function AudioPlayer({
                     setSelectedVoiceMantraId(null);
                   }
                 }}
-                className="mt-1 accent-[#8e6d72] cursor-pointer"
+                className="mt-1 accent-[var(--amnd-wood)] cursor-pointer"
               />
               <div className="text-left">
                 <label
                   htmlFor="checkbox-loop-mantra"
-                  className="text-[10.5px] font-bold text-[#8e6d72] block cursor-pointer"
+                  className="text-xs font-medium text-[var(--amnd-text-primary)] block cursor-pointer"
                 >
-                  {language === 'en' ? '✨ Subconscious Loop: Play your voice during meditation' : '✨ 潜意识神意灌顶：在全屏冥想专注时，循环播放选中的亲口录音'}
+                  {language === 'en' ? 'Loop your voice softly during stillness sessions' : '静心模式开关：在全屏冥想时柔和循环播放选中的录音'}
                 </label>
-                <p className="text-[9px] text-[#6d5b5e] mt-0.5 leading-relaxed">
-                  {language === 'en' ? 'Once enabled, your recorded audio will loop softly in the background. Hearing your own voice repeating desires is highly effective.' : '勾选后，当您启动全屏专注显化沙龙，本段音频将作为专属心愿指令，与背景音乐叠加柔和循环。听自己的声线念肯定句，潜意识最不易产生抗拒。'}
+                <p className="text-[11px] text-[var(--amnd-text-muted)] mt-0.5 leading-relaxed">
+                  {language === 'en' ? 'Once enabled, your recorded audio will loop gently alongside ambient tracks.' : '勾选后，开启全屏冥想时将把该录音叠加在背景声景中柔和循环。'}
                 </p>
               </div>
             </div>
@@ -1539,10 +1546,11 @@ export default function AudioPlayer({
       )}
 
       {/* FOOTER Master Audio Status Bar */}
-      <div className="flex items-center gap-4 py-2.5 px-3.5 mt-4 rounded-2xl bg-white/45 border border-white/50 shadow-sm text-left">
+      <div className="flex items-center gap-3.5 py-2.5 px-3.5 mt-4 rounded-xl bg-[var(--amnd-bg-secondary)] border border-[var(--amnd-border)] text-left">
         <button
+          type="button"
           onClick={() => setIsPlaying(!isPlaying)}
-          className="p-3.5 rounded-full bg-[#8e6d72] hover:bg-[#8e6d72]/90 text-white shadow-md shadow-[#8e6d72]/10 hover:scale-105 active:scale-95 transition-all duration-200"
+          className="p-3 rounded-xl bg-[var(--amnd-wood)] hover:bg-[var(--amnd-wood-hover)] text-[var(--amnd-bg-elevated)] transition-colors cursor-pointer shrink-0"
           id="music-play-pause-btn"
           aria-label={isPlaying ? (language === 'en' ? 'Pause' : '暂停') : (language === 'en' ? 'Play' : '播放')}
         >
@@ -1554,21 +1562,21 @@ export default function AudioPlayer({
         </button>
 
         <div className="flex-1 min-w-0">
-          <p className="text-xs font-bold text-[#4a3a3a] truncate">
-            {activeTab === 'composer' ? (language === 'en' ? `Composing: ${composerHz}Hz resonance` : `正在定制: ${composerHz}Hz 脑波振动`) : currentTrack.name}
+          <p className="text-xs font-medium text-[var(--amnd-text-primary)] truncate">
+            {activeTab === 'composer' ? (language === 'en' ? `Composing: ${composerHz}Hz resonance` : `正在定制: ${composerHz}Hz 声波共鸣`) : currentTrack.name}
           </p>
-          <p className="text-[9.5px] text-[#b49196] font-medium mt-0.5">
+          <p className="text-[11px] text-[var(--amnd-text-muted)] mt-0.5 truncate">
             {isPlaying
               ? isLiveComposing
-                ? (language === 'en' ? '✨ Perfect brainwave resonance active...' : '✨ 智能赫兹声波完美共振中...')
-                : (language === 'en' ? '🌸 Playing sacred ambient meditation track...' : '🌸 正在播放神圣冥想氛围音乐...')
-              : (language === 'en' ? '🍵 Awaiting your manifestation journey...' : '🍵 静候您的显化旅程...')}
+                ? (language === 'en' ? 'Live soundscape resonance active...' : '实时声景共鸣播放中...')
+                : (language === 'en' ? 'Playing calm meditation soundscape...' : '正在播放静心背景声景...')
+              : (language === 'en' ? 'Ready for your stillness session' : '静候开启背景声景')}
           </p>
         </div>
 
         {/* Volume adjust sliders */}
-        <div className="flex items-center gap-1.5">
-          <Volume2 className="w-3.5 h-3.5 text-[#8e6d72]" />
+        <div className="flex items-center gap-1.5 shrink-0">
+          <Volume2 className="w-3.5 h-3.5 text-[var(--amnd-wood)]" />
           <input
             type="range"
             min="0"
@@ -1576,7 +1584,7 @@ export default function AudioPlayer({
             step="0.05"
             value={volume}
             onChange={(e) => setVolume(parseFloat(e.target.value))}
-            className="w-16 h-1 bg-[#8e6d72]/10 rounded-lg appearance-none cursor-pointer accent-[#8e6d72]"
+            className="w-16 h-1.5 bg-[var(--amnd-border)] rounded-lg appearance-none cursor-pointer accent-[var(--amnd-wood)]"
             id="music-volume"
           />
         </div>
