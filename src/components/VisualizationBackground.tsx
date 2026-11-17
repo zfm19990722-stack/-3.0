@@ -7,6 +7,7 @@ interface VisualizationBackgroundProps {
   saturation?: number;
   brightness?: number;
   blur?: number;
+  zIndexClass?: string;
 }
 
 export default function VisualizationBackground({
@@ -14,7 +15,8 @@ export default function VisualizationBackground({
   intensity = 3,
   saturation = 100,
   brightness = 100,
-  blur = 0
+  blur = 0,
+  zIndexClass = '-z-10'
 }: VisualizationBackgroundProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -261,7 +263,7 @@ export default function VisualizationBackground({
   return (
     <div
       ref={containerRef}
-      className="fixed inset-0 w-full h-full overflow-hidden select-none -z-10"
+      className={`fixed inset-0 w-full h-full overflow-hidden select-none ${zIndexClass}`}
       id="visualization-canvas-container"
     >
       <canvas

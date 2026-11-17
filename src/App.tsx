@@ -190,7 +190,7 @@ export default function App() {
   const [meditationSoundType, setMeditationSoundType] = useState<'ambient' | 'solfeggio'>('ambient');
   const [solfeggioFrequency, setSolfeggioFrequency] = useState<number>(528);
   const [solfeggioVolume, setSolfeggioVolume] = useState<number>(0.3);
-  const [isBackgroundAudioEnabled, setIsBackgroundAudioEnabled] = useState<boolean>(true);
+  const [isBackgroundAudioEnabled, setIsBackgroundAudioEnabled] = useState<boolean>(false);
 
   // Refs for continuous Solfeggio sound
   const solfeggioAudioCtxRef = useRef<AudioContext | null>(null);
@@ -1089,16 +1089,11 @@ export default function App() {
     setShowFinishedOverlay(false);
     setSelectedGratitudeWhisper(GRATITUDE_WHISPERS[Math.floor(Math.random() * GRATITUDE_WHISPERS.length)]);
 
-    // Automatically play the background music
-    setIsMusicPlaying(true);
-
-    // Automatically read out details to guide them - fall back to details if no visualization details exist yet
-    const textToRead = wish.visualizationDetails || wish.details;
-    if (textToRead) {
-      setTimeout(() => {
-        handleSpeakText(textToRead);
-      }, 400); // 400ms is much faster and feels snap-instant!
-    }
+    // Never auto-play background music or auto-read text on session entry or topic switch
+    setIsBackgroundAudioEnabled(false);
+    setIsMusicPlaying(false);
+    stopSolfeggioSynth();
+    handleStopSpeaking();
   };
 
   const handleNavigate = (view: PrimaryViewId) => {
@@ -1119,9 +1114,21 @@ export default function App() {
     setActiveWishSession(null);
     setIsTimerRunning(false);
     setShowFinishedOverlay(false);
+    setIsBackgroundAudioEnabled(false);
+    setIsMusicPlaying(false);
     handleStopSpeaking();
     stopSolfeggioSynth();
   };
+
+  // Lock background page scroll while immersive meditation/manifestation overlay is open
+  useEffect(() => {
+    if (!activeWishSession) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [activeWishSession]);
 
   const handleSetTimerDuration = (minutes: number) => {
     const seconds = minutes * 60;
@@ -1576,15 +1583,32 @@ export default function App() {
       {/* FULL SCREEN IMMERSIVE MANIFESTATION VISUALIZATION OVERLAY */}
       {activeWishSession && (
         <div
-          className="fixed inset-0 z-50 overflow-y-auto flex flex-col justify-between p-4 md:p-8 lg:p-12 animate-fadeIn font-sans"
+          className={`fixed inset-0 z-[60] overflow-y-auto font-sans ${
+            isBgDark ? 'bg-[#1E1B4B]' : 'bg-[#faf7f2]'
+          }`}
           id="immersive-focus-session-overlay"
         >
-          {/* Immersive background matching parent active choice */}
-          <VisualizationBackground type={visualBg} intensity={4} saturation={bgSaturation} brightness={bgBrightness} blur={bgBlur} />
+          {/* Fixed opaque backdrop + visual canvas locked to viewport (never scrolls away or reveals main page underneath) */}
+          <div
+            className={`fixed inset-0 z-0 pointer-events-none ${
+              isBgDark ? 'bg-[#1E1B4B]' : 'bg-[#faf7f2]'
+            }`}
+            aria-hidden="true"
+          >
+            <VisualizationBackground
+              type={visualBg}
+              intensity={4}
+              saturation={bgSaturation}
+              brightness={bgBrightness}
+              blur={bgBlur}
+              zIndexClass="z-0"
+            />
+          </div>
 
-          {/* Top Bar inside focus session */}
-          <div className="flex items-center justify-between w-full relative z-10">
-            <div className={`flex items-center space-x-2.5 ${isBgDark ? 'text-white' : 'text-[#5c3e43]'}`}>
+          <div className="relative z-10 min-h-full w-full flex flex-col justify-between gap-8 p-4 md:p-8 lg:p-12">
+            {/* Top Bar inside focus session */}
+            <div className="flex items-center justify-between w-full shrink-0 relative z-10">
+              <div className={`flex items-center space-x-2.5 ${isBgDark ? 'text-white' : 'text-[#5c3e43]'}`}>
               <img
                 src="/logo-icon.png"
                 alt="AMND Manifestation"
@@ -1714,7 +1738,7 @@ export default function App() {
           )}
 
           {/* Center focus elements */}
-          <div className="flex-1 flex flex-col items-center justify-center text-center my-4 max-w-3xl mx-auto space-y-4 md:space-y-6 lg:space-y-8 relative z-10 w-full">
+          <div className="w-full max-w-4xl mx-auto flex flex-col items-center text-center my-auto py-2 space-y-5 md:space-y-7 relative z-10">
             
             {/* Countdown Timer Control Center */}
             <div className={`backdrop-blur-md border rounded-[28px] px-5 py-3.5 flex flex-col sm:flex-row items-center gap-5 shadow-xl animate-fadeIn ${
@@ -2303,8 +2327,17 @@ export default function App() {
                       </div>
                       <div className="flex items-center gap-2">
                         <button
-                          onClick={() => setIsMusicPlaying(!isMusicPlaying)}
-                          className={`p-1.5 rounded-lg transition-all ${
+                          type="button"
+                          onClick={() => {
+                            const next = !isMusicPlaying;
+                            setIsMusicPlaying(next);
+                            if (next) {
+                              setIsBackgroundAudioEnabled(true);
+                            } else {
+                              setIsBackgroundAudioEnabled(false);
+                            }
+                          }}
+                          className={`p-1.5 rounded-lg transition-all cursor-pointer ${
                             isBgDark ? 'bg-white/15 hover:bg-white/25 text-white' : 'bg-[#8e6d72]/15 hover:bg-[#8e6d72]/25 text-[#8e6d72]'
                           }`}
                           title={isMusicPlaying ? (language === 'en' ? "Pause ambient sound" : "暂停环境音") : (language === 'en' ? "Play ambient sound" : "播放环境音")}
@@ -2416,7 +2449,7 @@ export default function App() {
           </div>
 
           {/* Bottom Bar: Ambient reassurance */}
-          <div className={`flex flex-col md:flex-row items-center justify-between w-full border-t pt-4 relative z-10 text-xs space-y-2 md:space-y-0 font-medium ${
+          <div className={`flex flex-col md:flex-row items-center justify-between w-full shrink-0 border-t pt-4 relative z-10 text-xs space-y-2 md:space-y-0 font-medium ${
             isBgDark ? 'border-white/20 text-white/70' : 'border-[#8e6d72]/20 text-[#6d5b5e]'
           }`}>
             <span>
@@ -2436,10 +2469,11 @@ export default function App() {
               </span>
             </div>
           </div>
+          </div>
 
           {/* MEDITATION FINISHED CALM OVERLAY */}
           {showFinishedOverlay && (
-            <div className="absolute inset-0 z-50 bg-[#262320]/60 backdrop-blur-2xl flex flex-col items-center justify-center text-center p-6 md:p-8 overflow-y-auto animate-fadeIn" id="finished-overlay">
+            <div className="fixed inset-0 z-[70] bg-[#262320]/60 backdrop-blur-2xl flex flex-col items-center justify-center text-center p-6 md:p-8 overflow-y-auto animate-fadeIn" id="finished-overlay">
               <div className="bg-[var(--amnd-bg-elevated)] max-w-lg p-6 md:p-10 rounded-[28px] border border-[var(--amnd-border)] shadow-2xl flex flex-col items-center space-y-5 md:space-y-6 my-auto text-[var(--amnd-text-primary)]">
                 <div className="w-12 h-12 rounded-2xl bg-[var(--amnd-bg-secondary)] border border-[var(--amnd-border)] flex items-center justify-center text-[var(--amnd-wood)]">
                   <Sparkles className="w-6 h-6" />
