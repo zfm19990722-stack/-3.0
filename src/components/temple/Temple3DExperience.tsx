@@ -22,6 +22,7 @@ import {
   createTempleMaterials,
   disposeSceneHierarchy,
 } from './templeProceduralMaterials';
+import { buildTempleCourtyard } from './templeCourtyardBuilder';
 import type {
   TempleLightingPreference,
   TempleResolvedEnvironment,
@@ -37,18 +38,18 @@ interface Temple3DExperienceProps {
   interactionBridge?: Temple3DInteractionBridge;
 }
 
-const DEFAULT_CAMERA_POS = new THREE.Vector3(0, 2.35, 4.65);
-const DEFAULT_TARGET_POS = new THREE.Vector3(0, 2.0, -4.6);
+const DEFAULT_CAMERA_POS = new THREE.Vector3(0, 4.65, 7.6);
+const DEFAULT_TARGET_POS = new THREE.Vector3(0, 1.85, -7.5);
 
 // Day vs Night lighting color constants (pre-allocated outside render loop)
-const DAY_BG_COLOR = new THREE.Color(0xede6da);
-const NIGHT_BG_COLOR = new THREE.Color(0x26201a);
+const DAY_BG_COLOR = new THREE.Color(0xe6dfd3);
+const NIGHT_BG_COLOR = new THREE.Color(0x221d18);
 
-const DAY_HEMI_SKY = new THREE.Color(0xfdfaf3);
-const NIGHT_HEMI_SKY = new THREE.Color(0x52463a);
+const DAY_HEMI_SKY = new THREE.Color(0xfefcf6);
+const NIGHT_HEMI_SKY = new THREE.Color(0x5c4f42);
 
-const DAY_HEMI_GROUND = new THREE.Color(0x8c7761);
-const NIGHT_HEMI_GROUND = new THREE.Color(0x3a2b1e);
+const DAY_HEMI_GROUND = new THREE.Color(0x5e5a54);
+const NIGHT_HEMI_GROUND = new THREE.Color(0x35291e);
 
 const DAY_KEY_COLOR = new THREE.Color(0xfff1dc);
 const NIGHT_KEY_COLOR = new THREE.Color(0xcab69c);
@@ -199,57 +200,6 @@ export default function Temple3DExperience({
     return { group, flameMesh, haloMesh, haloMat };
   };
 
-  // Build minimal architectural wall sconce for night perimeter ambient reflection
-  const buildWallSconce = (
-    bronzeMat: THREE.Material,
-    flameMat: THREE.Material,
-    sideSign: number
-  ) => {
-    const group = new THREE.Group();
-
-    const bracket = new THREE.Mesh(
-      new THREE.BoxGeometry(0.08, 0.24, 0.12),
-      bronzeMat
-    );
-    group.add(bracket);
-
-    const arm = new THREE.Mesh(
-      new THREE.BoxGeometry(0.22, 0.04, 0.06),
-      bronzeMat
-    );
-    arm.position.set(-0.11 * sideSign, -0.02, 0);
-    group.add(arm);
-
-    const cup = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.06, 0.04, 0.07, 16),
-      bronzeMat
-    );
-    cup.position.set(-0.19 * sideSign, 0.02, 0);
-    group.add(cup);
-
-    const flameMesh = new THREE.Mesh(
-      new THREE.ConeGeometry(0.016, 0.05, 12),
-      flameMat
-    );
-    flameMesh.position.set(-0.19 * sideSign, 0.075, 0);
-    group.add(flameMesh);
-
-    const haloMat = new THREE.MeshBasicMaterial({
-      color: 0xffd288,
-      transparent: true,
-      opacity: 0.12,
-      depthWrite: false,
-    });
-    const haloMesh = new THREE.Mesh(
-      new THREE.SphereGeometry(0.038, 12, 10),
-      haloMat
-    );
-    haloMesh.position.set(-0.19 * sideSign, 0.075, 0);
-    group.add(haloMesh);
-
-    return { group, flameMesh, haloMesh, haloMat };
-  };
-
   // Build procedural stoneware floral vase with quiet botanical stems
   const buildFloralVase = (
     ceramicMat: THREE.Material,
@@ -381,7 +331,7 @@ export default function Temple3DExperience({
 
     const scene = new THREE.Scene();
     const bgColor = DAY_BG_COLOR.clone();
-    const fog = new THREE.FogExp2(0xede6da, 0.022);
+    const fog = new THREE.FogExp2(0xe6dfd3, 0.011);
     scene.background = bgColor;
     scene.fog = fog;
 
@@ -390,7 +340,9 @@ export default function Temple3DExperience({
     scene.environment = envTarget.texture;
     pmremGenerator.dispose();
 
-    const camera = new THREE.PerspectiveCamera(44, width / height, 0.1, 60);
+    const aspect = width / height;
+    const initialFov = aspect < 0.85 ? 64 : 48;
+    const camera = new THREE.PerspectiveCamera(initialFov, aspect, 0.15, 95);
     camera.position.copy(DEFAULT_CAMERA_POS);
 
     const controls = new OrbitControls(camera, renderer.domElement);
@@ -399,13 +351,13 @@ export default function Temple3DExperience({
     controls.dampingFactor = 0.06;
     controls.enablePan = false;
     controls.rotateSpeed = isSmallViewport ? 0.65 : 0.78;
-    controls.zoomSpeed = 0.75;
-    controls.minDistance = 4.2;
-    controls.maxDistance = 11.2;
-    controls.minAzimuthAngle = -Math.PI * 0.34;
-    controls.maxAzimuthAngle = Math.PI * 0.34;
-    controls.minPolarAngle = Math.PI * 0.32;
-    controls.maxPolarAngle = Math.PI * 0.56;
+    controls.zoomSpeed = 0.85;
+    controls.minDistance = 2.8;
+    controls.maxDistance = 19.5;
+    controls.minAzimuthAngle = -Math.PI * 0.48;
+    controls.maxAzimuthAngle = Math.PI * 0.48;
+    controls.minPolarAngle = Math.PI * 0.25;
+    controls.maxPolarAngle = Math.PI * 0.53;
     controls.update();
 
     const maxAnisotropy = Math.min(
@@ -418,193 +370,11 @@ export default function Temple3DExperience({
     const extraMaterials: THREE.Material[] = [];
 
     // ------------------------------------------------------------
-    // 1. ARCHITECTURAL SHELL
+    // 1. TRADITIONAL CHINESE COURTYARD ARCHITECTURE (四合院)
     // ------------------------------------------------------------
-    const architectureGroup = new THREE.Group();
-    scene.add(architectureGroup);
-
-    const floor = new THREE.Mesh(
-      new THREE.PlaneGeometry(16.4, 21),
-      palette.stoneFloor
-    );
-    floor.rotation.x = -Math.PI / 2;
-    floor.receiveShadow = true;
-    architectureGroup.add(floor);
-
-    const runner = new THREE.Mesh(
-      new THREE.BoxGeometry(2.6, 0.03, 12.2),
-      palette.stoneRunner
-    );
-    runner.position.set(0, 0.015, 1.4);
-    runner.receiveShadow = true;
-    architectureGroup.add(runner);
-
-    const daisStep1 = new THREE.Mesh(
-      new THREE.BoxGeometry(9.6, 0.18, 5.2),
-      palette.stoneRunner
-    );
-    daisStep1.position.set(0, 0.09, -5.2);
-    daisStep1.receiveShadow = true;
-    architectureGroup.add(daisStep1);
-
-    const daisStep2 = new THREE.Mesh(
-      new THREE.BoxGeometry(6.8, 0.18, 3.3),
-      palette.stonePedestal
-    );
-    daisStep2.position.set(0, 0.27, -5.55);
-    daisStep2.receiveShadow = true;
-    architectureGroup.add(daisStep2);
-
-    const daisTrim = new THREE.Mesh(
-      new THREE.BoxGeometry(9.62, 0.025, 0.04),
-      palette.mutedGold
-    );
-    daisTrim.position.set(0, 0.175, -2.6);
-    architectureGroup.add(daisTrim);
-
-    const northWall = new THREE.Mesh(
-      new THREE.BoxGeometry(16.4, 8.6, 0.35),
-      palette.warmPlasterWall
-    );
-    northWall.position.set(0, 4.3, -8.2);
-    northWall.receiveShadow = true;
-    architectureGroup.add(northWall);
-
-    const alcoveBackdrop = new THREE.Mesh(
-      new THREE.BoxGeometry(5.6, 6.2, 0.18),
-      palette.stoneRunner
-    );
-    alcoveBackdrop.position.set(0, 3.2, -7.95);
-    alcoveBackdrop.receiveShadow = true;
-    architectureGroup.add(alcoveBackdrop);
-
-    const alcoveLeftPillar = new THREE.Mesh(
-      new THREE.BoxGeometry(0.28, 6.4, 0.32),
-      palette.naturalWood
-    );
-    alcoveLeftPillar.position.set(-2.9, 3.2, -7.85);
-    alcoveLeftPillar.castShadow = true;
-    architectureGroup.add(alcoveLeftPillar);
-
-    const alcoveRightPillar = alcoveLeftPillar.clone();
-    alcoveRightPillar.position.set(2.9, 3.2, -7.85);
-    architectureGroup.add(alcoveRightPillar);
-
-    const alcoveHeaderBeam = new THREE.Mesh(
-      new THREE.BoxGeometry(6.1, 0.32, 0.38),
-      palette.naturalWood
-    );
-    alcoveHeaderBeam.position.set(0, 6.35, -7.84);
-    architectureGroup.add(alcoveHeaderBeam);
-
-    const southWall = new THREE.Mesh(
-      new THREE.BoxGeometry(16.4, 8.6, 0.35),
-      palette.warmPlasterWall
-    );
-    southWall.position.set(0, 4.3, 10.2);
-    architectureGroup.add(southWall);
-
-    [-8.1, 8.1].forEach((wx) => {
-      const sideWall = new THREE.Mesh(
-        new THREE.BoxGeometry(0.35, 8.6, 18.8),
-        palette.warmPlasterWall
-      );
-      sideWall.position.set(wx, 4.3, 1.0);
-      sideWall.receiveShadow = true;
-      architectureGroup.add(sideWall);
-
-      const skirting = new THREE.Mesh(
-        new THREE.BoxGeometry(0.08, 0.9, 18.4),
-        palette.darkWalnutWood
-      );
-      skirting.position.set(wx > 0 ? wx - 0.19 : wx + 0.19, 0.45, 1.0);
-      architectureGroup.add(skirting);
-    });
-
-    const slatGeo = new THREE.BoxGeometry(0.09, 5.4, 0.16);
-    [-7.82, 7.82].forEach((sx) => {
-      for (let zPos = -5.8; zPos <= 4.8; zPos += 0.72) {
-        const slat = new THREE.Mesh(slatGeo, palette.naturalWood);
-        slat.position.set(sx, 4.1, zPos);
-        architectureGroup.add(slat);
-      }
-    });
-
-    const colGeo = new THREE.CylinderGeometry(0.24, 0.27, 7.3, 20);
-    const colBaseGeo = new THREE.BoxGeometry(0.76, 0.24, 0.76);
-    const colPositionsZ = [-4.0, 0.2, 4.4];
-
-    colPositionsZ.forEach((cz) => {
-      [-4.1, 4.1].forEach((cx) => {
-        const plinth = new THREE.Mesh(colBaseGeo, palette.stonePedestal);
-        plinth.position.set(cx, 0.12, cz);
-        plinth.receiveShadow = true;
-        architectureGroup.add(plinth);
-
-        const col = new THREE.Mesh(colGeo, palette.naturalWood);
-        col.position.set(cx, 3.89, cz);
-        col.castShadow = true;
-        col.receiveShadow = true;
-        architectureGroup.add(col);
-      });
-
-      const crossBeam = new THREE.Mesh(
-        new THREE.BoxGeometry(16.0, 0.36, 0.36),
-        palette.darkWalnutWood
-      );
-      crossBeam.position.set(0, 7.45, cz);
-      architectureGroup.add(crossBeam);
-    });
-
-    const ceilingNorth = new THREE.Mesh(
-      new THREE.BoxGeometry(16.4, 0.3, 4.2),
-      palette.ceilingPlaster
-    );
-    ceilingNorth.position.set(0, 8.2, -6.2);
-    architectureGroup.add(ceilingNorth);
-
-    const ceilingSouth = new THREE.Mesh(
-      new THREE.BoxGeometry(16.4, 0.3, 12.2),
-      palette.ceilingPlaster
-    );
-    ceilingSouth.position.set(0, 8.2, 4.2);
-    architectureGroup.add(ceilingSouth);
-
-    [-5.8, 5.8].forEach((cx) => {
-      const ceilingWing = new THREE.Mesh(
-        new THREE.BoxGeometry(4.8, 0.3, 2.5),
-        palette.ceilingPlaster
-      );
-      ceilingWing.position.set(cx, 8.2, -2.9);
-      architectureGroup.add(ceilingWing);
-    });
-
-    const skylightPlane = new THREE.Mesh(
-      new THREE.PlaneGeometry(6.8, 2.4),
-      palette.skylightGlow
-    );
-    skylightPlane.rotation.x = Math.PI / 2;
-    skylightPlane.position.set(0, 8.15, -2.9);
-    architectureGroup.add(skylightPlane);
-
-    // Subtle Side Wall Candle Sconces for Night Architectural Reflection
-    const wallSconceLeft = buildWallSconce(
-      palette.bronzeMetal,
-      palette.lampFlame,
-      -1
-    );
-    wallSconceLeft.group.position.set(-7.9, 2.85, -1.8);
-    architectureGroup.add(wallSconceLeft.group);
-
-    const wallSconceRight = buildWallSconce(
-      palette.bronzeMetal,
-      palette.lampFlame,
-      1
-    );
-    wallSconceRight.group.position.set(7.9, 2.85, -1.8);
-    architectureGroup.add(wallSconceRight.group);
-
-    extraMaterials.push(wallSconceLeft.haloMat, wallSconceRight.haloMat);
+    const courtyard = buildTempleCourtyard(palette);
+    scene.add(courtyard.group);
+    extraMaterials.push(...courtyard.courtyardSconceHalos);
 
     // ------------------------------------------------------------
     // 2. ANCHORS FOR SANCTUARY ELEMENTS & FUTURE V2.2 / V2.3 ASSETS
@@ -848,80 +618,80 @@ export default function Temple3DExperience({
     bridgeRef.current?.onSceneReady?.(anchors);
 
     // ------------------------------------------------------------
-    // 3. DAY & NIGHT DYNAMIC LIGHTING RIG
+    // 3. DAY & NIGHT DYNAMIC COURTYARD & SANCTUARY LIGHTING RIG
     // ------------------------------------------------------------
-    const hemiLight = new THREE.HemisphereLight(0xfdfaf3, 0x8c7761, 1.15);
-    hemiLight.position.set(0, 8, 0);
+    const hemiLight = new THREE.HemisphereLight(0xfefcf6, 0x5e5a54, 1.2);
+    hemiLight.position.set(0, 14, 0);
     scene.add(hemiLight);
 
-    const skylightKey = new THREE.DirectionalLight(0xfff1dc, 1.95);
-    skylightKey.position.set(2.4, 8.0, -0.8);
-    skylightKey.target.position.set(0, 1.2, -5.0);
+    const skylightKey = new THREE.DirectionalLight(0xfff1dc, 2.05);
+    skylightKey.position.set(11.0, 18.0, 9.0);
+    skylightKey.target.position.set(0, 1.2, -5.5);
     scene.add(skylightKey.target);
     if (!isSoftwareGl) {
       skylightKey.castShadow = true;
       skylightKey.shadow.mapSize.set(
-        isSmallViewport ? 1024 : 1536,
-        isSmallViewport ? 1024 : 1536
+        isSmallViewport ? 1024 : 2048,
+        isSmallViewport ? 1024 : 2048
       );
-      skylightKey.shadow.camera.near = 0.5;
-      skylightKey.shadow.camera.far = 20;
-      skylightKey.shadow.camera.left = -7;
-      skylightKey.shadow.camera.right = 7;
-      skylightKey.shadow.camera.top = 7;
-      skylightKey.shadow.camera.bottom = -7;
+      skylightKey.shadow.camera.near = 1.0;
+      skylightKey.shadow.camera.far = 46;
+      skylightKey.shadow.camera.left = -16;
+      skylightKey.shadow.camera.right = 16;
+      skylightKey.shadow.camera.top = 16;
+      skylightKey.shadow.camera.bottom = -16;
       skylightKey.shadow.bias = -0.0005;
-      skylightKey.shadow.normalBias = 0.02;
+      skylightKey.shadow.normalBias = 0.025;
     }
     scene.add(skylightKey);
 
-    const altarFill = new THREE.DirectionalLight(0xfff7ea, 0.65);
-    altarFill.position.set(-3.2, 4.2, 2.5);
+    const altarFill = new THREE.DirectionalLight(0xfff7ea, 0.62);
+    altarFill.position.set(-8.0, 6.5, 8.0);
     scene.add(altarFill);
 
-    // Primary offering lamps on table
+    // Primary offering lamps on Main Hall table
     const leftLampLight = new THREE.PointLight(0xffcb7a, 0.5, 13.5, 1.65);
-    leftLampLight.position.set(-1.42, 1.44, -4.42);
+    leftLampLight.position.set(-1.42, 1.88, -11.88);
     scene.add(leftLampLight);
 
     const rightLampLight = new THREE.PointLight(0xffcb7a, 0.5, 13.5, 1.65);
-    rightLampLight.position.set(1.42, 1.44, -4.42);
+    rightLampLight.position.set(1.42, 1.88, -11.88);
     scene.add(rightLampLight);
 
     // Warm sanctuary front lamp light keeping main statue & pedestal contours legible at night
-    const sanctuaryFrontGlowLight = new THREE.PointLight(0xffcd85, 0.0, 10.5, 1.6);
-    sanctuaryFrontGlowLight.position.set(0, 1.65, -4.55);
+    const sanctuaryFrontGlowLight = new THREE.PointLight(0xffcd85, 0.0, 12.5, 1.55);
+    sanctuaryFrontGlowLight.position.set(0, 2.25, -12.0);
     scene.add(sanctuaryFrontGlowLight);
 
-    // Flanking architectural perimeter ambient sconce lights for warm floor/wall reflections at night
-    const leftWallSconceLight = new THREE.PointLight(0xffc372, 0.0, 12.5, 1.75);
-    leftWallSconceLight.position.set(-6.9, 2.95, -1.8);
+    // Flanking Side Hall & Courtyard Lantern warm lights at night
+    const leftWallSconceLight = new THREE.PointLight(0xffc372, 0.0, 14.5, 1.65);
+    leftWallSconceLight.position.set(-6.8, 2.35, 0);
     scene.add(leftWallSconceLight);
 
-    const rightWallSconceLight = new THREE.PointLight(0xffc372, 0.0, 12.5, 1.75);
-    rightWallSconceLight.position.set(6.9, 2.95, -1.8);
+    const rightWallSconceLight = new THREE.PointLight(0xffc372, 0.0, 14.5, 1.65);
+    rightWallSconceLight.position.set(6.8, 2.35, 0);
     scene.add(rightWallSconceLight);
 
     const applyEnvironmentAtFactor = (nf: number, elapsedSec: number) => {
       // Background & Fog
       bgColor.lerpColors(DAY_BG_COLOR, NIGHT_BG_COLOR, nf);
       fog.color.copy(bgColor);
-      fog.density = THREE.MathUtils.lerp(0.022, 0.025, nf);
+      fog.density = THREE.MathUtils.lerp(0.011, 0.014, nf);
 
       // Environment reflection & exposure
-      scene.environmentIntensity = THREE.MathUtils.lerp(0.95, 0.4, nf);
-      renderer.toneMappingExposure = THREE.MathUtils.lerp(1.08, 1.05, nf);
+      scene.environmentIntensity = THREE.MathUtils.lerp(0.95, 0.42, nf);
+      renderer.toneMappingExposure = THREE.MathUtils.lerp(1.06, 1.04, nf);
 
-      // Hemisphere & Skylight
+      // Hemisphere & Sky Key/Fill
       hemiLight.color.lerpColors(DAY_HEMI_SKY, NIGHT_HEMI_SKY, nf);
       hemiLight.groundColor.lerpColors(DAY_HEMI_GROUND, NIGHT_HEMI_GROUND, nf);
-      hemiLight.intensity = THREE.MathUtils.lerp(1.15, 0.64, nf);
+      hemiLight.intensity = THREE.MathUtils.lerp(1.2, 0.68, nf);
 
       skylightKey.color.lerpColors(DAY_KEY_COLOR, NIGHT_KEY_COLOR, nf);
-      skylightKey.intensity = THREE.MathUtils.lerp(1.95, 0.28, nf);
+      skylightKey.intensity = THREE.MathUtils.lerp(2.05, 0.34, nf);
 
       altarFill.color.lerpColors(DAY_FILL_COLOR, NIGHT_FILL_COLOR, nf);
-      altarFill.intensity = THREE.MathUtils.lerp(0.65, 0.34, nf);
+      altarFill.intensity = THREE.MathUtils.lerp(0.62, 0.36, nf);
 
       palette.skylightGlow.color.lerpColors(
         DAY_SKYLIGHT_COLOR,
@@ -941,18 +711,18 @@ export default function Temple3DExperience({
           Math.sin(elapsedSec * 9.7 + 1.2) * 0.025
         : 0;
 
-      // Offering lamps become primary warm light sources at night
+      // Offering lamps become primary warm light sources inside Main Hall at night
       leftLampLight.color.lerpColors(DAY_LAMP_COLOR, NIGHT_LAMP_COLOR, nf);
       rightLampLight.color.lerpColors(DAY_LAMP_COLOR, NIGHT_LAMP_COLOR, nf);
 
-      const baseLampPower = THREE.MathUtils.lerp(0.45, 4.15, nf);
+      const baseLampPower = THREE.MathUtils.lerp(0.45, 4.4, nf);
       leftLampLight.intensity = baseLampPower * (1 + flickerA * nf);
       rightLampLight.intensity = baseLampPower * (1 + flickerB * nf);
 
       sanctuaryFrontGlowLight.intensity =
-        THREE.MathUtils.lerp(0.0, 2.7, nf) * (1 + (flickerA + flickerB) * 0.35);
+        THREE.MathUtils.lerp(0.0, 3.1, nf) * (1 + (flickerA + flickerB) * 0.35);
 
-      const sconcePower = THREE.MathUtils.lerp(0.0, 2.1, nf);
+      const sconcePower = THREE.MathUtils.lerp(0.0, 2.55, nf);
       leftWallSconceLight.intensity = sconcePower * (1 + flickerA * 0.5);
       rightWallSconceLight.intensity = sconcePower * (1 + flickerB * 0.5);
 
@@ -963,16 +733,19 @@ export default function Temple3DExperience({
       leftLampBuilt.haloMat.opacity = offeringHaloOpacity + flickerA * 0.08;
       rightLampBuilt.haloMat.opacity = offeringHaloOpacity + flickerB * 0.08;
 
-      const sconceHaloOpacity = THREE.MathUtils.lerp(0.08, 0.52, nf);
-      wallSconceLeft.haloMat.opacity = sconceHaloOpacity + flickerA * 0.06;
-      wallSconceRight.haloMat.opacity = sconceHaloOpacity + flickerB * 0.06;
+      const sconceHaloOpacity = THREE.MathUtils.lerp(0.08, 0.54, nf);
+      courtyard.courtyardSconceHalos.forEach((haloMat, idx) => {
+        const fl = idx % 2 === 0 ? flickerA : flickerB;
+        haloMat.opacity = sconceHaloOpacity + fl * 0.06;
+      });
 
       const scaleA = 1 + flickerA * 0.85 * nf;
       const scaleB = 1 + flickerB * 0.85 * nf;
       leftLampBuilt.flameMesh.scale.set(1, scaleA, 1);
       rightLampBuilt.flameMesh.scale.set(1, scaleB, 1);
-      wallSconceLeft.flameMesh.scale.set(1, scaleA, 1);
-      wallSconceRight.flameMesh.scale.set(1, scaleB, 1);
+      courtyard.courtyardSconceFlames.forEach((flameMesh, idx) => {
+        flameMesh.scale.set(1, idx % 2 === 0 ? scaleA : scaleB, 1);
+      });
     };
 
     // Apply initial Day/Night lighting immediately before first draw
@@ -989,9 +762,9 @@ export default function Temple3DExperience({
     const startClockMs = lastTimestamp;
 
     function clampCameraInsideHall() {
-      camera.position.x = THREE.MathUtils.clamp(camera.position.x, -6.0, 6.0);
-      camera.position.y = THREE.MathUtils.clamp(camera.position.y, 1.15, 6.1);
-      camera.position.z = THREE.MathUtils.clamp(camera.position.z, -1.2, 7.8);
+      camera.position.x = THREE.MathUtils.clamp(camera.position.x, -10.8, 10.8);
+      camera.position.y = THREE.MathUtils.clamp(camera.position.y, 1.35, 10.0);
+      camera.position.z = THREE.MathUtils.clamp(camera.position.z, -14.8, 9.5);
     }
 
     function afterDraw(cb: () => void) {
@@ -1179,7 +952,9 @@ export default function Temple3DExperience({
       if (disposed || !container) return;
       const w = Math.max(container.clientWidth, 320);
       const h = Math.max(container.clientHeight, 320);
-      camera.aspect = w / h;
+      const nextAspect = w / h;
+      camera.fov = nextAspect < 0.85 ? 64 : 48;
+      camera.aspect = nextAspect;
       camera.updateProjectionMatrix();
       renderer.setSize(w, h);
       requestRender();
@@ -1294,7 +1069,7 @@ export default function Temple3DExperience({
         <div className="hidden md:flex items-center gap-2 text-xs text-[var(--amnd-text-secondary)]">
           <Compass className="w-3.5 h-3.5 text-[var(--amnd-gold)]" />
           <span className="font-serif font-medium text-[var(--amnd-text-primary)]">
-            {isEn ? 'Sanctuary Hall' : '静观大殿'}
+            {isEn ? 'Courtyard Sanctuary' : '静观大雄宝殿庭院'}
           </span>
           <span aria-hidden="true">·</span>
           <span>
@@ -1315,10 +1090,10 @@ export default function Temple3DExperience({
               onClick={handleResetView}
               id="temple-3d-reset-view-btn"
               className="px-3 py-2 amnd-btn-secondary text-xs font-medium inline-flex items-center gap-1.5 cursor-pointer whitespace-nowrap min-h-[44px]"
-              title={isEn ? 'Reset to Front Altar View' : '回到正面佛像视角'}
+              title={isEn ? 'Return to South Gate Courtyard View' : '回到南门庭院视角'}
             >
               <RotateCcw className="w-3.5 h-3.5 text-[var(--amnd-wood)]" />
-              <span>{isEn ? 'Front View' : '正面视角'}</span>
+              <span>{isEn ? 'South Gate' : '南门视角'}</span>
             </button>
           )}
 

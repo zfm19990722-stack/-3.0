@@ -5,27 +5,37 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script>
       (function () {
+        var origDefineProperty = Object.defineProperty;
+
+        function makeAccessorWithSetter(getter, enumerable) {
+          var hasOverride = false;
+          var override;
+          return {
+            get: function () {
+              return hasOverride ? override : getter.call(this);
+            },
+            set: function (val) {
+              override = val;
+              hasOverride = true;
+            },
+            enumerable: enumerable !== undefined ? Boolean(enumerable) : true,
+            configurable: true,
+          };
+        }
+
         function ensureWritableFetch() {
           try {
             var ownDesc = Object.getOwnPropertyDescriptor(window, 'fetch');
             if (ownDesc) {
               if (ownDesc.get && !ownDesc.set && ownDesc.configurable) {
-                var getter = ownDesc.get;
-                var override;
-                var hasOverride = false;
-                Object.defineProperty(window, 'fetch', {
-                  get: function () {
-                    return hasOverride ? override : getter.call(window);
-                  },
-                  set: function (val) {
-                    override = val;
-                    hasOverride = true;
-                  },
-                  enumerable: ownDesc.enumerable,
-                  configurable: true,
-                });
+                origDefineProperty.call(
+                  Object,
+                  window,
+                  'fetch',
+                  makeAccessorWithSetter(ownDesc.get, ownDesc.enumerable)
+                );
               } else if ('value' in ownDesc && !ownDesc.writable && ownDesc.configurable) {
-                Object.defineProperty(window, 'fetch', {
+                origDefineProperty.call(Object, window, 'fetch', {
                   value: ownDesc.value,
                   writable: true,
                   enumerable: ownDesc.enumerable,
@@ -37,21 +47,22 @@
             var proto = Object.getPrototypeOf(window);
             while (proto && proto !== Object.prototype) {
               var protoDesc = Object.getOwnPropertyDescriptor(proto, 'fetch');
-              if (protoDesc && protoDesc.get && !protoDesc.set) {
-                var protoGetter = protoDesc.get;
-                var protoOverride;
-                var hasProtoOverride = false;
-                Object.defineProperty(window, 'fetch', {
-                  get: function () {
-                    return hasProtoOverride ? protoOverride : protoGetter.call(window);
-                  },
-                  set: function (val) {
-                    protoOverride = val;
-                    hasProtoOverride = true;
-                  },
-                  enumerable: true,
-                  configurable: true,
-                });
+              if (protoDesc) {
+                if (protoDesc.get && !protoDesc.set) {
+                  origDefineProperty.call(
+                    Object,
+                    window,
+                    'fetch',
+                    makeAccessorWithSetter(protoDesc.get, true)
+                  );
+                } else if ('value' in protoDesc && !protoDesc.writable) {
+                  origDefineProperty.call(Object, window, 'fetch', {
+                    value: protoDesc.value,
+                    writable: true,
+                    enumerable: true,
+                    configurable: true,
+                  });
+                }
                 break;
               }
               proto = Object.getPrototypeOf(proto);
@@ -60,6 +71,81 @@
             // Ignore when host runtime enforces a non-configurable fetch property
           }
         }
+
+        try {
+          var winProto = typeof Window !== 'undefined' ? Window.prototype : null;
+          Object.defineProperty = function (target, prop, descriptor) {
+            if (
+              (target === window || (winProto && target === winProto)) &&
+              prop === 'fetch' &&
+              descriptor &&
+              descriptor.get &&
+              !descriptor.set
+            ) {
+              try {
+                return origDefineProperty.call(
+                  Object,
+                  target,
+                  prop,
+                  makeAccessorWithSetter(descriptor.get, descriptor.enumerable)
+                );
+              } catch (err) {
+                return origDefineProperty.call(Object, target, prop, descriptor);
+              }
+            }
+            return origDefineProperty.call(Object, target, prop, descriptor);
+          };
+        } catch (e) {
+          // Ignore if Object.defineProperty cannot be wrapped
+        }
+
+        function isExtensionFetchSetterError(message, source, stack) {
+          var msg = String(message || '');
+          var src = String(source || '');
+          var stk = String(stack || '');
+          var isExt =
+            src.indexOf('chrome-extension://') === 0 ||
+            src.indexOf('moz-extension://') === 0 ||
+            src.indexOf('safari-extension://') === 0 ||
+            stk.indexOf('chrome-extension://') !== -1 ||
+            stk.indexOf('moz-extension://') !== -1 ||
+            stk.indexOf('safari-extension://') !== -1;
+          return isExt && msg.indexOf('Cannot set property fetch') !== -1;
+        }
+
+        window.addEventListener(
+          'error',
+          function (event) {
+            var errStack =
+              event && event.error && event.error.stack ? event.error.stack : '';
+            if (
+              isExtensionFetchSetterError(
+                event && event.message,
+                event && event.filename,
+                errStack
+              )
+            ) {
+              event.preventDefault();
+              event.stopImmediatePropagation();
+            }
+          },
+          true
+        );
+
+        window.addEventListener(
+          'unhandledrejection',
+          function (event) {
+            var reason = event && event.reason;
+            var msg = reason && (reason.message || String(reason));
+            var errStack = reason && reason.stack ? reason.stack : '';
+            if (isExtensionFetchSetterError(msg, '', errStack)) {
+              event.preventDefault();
+              event.stopImmediatePropagation();
+            }
+          },
+          true
+        );
+
         ensureWritableFetch();
         window.__amndEnsureWritableFetch = ensureWritableFetch;
       })();
