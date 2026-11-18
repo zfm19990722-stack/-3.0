@@ -1,9 +1,15 @@
-import { useState, useEffect, FormEvent } from 'react';
-import { ArrowRight, Compass, Flame, Heart, Sparkles, Trash2, Wind } from 'lucide-react';
+import { useState, useEffect, FormEvent, lazy, Suspense } from 'react';
+import { ArrowRight, Box, Compass, Flame, Heart, Moon, Sparkles, Sun, Trash2, Wind } from 'lucide-react';
 import EditorialImage from '../EditorialImage';
 import type { PrimaryViewId } from './HomePage';
 import templeHallImg from '../../assets/images/temple_modern_hall_1794884029399.jpg';
 import templeSculptureImg from '../../assets/images/temple_sculpture_contemplation_1794884029521.jpg';
+import {
+  TempleLightingPreference,
+  useTempleLightingMode,
+} from '../temple/templeLightingTime';
+
+const Temple3DExperience = lazy(() => import('../temple/Temple3DExperience'));
 
 const TEMPLE_PRAYERS_STORAGE_KEY = 'amnd_temple_prayers_v1';
 
@@ -26,6 +32,14 @@ export default function TemplePage({
   onEnterStillness,
 }: TemplePageProps) {
   const isEn = language === 'en';
+  const [is3DHallOpen, setIs3DHallOpen] = useState(false);
+  const {
+    preference: lightingPreference,
+    setPreference: setLightingPreference,
+    resolvedMode: resolvedEnvironment,
+    beijingTimeLabel,
+  } = useTempleLightingMode();
+  const isNightEnv = resolvedEnvironment === 'night';
   const [intentionType, setIntentionType] = useState<'wish' | 'gratitude' | 'release'>('wish');
   const [intentionText, setIntentionText] = useState('');
   const [entries, setEntries] = useState<TempleIntention[]>(() => {
@@ -48,6 +62,16 @@ export default function TemplePage({
       console.warn('Failed to persist temple contemplation entries:', e);
     }
   }, [entries]);
+
+  // Lock page scroll while full-viewport 3D Sanctuary is open
+  useEffect(() => {
+    if (!is3DHallOpen) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [is3DHallOpen]);
 
   const handleSaveEntry = (e: FormEvent) => {
     e.preventDefault();
@@ -95,19 +119,28 @@ export default function TemplePage({
             </p>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-3 pt-2">
+          <div className="flex flex-col sm:flex-row flex-wrap gap-3 pt-2">
+            <button
+              type="button"
+              onClick={() => setIs3DHallOpen(true)}
+              id="temple-enter-3d-hall-btn"
+              className="px-5 py-3 amnd-btn-primary text-xs sm:text-sm font-medium inline-flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap min-h-[44px]"
+            >
+              <Box className="w-4 h-4" />
+              <span>{isEn ? 'Enter 3D Sanctuary Hall' : '进入 3D 静观大殿'}</span>
+            </button>
             <button
               type="button"
               onClick={onEnterStillness}
               id="temple-enter-stillness-btn"
-              className="px-5 py-3 amnd-btn-primary text-xs sm:text-sm font-medium inline-flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap min-h-[44px]"
+              className="px-5 py-3 amnd-btn-secondary text-xs sm:text-sm font-medium inline-flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap min-h-[44px]"
             >
-              <Wind className="w-4 h-4" />
+              <Wind className="w-4 h-4 text-[var(--amnd-wood)]" />
               <span>{isEn ? 'Enter Quiet Sitting' : '进入静坐冥想'}</span>
             </button>
             <a
               href="#temple-prayer-sanctuary"
-              className="px-5 py-3 amnd-btn-secondary text-xs sm:text-sm font-medium inline-flex items-center justify-center gap-2 whitespace-nowrap min-h-[44px]"
+              className="px-4 py-3 text-xs sm:text-sm font-medium text-[var(--amnd-wood)] hover:underline inline-flex items-center justify-center gap-1.5 whitespace-nowrap min-h-[44px]"
             >
               <span>{isEn ? 'Contemplation & Vows' : '安放祈愿与放下'}</span>
             </a>
@@ -115,26 +148,48 @@ export default function TemplePage({
         </div>
 
         <div className="lg:col-span-7 flex">
-          <EditorialImage
-            src={templeHallImg}
-            alt={isEn ? 'Minimalist modern sanctuary hall bathed in daylight' : '自然天光映照的现代简约静观殿堂'}
-            aspectClassName="aspect-[16/9] lg:aspect-auto lg:h-full min-h-[240px]"
-            fallbackTitle="Temple · Modern Spiritual Sanctuary"
-            fallbackSubtitle="A space for reflection, reverence and inner peace."
-          />
+          <div className="relative w-full flex rounded-2xl overflow-hidden">
+            <EditorialImage
+              src={templeHallImg}
+              alt={isEn ? 'Minimalist modern sanctuary hall bathed in daylight' : '自然天光映照的现代简约静观殿堂'}
+              aspectClassName="aspect-[16/9] lg:aspect-auto lg:h-full min-h-[240px]"
+              className={`transition-all duration-700 ${isNightEnv ? 'brightness-[0.65] contrast-[1.06]' : 'brightness-100'}`}
+              fallbackTitle="Temple · Modern Spiritual Sanctuary"
+              fallbackSubtitle="A space for reflection, reverence and inner peace."
+            />
+            <div
+              aria-hidden="true"
+              className={`absolute inset-0 pointer-events-none transition-opacity duration-700 ${isNightEnv ? 'opacity-100' : 'opacity-0'}`}
+              style={{
+                background:
+                  'radial-gradient(circle at 50% 52%, rgba(242, 186, 98, 0.20) 0%, rgba(28, 22, 17, 0.36) 56%, rgba(18, 15, 12, 0.62) 100%)',
+              }}
+            />
+          </div>
         </div>
       </section>
 
       {/* B. Buddha Hall & Statue Contemplation Exhibition Area */}
       <section className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch" id="temple-hall-section">
         <div className="lg:col-span-5 flex">
-          <EditorialImage
-            src={templeSculptureImg}
-            alt={isEn ? 'Minimalist meditative stone sculpture in natural gallery light' : '自然天光下安静庄重的冥想石雕艺术展陈'}
-            aspectClassName="aspect-[3/4] max-h-[480px] lg:max-h-none"
-            fallbackTitle={isEn ? 'Main Hall · Contemplation Space' : '佛殿主室 · 静观展陈区域'}
-            fallbackSubtitle={isEn ? 'Quiet sculptural presence in diffused daylight' : '自然柔和天光下的静态沉思展陈'}
-          />
+          <div className="relative w-full flex rounded-2xl overflow-hidden">
+            <EditorialImage
+              src={templeSculptureImg}
+              alt={isEn ? 'Minimalist meditative stone sculpture in natural gallery light' : '自然天光下安静庄重的冥想石雕艺术展陈'}
+              aspectClassName="aspect-[3/4] max-h-[480px] lg:max-h-none"
+              className={`transition-all duration-700 ${isNightEnv ? 'brightness-[0.70] contrast-[1.05]' : 'brightness-100'}`}
+              fallbackTitle={isEn ? 'Main Hall · Contemplation Space' : '佛殿主室 · 静观展陈区域'}
+              fallbackSubtitle={isEn ? 'Quiet sculptural presence in diffused daylight' : '自然柔和天光下的静态沉思展陈'}
+            />
+            <div
+              aria-hidden="true"
+              className={`absolute inset-0 pointer-events-none transition-opacity duration-700 ${isNightEnv ? 'opacity-100' : 'opacity-0'}`}
+              style={{
+                background:
+                  'radial-gradient(circle at 50% 42%, rgba(240, 184, 96, 0.16) 0%, rgba(24, 20, 16, 0.42) 64%, rgba(16, 13, 10, 0.66) 100%)',
+              }}
+            />
+          </div>
         </div>
 
         <div className="lg:col-span-7 amnd-surface p-6 md:p-8 flex flex-col justify-between text-left space-y-6">
@@ -166,7 +221,89 @@ export default function TemplePage({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+          <div className="space-y-3 pt-2">
+            {/* Day / Night Environment Selector (Beijing Time Auto + Manual Override) */}
+            <div className="p-3.5 rounded-xl border border-[var(--amnd-border)] bg-[var(--amnd-bg-secondary)]/70 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="space-y-0.5 text-left">
+                <p className="text-xs font-semibold text-[var(--amnd-text-primary)] flex items-center gap-1.5">
+                  {isNightEnv ? (
+                    <Moon className="w-3.5 h-3.5 text-[var(--amnd-gold)]" />
+                  ) : (
+                    <Sun className="w-3.5 h-3.5 text-[var(--amnd-gold)]" />
+                  )}
+                  <span>
+                    {isNightEnv
+                      ? isEn
+                        ? 'Hall Atmosphere · Evening Lamps'
+                        : '大殿光影 · 夜间供灯'
+                      : isEn
+                        ? 'Hall Atmosphere · Daylight'
+                        : '大殿光影 · 日间自然光'}
+                  </span>
+                </p>
+                <p className="text-[11px] text-[var(--amnd-text-muted)] tabular-nums">
+                  {isEn
+                    ? `Beijing Time ${beijingTimeLabel} · Auto (06:00 Day / 19:00 Night)`
+                    : `北京时间 ${beijingTimeLabel} · 06:00 切换白天 / 19:00 切换夜晚`}
+                </p>
+              </div>
+
+              <div
+                className="inline-flex items-center gap-1 p-1 rounded-xl bg-[var(--amnd-bg-elevated)] border border-[var(--amnd-border)] w-full sm:w-auto"
+                role="group"
+                aria-label={isEn ? 'Hall Lighting Mode' : '大殿昼夜光影切换'}
+              >
+                {(
+                  [
+                    { id: 'auto', label: 'Auto', icon: Compass },
+                    { id: 'day', label: isEn ? 'Day' : '白天', icon: Sun },
+                    { id: 'night', label: isEn ? 'Night' : '夜晚', icon: Moon },
+                  ] as { id: TempleLightingPreference; label: string; icon: typeof Compass }[]
+                ).map((opt) => {
+                  const Icon = opt.icon;
+                  const active = lightingPreference === opt.id;
+                  return (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      id={`temple-page-lighting-${opt.id}`}
+                      onClick={() => setLightingPreference(opt.id)}
+                      aria-pressed={active}
+                      className={`flex-1 sm:flex-none px-3 py-1.5 rounded-lg text-xs font-medium inline-flex items-center justify-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap min-h-[38px] ${
+                        active
+                          ? 'bg-[var(--amnd-wood)] text-[#fffdf9]'
+                          : 'text-[var(--amnd-text-secondary)] hover:text-[var(--amnd-text-primary)] hover:bg-[var(--amnd-bg-secondary)]'
+                      }`}
+                    >
+                      <Icon className="w-3.5 h-3.5" />
+                      <span>{opt.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setIs3DHallOpen(true)}
+              id="temple-hall-open-3d-btn"
+              className="w-full p-4 rounded-xl border border-[var(--amnd-wood)] bg-[var(--amnd-bg-primary)] hover:bg-[var(--amnd-bg-secondary)] text-left transition-colors cursor-pointer group flex items-center justify-between gap-3"
+            >
+              <div className="space-y-1">
+                <p className="text-xs sm:text-sm font-semibold text-[var(--amnd-text-primary)] flex items-center gap-2">
+                  <Box className="w-4 h-4 text-[var(--amnd-gold)]" />
+                  <span>{isEn ? 'Explore Interactive 3D Sanctuary Hall (V2.1)' : '步入 3D 静观大殿空间（V2.1 基础版）'}</span>
+                </p>
+                <p className="text-xs text-[var(--amnd-text-secondary)]">
+                  {isEn
+                    ? 'Inspect the limestone hall, altar lamps, floral vessels, and smooth Beijing-time day & night lighting.'
+                    : '在三维建筑空间中环顾大殿纵深、供台明灯与北京时间昼夜流转，支持移动端触摸与静态降级。'}
+                </p>
+              </div>
+              <ArrowRight className="w-4 h-4 text-[var(--amnd-wood)] shrink-0 transition-transform group-hover:translate-x-0.5" />
+            </button>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <button
               type="button"
               onClick={() => onNavigate('stillness')}
@@ -194,6 +331,7 @@ export default function TemplePage({
                 {isEn ? 'Explore 《Abundance》 chapters & quotes' : '阅读《丰盛》要义与经典静心语录'}
               </p>
             </button>
+            </div>
           </div>
         </div>
       </section>
@@ -365,6 +503,39 @@ export default function TemplePage({
           </div>
         </div>
       </section>
+
+      {/* Lazy-Loaded 3D Temple Sanctuary Modal (Releases WebGL completely on exit) */}
+      {is3DHallOpen && (
+        <Suspense
+          fallback={
+            <div
+              className={`fixed inset-0 z-[70] flex flex-col items-center justify-center gap-3 text-center px-6 ${
+                isNightEnv
+                  ? 'bg-[#26201a] text-[#f5efe6]'
+                  : 'bg-[#ede6da] text-[#262320]'
+              }`}
+              role="status"
+            >
+              <Compass
+                className="w-6 h-6 text-[var(--amnd-gold)] animate-spin"
+                style={{ animationDuration: '6s' }}
+              />
+              <p className="font-serif text-base font-medium">
+                {isEn ? 'Loading 3D Sanctuary Hall…' : '正在加载 3D 静观大殿…'}
+              </p>
+            </div>
+          }
+        >
+          <Temple3DExperience
+            language={language}
+            onClose={() => setIs3DHallOpen(false)}
+            lightingPreference={lightingPreference}
+            onChangeLightingPreference={setLightingPreference}
+            resolvedEnvironment={resolvedEnvironment}
+            beijingTimeLabel={beijingTimeLabel}
+          />
+        </Suspense>
+      )}
     </div>
   );
 }
