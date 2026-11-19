@@ -5,7 +5,6 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import {
   ArrowLeft,
   Compass,
-  Eye,
   Footprints,
   Info,
   Moon,
@@ -13,7 +12,6 @@ import {
   Sun,
   X,
 } from 'lucide-react';
-import templeHallImg from '../../assets/images/temple_modern_hall_1794884029399.jpg';
 import {
   TEMPLE_MODEL_MANIFEST,
   Temple3DInteractionBridge,
@@ -24,6 +22,7 @@ import {
   disposeSceneHierarchy,
 } from './templeProceduralMaterials';
 import { buildTempleCourtyard } from './templeCourtyardBuilder';
+import { buildTempleValley } from './templeValleyBuilder';
 import {
   buildLotusPedestalAndBuddhaAnchor,
   buildMainAltar,
@@ -103,6 +102,136 @@ function detectSoftwareWebGL(): { supported: boolean; isSoftwareGl: boolean } {
   }
 }
 
+// Build procedural offering lamp (LatheGeometry + flame + soft glow halo, 0.34m total height)
+function buildOfferingLamp(
+  bronzeMat: THREE.Material,
+  goldMat: THREE.Material,
+  flameMat: THREE.Material
+) {
+  const group = new THREE.Group();
+
+  const baseProfile = [
+    new THREE.Vector2(0, 0),
+    new THREE.Vector2(0.09, 0),
+    new THREE.Vector2(0.082, 0.026),
+    new THREE.Vector2(0.036, 0.055),
+    new THREE.Vector2(0.022, 0.155),
+    new THREE.Vector2(0.032, 0.195),
+    new THREE.Vector2(0.082, 0.242),
+    new THREE.Vector2(0.09, 0.278),
+    new THREE.Vector2(0.076, 0.282),
+    new THREE.Vector2(0.064, 0.232),
+    new THREE.Vector2(0, 0.222),
+  ];
+  const bodyMesh = new THREE.Mesh(
+    new THREE.LatheGeometry(baseProfile, 28),
+    bronzeMat
+  );
+  bodyMesh.castShadow = true;
+  bodyMesh.receiveShadow = true;
+  group.add(bodyMesh);
+
+  const rimMesh = new THREE.Mesh(
+    new THREE.TorusGeometry(0.082, 0.007, 12, 28),
+    goldMat
+  );
+  rimMesh.rotation.x = Math.PI / 2;
+  rimMesh.position.y = 0.28;
+  group.add(rimMesh);
+
+  const flameMesh = new THREE.Mesh(
+    new THREE.ConeGeometry(0.015, 0.064, 14),
+    flameMat
+  );
+  flameMesh.position.y = 0.304;
+  group.add(flameMesh);
+
+  const haloMat = new THREE.MeshBasicMaterial({
+    color: 0xffd58e,
+    transparent: true,
+    opacity: 0.2,
+    depthWrite: false,
+  });
+  const haloMesh = new THREE.Mesh(
+    new THREE.SphereGeometry(0.036, 14, 12),
+    haloMat
+  );
+  haloMesh.position.y = 0.304;
+  group.add(haloMesh);
+
+  return { group, flameMesh, haloMesh, haloMat };
+}
+
+// Build procedural stoneware floral vase (0.34m vessel + botanical stems peaking at 0.50m total)
+function buildFloralVase(
+  ceramicMat: THREE.Material,
+  stemMat: THREE.Material,
+  petalMat: THREE.Material,
+  mirrorSide: number
+) {
+  const group = new THREE.Group();
+
+  const vaseProfile = [
+    new THREE.Vector2(0, 0),
+    new THREE.Vector2(0.066, 0),
+    new THREE.Vector2(0.095, 0.1),
+    new THREE.Vector2(0.088, 0.205),
+    new THREE.Vector2(0.044, 0.29),
+    new THREE.Vector2(0.05, 0.34),
+    new THREE.Vector2(0.042, 0.34),
+    new THREE.Vector2(0.035, 0.275),
+    new THREE.Vector2(0, 0.26),
+  ];
+  const vaseMesh = new THREE.Mesh(
+    new THREE.LatheGeometry(vaseProfile, 28),
+    ceramicMat
+  );
+  vaseMesh.castShadow = true;
+  vaseMesh.receiveShadow = true;
+  group.add(vaseMesh);
+
+  const branchCurve1 = new THREE.CatmullRomCurve3([
+    new THREE.Vector3(0, 0.275, 0),
+    new THREE.Vector3(0.024 * mirrorSide, 0.36, 0.014),
+    new THREE.Vector3(0.068 * mirrorSide, 0.44, -0.012),
+    new THREE.Vector3(0.1 * mirrorSide, 0.488, 0.018),
+  ]);
+  group.add(
+    new THREE.Mesh(
+      new THREE.TubeGeometry(branchCurve1, 14, 0.0048, 6, false),
+      stemMat
+    )
+  );
+
+  const branchCurve2 = new THREE.CatmullRomCurve3([
+    new THREE.Vector3(0, 0.275, 0),
+    new THREE.Vector3(-0.016 * mirrorSide, 0.37, -0.014),
+    new THREE.Vector3(-0.05 * mirrorSide, 0.445, 0.018),
+  ]);
+  group.add(
+    new THREE.Mesh(
+      new THREE.TubeGeometry(branchCurve2, 12, 0.0042, 6, false),
+      stemMat
+    )
+  );
+
+  const blossomPositions: [number, number, number, number][] = [
+    [0.062 * mirrorSide, 0.43, -0.01, 0.017],
+    [0.096 * mirrorSide, 0.485, 0.016, 0.015],
+    [-0.046 * mirrorSide, 0.44, 0.016, 0.016],
+    [0.022 * mirrorSide, 0.385, 0.016, 0.014],
+  ];
+  const budGeo = new THREE.SphereGeometry(1, 12, 10);
+  blossomPositions.forEach(([bx, by, bz, scale]) => {
+    const blossom = new THREE.Mesh(budGeo, petalMat);
+    blossom.position.set(bx, by, bz);
+    blossom.scale.set(scale * 1.15, scale * 0.85, scale * 1.15);
+    group.add(blossom);
+  });
+
+  return group;
+}
+
 export default function Temple3DExperience({
   language,
   onClose,
@@ -137,8 +266,7 @@ export default function Temple3DExperience({
   }, [resolvedEnvironment]);
 
   const [isLoading, setIsLoading] = useState(true);
-  const [useStaticFallback, setUseStaticFallback] = useState(false);
-  const [fallbackReason, setFallbackReason] = useState<'unsupported' | 'user' | null>(
+  const [webglError, setWebglError] = useState<'unsupported' | 'context-lost' | null>(
     null
   );
   const [showInfoSheet, setShowInfoSheet] = useState(false);
@@ -160,149 +288,13 @@ export default function Temple3DExperience({
     return () => mq.removeEventListener('change', handleChange);
   }, []);
 
-  // Build procedural offering lamp (LatheGeometry + flame + soft glow halo, 0.34m total height)
-  const buildOfferingLamp = (
-    bronzeMat: THREE.Material,
-    goldMat: THREE.Material,
-    flameMat: THREE.Material
-  ) => {
-    const group = new THREE.Group();
-
-    const baseProfile = [
-      new THREE.Vector2(0, 0),
-      new THREE.Vector2(0.09, 0),
-      new THREE.Vector2(0.082, 0.026),
-      new THREE.Vector2(0.036, 0.055),
-      new THREE.Vector2(0.022, 0.155),
-      new THREE.Vector2(0.032, 0.195),
-      new THREE.Vector2(0.082, 0.242),
-      new THREE.Vector2(0.09, 0.278),
-      new THREE.Vector2(0.076, 0.282),
-      new THREE.Vector2(0.064, 0.232),
-      new THREE.Vector2(0, 0.222),
-    ];
-    const bodyMesh = new THREE.Mesh(
-      new THREE.LatheGeometry(baseProfile, 28),
-      bronzeMat
-    );
-    bodyMesh.castShadow = true;
-    bodyMesh.receiveShadow = true;
-    group.add(bodyMesh);
-
-    const rimMesh = new THREE.Mesh(
-      new THREE.TorusGeometry(0.082, 0.007, 12, 28),
-      goldMat
-    );
-    rimMesh.rotation.x = Math.PI / 2;
-    rimMesh.position.y = 0.28;
-    group.add(rimMesh);
-
-    const flameMesh = new THREE.Mesh(
-      new THREE.ConeGeometry(0.015, 0.064, 14),
-      flameMat
-    );
-    flameMesh.position.y = 0.304;
-    group.add(flameMesh);
-
-    const haloMat = new THREE.MeshBasicMaterial({
-      color: 0xffd58e,
-      transparent: true,
-      opacity: 0.2,
-      depthWrite: false,
-    });
-    const haloMesh = new THREE.Mesh(
-      new THREE.SphereGeometry(0.036, 14, 12),
-      haloMat
-    );
-    haloMesh.position.y = 0.304;
-    group.add(haloMesh);
-
-    return { group, flameMesh, haloMesh, haloMat };
-  };
-
-  // Build procedural stoneware floral vase (0.34m vessel + botanical stems peaking at 0.50m total)
-  const buildFloralVase = (
-    ceramicMat: THREE.Material,
-    stemMat: THREE.Material,
-    petalMat: THREE.Material,
-    mirrorSide: number
-  ) => {
-    const group = new THREE.Group();
-
-    const vaseProfile = [
-      new THREE.Vector2(0, 0),
-      new THREE.Vector2(0.066, 0),
-      new THREE.Vector2(0.095, 0.1),
-      new THREE.Vector2(0.088, 0.205),
-      new THREE.Vector2(0.044, 0.29),
-      new THREE.Vector2(0.05, 0.34),
-      new THREE.Vector2(0.042, 0.34),
-      new THREE.Vector2(0.035, 0.275),
-      new THREE.Vector2(0, 0.26),
-    ];
-    const vaseMesh = new THREE.Mesh(
-      new THREE.LatheGeometry(vaseProfile, 28),
-      ceramicMat
-    );
-    vaseMesh.castShadow = true;
-    vaseMesh.receiveShadow = true;
-    group.add(vaseMesh);
-
-    const branchCurve1 = new THREE.CatmullRomCurve3([
-      new THREE.Vector3(0, 0.275, 0),
-      new THREE.Vector3(0.024 * mirrorSide, 0.36, 0.014),
-      new THREE.Vector3(0.068 * mirrorSide, 0.44, -0.012),
-      new THREE.Vector3(0.1 * mirrorSide, 0.488, 0.018),
-    ]);
-    group.add(
-      new THREE.Mesh(
-        new THREE.TubeGeometry(branchCurve1, 14, 0.0048, 6, false),
-        stemMat
-      )
-    );
-
-    const branchCurve2 = new THREE.CatmullRomCurve3([
-      new THREE.Vector3(0, 0.275, 0),
-      new THREE.Vector3(-0.016 * mirrorSide, 0.37, -0.014),
-      new THREE.Vector3(-0.05 * mirrorSide, 0.445, 0.018),
-    ]);
-    group.add(
-      new THREE.Mesh(
-        new THREE.TubeGeometry(branchCurve2, 12, 0.0042, 6, false),
-        stemMat
-      )
-    );
-
-    const blossomPositions: [number, number, number, number][] = [
-      [0.062 * mirrorSide, 0.43, -0.01, 0.017],
-      [0.096 * mirrorSide, 0.485, 0.016, 0.015],
-      [-0.046 * mirrorSide, 0.44, 0.016, 0.016],
-      [0.022 * mirrorSide, 0.385, 0.016, 0.014],
-    ];
-    const budGeo = new THREE.SphereGeometry(1, 12, 10);
-    blossomPositions.forEach(([bx, by, bz, scale]) => {
-      const blossom = new THREE.Mesh(budGeo, petalMat);
-      blossom.position.set(bx, by, bz);
-      blossom.scale.set(scale * 1.15, scale * 0.85, scale * 1.15);
-      group.add(blossom);
-    });
-
-    return group;
-  };
-
   useEffect(() => {
-    if (useStaticFallback) {
-      setIsLoading(false);
-      return;
-    }
-
     const container = mountRef.current;
     if (!container) return;
 
     const capability = detectSoftwareWebGL();
     if (!capability.supported) {
-      setUseStaticFallback(true);
-      setFallbackReason('unsupported');
+      setWebglError('unsupported');
       setIsLoading(false);
       return;
     }
@@ -317,13 +309,13 @@ export default function Temple3DExperience({
         powerPreference: isSmallViewport ? 'default' : 'high-performance',
       });
     } catch {
-      setUseStaticFallback(true);
-      setFallbackReason('unsupported');
+      setWebglError('unsupported');
       setIsLoading(false);
       return;
     }
 
     let disposed = false;
+    let contextLost = false;
     let frameId = 0;
     let flickerTimerId = 0;
     let renderBusy = false;
@@ -362,7 +354,7 @@ export default function Temple3DExperience({
 
     const aspect = width / height;
     const initialFov = aspect < 0.85 ? 64 : 48;
-    const camera = new THREE.PerspectiveCamera(initialFov, aspect, 0.15, 120);
+    const camera = new THREE.PerspectiveCamera(initialFov, aspect, 0.15, 220);
     camera.position.copy(DEFAULT_CAMERA_POS);
 
     const controls = new OrbitControls(camera, renderer.domElement);
@@ -402,6 +394,10 @@ export default function Temple3DExperience({
     scene.add(courtyard.group);
     extraMaterials.push(...courtyard.courtyardSconceHalos);
     const collisionRegistry = buildTempleCollisionRegistry(courtyard.group);
+
+    // 1B. JIANGNAN MOUNTAIN VALLEY TERRAIN & SPATIAL BLOCKOUT (Phase 2C.1)
+    const valley = buildTempleValley();
+    scene.add(valley.group);
 
     // ------------------------------------------------------------
     // 2. ANCHORS FOR SANCTUARY ELEMENTS & FUTURE V2.2 / V2.3 ASSETS
@@ -700,6 +696,7 @@ export default function Temple3DExperience({
       window.clearTimeout(flickerTimerId);
       if (
         disposed ||
+        contextLost ||
         document.hidden ||
         isSoftwareGl ||
         prefersReducedMotionRef.current
@@ -709,7 +706,7 @@ export default function Temple3DExperience({
       if (currentNightFactor > 0.08) {
         // Calm ~20fps gentle candle shimmer on night mode without overheating mobile devices
         flickerTimerId = window.setTimeout(() => {
-          if (!disposed && !document.hidden) {
+          if (!disposed && !contextLost && !document.hidden) {
             requestRender();
           }
         }, isSmallViewport ? 55 : 42);
@@ -717,14 +714,17 @@ export default function Temple3DExperience({
     }
 
     function requestRender() {
-      if (disposed || document.hidden) return;
+      if (disposed || contextLost || document.hidden) return;
       if (renderBusy) {
         renderDirty = true;
         return;
       }
       renderBusy = true;
       frameId = requestAnimationFrame((now) => {
-        if (disposed) return;
+        if (disposed || contextLost) {
+          renderBusy = false;
+          return;
+        }
         renderDirty = false;
         const delta = Math.min((now - lastTimestamp) / 1000, 0.1);
         lastTimestamp = now;
@@ -820,7 +820,7 @@ export default function Temple3DExperience({
     }
 
     const switchCameraMode = (nextMode: 'overview' | 'walk') => {
-      if (disposed || cameraModeRef.current === nextMode) return;
+      if (disposed || contextLost || cameraModeRef.current === nextMode) return;
 
       if (nextMode === 'walk') {
         savedOverviewCamPos.copy(camera.position);
@@ -893,7 +893,7 @@ export default function Temple3DExperience({
     switchModeFnRef.current = switchCameraMode;
 
     resetWalkSpawnFnRef.current = () => {
-      if (cameraModeRef.current === 'walk') {
+      if (!disposed && !contextLost && cameraModeRef.current === 'walk') {
         walkController.resetToSpawn();
         lastTimestamp = performance.now();
         requestRender();
@@ -901,6 +901,7 @@ export default function Temple3DExperience({
     };
 
     resetCameraFnRef.current = () => {
+      if (disposed || contextLost) return;
       if (cameraModeRef.current === 'walk') {
         walkController.resetToSpawn();
       } else {
@@ -911,7 +912,7 @@ export default function Temple3DExperience({
     };
 
     const handleResize = () => {
-      if (disposed || !container) return;
+      if (disposed || contextLost || !container) return;
       const w = Math.max(container.clientWidth, 320);
       const h = Math.max(container.clientHeight, 320);
       const nextAspect = w / h;
@@ -929,7 +930,7 @@ export default function Temple3DExperience({
       if (document.hidden) {
         window.clearTimeout(flickerTimerId);
         walkController.clearInputs();
-      } else if (!disposed) {
+      } else if (!disposed && !contextLost) {
         lastTimestamp = performance.now();
         requestRender();
       }
@@ -938,10 +939,17 @@ export default function Temple3DExperience({
 
     const handleContextLost = (e: Event) => {
       e.preventDefault();
-      if (!disposed) {
-        setUseStaticFallback(true);
-        setFallbackReason('unsupported');
-      }
+      if (disposed) return;
+      contextLost = true;
+      renderBusy = false;
+      renderDirty = false;
+      cancelAnimationFrame(frameId);
+      clearTimeout(frameId);
+      clearTimeout(flickerTimerId);
+      walkController.clearInputs();
+      controls.enabled = false;
+      setIsLoading(false);
+      setWebglError('context-lost');
     };
     renderer.domElement.addEventListener('webglcontextlost', handleContextLost);
 
@@ -980,7 +988,7 @@ export default function Temple3DExperience({
         container.removeChild(renderer.domElement);
       }
     };
-  }, [useStaticFallback]);
+  }, []);
 
   const handleResetView = (e?: MouseEvent<HTMLButtonElement>) => {
     e?.currentTarget.blur();
@@ -1056,7 +1064,7 @@ export default function Temple3DExperience({
         </div>
 
         <div className="flex items-center gap-1.5 sm:gap-2">
-          {!useStaticFallback && (
+          {!webglError && (
             <>
               <div
                 className="inline-flex items-center p-0.5 rounded-xl bg-[#ebe5d9] border border-[#d4cbb5]"
@@ -1130,44 +1138,6 @@ export default function Temple3DExperience({
 
           <button
             type="button"
-            onClick={() => {
-              if (useStaticFallback) {
-                setFallbackReason(null);
-                setUseStaticFallback(false);
-                setIsLoading(true);
-              } else {
-                cameraModeRef.current = 'overview';
-                setCameraMode('overview');
-                setFallbackReason('user');
-                setUseStaticFallback(true);
-              }
-            }}
-            id="temple-3d-toggle-static-btn"
-            className="px-2.5 sm:px-3 py-2 amnd-btn-secondary text-xs font-medium inline-flex items-center gap-1.5 cursor-pointer whitespace-nowrap min-h-[44px]"
-            title={
-              useStaticFallback
-                ? isEn
-                  ? 'Switch to 3D Interactive Mode'
-                  : '切换回 3D 交互空间'
-                : isEn
-                  ? 'Low-Power Static View'
-                  : '切换静态省电视图'
-            }
-          >
-            <Eye className="w-3.5 h-3.5 text-[var(--amnd-wood)]" />
-            <span className="hidden sm:inline">
-              {useStaticFallback
-                ? isEn
-                  ? '3D View'
-                  : '3D 视角'
-                : isEn
-                  ? 'Static'
-                  : '静态视图'}
-            </span>
-          </button>
-
-          <button
-            type="button"
             onClick={() => setShowInfoSheet((prev) => !prev)}
             className="p-2.5 amnd-btn-secondary inline-flex items-center justify-center cursor-pointer min-h-[44px] min-w-[44px]"
             aria-label={isEn ? 'Space & Model Info' : '空间与模型说明'}
@@ -1180,103 +1150,60 @@ export default function Temple3DExperience({
 
       {/* Main Viewport Area */}
       <div className="relative flex-1 w-full overflow-hidden">
-        {!useStaticFallback ? (
+        <div
+          ref={mountRef}
+          className="w-full h-full"
+          id="temple-3d-canvas-container"
+        />
+
+        {/* Minimal WebGL Error State (keeps Return control available) */}
+        {webglError && (
           <div
-            ref={mountRef}
-            className="w-full h-full"
-            id="temple-3d-canvas-container"
-          />
-        ) : (
-          /* Low-Performance / Static Fallback Scene with Day & Night Atmosphere */
-          <div
-            className={`w-full h-full relative flex items-center justify-center p-4 sm:p-8 overflow-y-auto transition-colors ${
-              prefersReducedMotion ? 'duration-0' : 'duration-1000'
-            } ${isNight ? 'bg-[#221d18]' : 'bg-[#ede6da]'}`}
-            id="temple-3d-static-fallback"
+            className={`absolute inset-0 z-10 flex flex-col items-center justify-center p-6 text-center ${
+              isNight ? 'bg-[#221d18] text-[#f5efe6]' : 'bg-[#ede6da] text-[#262320]'
+            }`}
+            id="temple-3d-webgl-error"
+            role="alert"
           >
             <div
-              className={`max-w-3xl w-full rounded-2xl border p-4 sm:p-6 space-y-4 transition-colors ${
-                prefersReducedMotion ? 'duration-0' : 'duration-1000'
-              } ${
+              className={`max-w-md w-full rounded-2xl border p-6 space-y-4 ${
                 isNight
-                  ? 'bg-[#2c251e] border-[#493c2f] text-[#f5efe6]'
-                  : 'bg-[#fffdf9] border-[#e5dec9] text-[#262320]'
+                  ? 'bg-[#2c251e] border-[#493c2f]'
+                  : 'bg-[#fffdf9] border-[#e5dec9]'
               }`}
             >
-              <div className="relative aspect-[16/9] w-full rounded-xl overflow-hidden bg-[#1e1914]">
-                <img
-                  src={templeHallImg}
-                  alt={
-                    isEn
-                      ? 'Yixiu Little Temple static fallback view'
-                      : '一休小庙静态降级视图'
-                  }
-                  className={`w-full h-full object-cover transition-all ${
-                    prefersReducedMotion ? 'duration-0' : 'duration-1000'
-                  } ${
-                    isNight
-                      ? 'brightness-[0.58] contrast-[1.06]'
-                      : 'brightness-100 contrast-100'
-                  }`}
-                  referrerPolicy="no-referrer"
-                />
-                {isNight && (
-                  <div
-                    className="absolute inset-0 pointer-events-none"
-                    style={{
-                      background:
-                        'radial-gradient(circle at 50% 48%, rgba(242, 186, 98, 0.22) 0%, rgba(30, 24, 18, 0.35) 58%, rgba(22, 18, 14, 0.65) 100%)',
-                    }}
-                  />
-                )}
-              </div>
-
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-left">
-                <div className="space-y-1">
-                  <p className="font-serif text-base font-semibold">
-                    {isNight
-                      ? isEn
-                        ? 'Yixiu Little Temple · Night Lamps'
-                        : '一休小庙 · 夜间供灯氛围'
-                      : isEn
-                        ? 'Yixiu Little Temple · Daylight'
-                        : '一休小庙 · 日间自然光'}
-                  </p>
-                  <p
-                    className={`text-xs ${
-                      isNight ? 'text-[#cfc4b5]' : 'text-[var(--amnd-text-secondary)]'
-                    }`}
-                  >
-                    {fallbackReason === 'unsupported'
-                      ? isEn
-                        ? 'WebGL is unavailable in this environment, so a calm static sanctuary preview is active.'
-                        : '当前环境暂不支持 WebGL 实时渲染，已自动切换为静态大殿视图以保持流畅浏览。'
-                      : isEn
-                        ? 'Low-power static preview enabled. Day and night atmosphere updates cleanly here too.'
-                        : '当前处于静态省电视图，昼夜光影氛围同样在此生效。'}
-                  </p>
-                </div>
-
-                {fallbackReason !== 'unsupported' && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setFallbackReason(null);
-                      setUseStaticFallback(false);
-                      setIsLoading(true);
-                    }}
-                    className="px-4 py-2.5 amnd-btn-primary text-xs font-medium cursor-pointer whitespace-nowrap min-h-[40px]"
-                  >
-                    {isEn ? 'Enter 3D Hall' : '恢复 3D 交互'}
-                  </button>
-                )}
-              </div>
+              <p className="font-serif text-base font-semibold">
+                {isEn
+                  ? 'Unable to Start 3D Space'
+                  : '暂时无法启动 3D 实时空间'}
+              </p>
+              <p
+                className={`text-xs leading-relaxed ${
+                  isNight ? 'text-[#cfc4b5]' : 'text-[var(--amnd-text-secondary)]'
+                }`}
+              >
+                {webglError === 'context-lost'
+                  ? isEn
+                    ? 'The WebGL graphics context was interrupted by your browser or device. Please return and re-enter Yixiu Little Temple.'
+                    : '浏览器或设备的 WebGL 图形上下文已中断，请返回后重新进入一休小庙。'
+                  : isEn
+                    ? 'WebGL 3D rendering is unavailable in this browser or environment.'
+                    : '当前浏览器或设备环境暂不支持 WebGL 实时 3D 渲染。'}
+              </p>
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2.5 amnd-btn-primary text-xs font-medium inline-flex items-center justify-center gap-1.5 cursor-pointer min-h-[44px]"
+              >
+                <ArrowLeft className="w-4 h-4 shrink-0" />
+                <span>{isEn ? 'Back' : '返回'}</span>
+              </button>
             </div>
           </div>
         )}
 
         {/* Loading Overlay */}
-        {isLoading && !useStaticFallback && (
+        {isLoading && !webglError && (
           <div
             className={`absolute inset-0 z-10 flex flex-col items-center justify-center text-center px-6 space-y-3 ${
               isNight ? 'bg-[#26201a] text-[#f5efe6]' : 'bg-[#ede6da] text-[#262320]'
@@ -1396,7 +1323,7 @@ export default function Temple3DExperience({
                   ? 'Manual Day'
                   : '手动白天'}
           </span>
-          {!useStaticFallback && (
+          {!webglError && (
             <>
               <span className="hidden md:inline" aria-hidden="true">
                 ·
