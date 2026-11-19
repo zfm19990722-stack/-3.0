@@ -131,6 +131,7 @@ const getSentenceSegments = (text: string): SentenceSegment[] => {
 
 export default function App() {
   const [currentView, setCurrentView] = useState<PrimaryViewId>('home');
+  const [templeReturnView, setTempleReturnView] = useState<PrimaryViewId>('home');
   const [language, setLanguage] = useState<'zh' | 'en'>('zh');
   const [wishes, setWishes] = useState<Wish[]>([]);
   const [isGeneratingMap, setIsGeneratingMap] = useState<Record<string, boolean>>({});
@@ -1097,6 +1098,9 @@ export default function App() {
   };
 
   const handleNavigate = (view: PrimaryViewId) => {
+    if (view === 'temple' && currentView !== 'temple') {
+      setTempleReturnView(currentView);
+    }
     setCurrentView(view);
     setShowMobileTools(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1532,6 +1536,7 @@ export default function App() {
             language={language}
             onNavigate={handleNavigate}
             onEnterStillness={() => handleNavigate('stillness')}
+            onExitTemple={() => handleNavigate(templeReturnView)}
           />
         )}
 

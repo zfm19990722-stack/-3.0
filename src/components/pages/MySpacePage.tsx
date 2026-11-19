@@ -31,6 +31,7 @@ import {
   REFLECTION_ENTRIES_STORAGE_KEY,
   SimpleJournalEntry,
 } from './ManifestationPage';
+import TemplePrayerSanctuary from '../temple/TemplePrayerSanctuary';
 import type { PrimaryViewId } from './HomePage';
 
 interface SavedVoiceSummary {
@@ -380,6 +381,12 @@ export default function MySpacePage({
               </div>
             )}
           </section>
+
+          {/* C2. Prayer, Gratitude & Release Notes (Preserved amnd_temple_prayers_v1) */}
+          <TemplePrayerSanctuary
+            language={language}
+            onOpenManifestation={() => onNavigate('manifestation')}
+          />
         </div>
 
         {/* Right: D. My Reflections + E. My Practice + F. Data & Backup */}

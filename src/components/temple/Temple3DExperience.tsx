@@ -1031,16 +1031,11 @@ export default function Temple3DExperience({
           type="button"
           onClick={onClose}
           id="temple-3d-exit-btn"
-          className="px-2.5 sm:px-3.5 py-2 amnd-btn-secondary text-xs font-medium inline-flex items-center gap-1.5 cursor-pointer whitespace-nowrap min-h-[44px]"
+          aria-label={isEn ? 'Return from Yixiu Little Temple' : '离开一休小庙返回上一页'}
+          className="px-3 sm:px-3.5 py-2 amnd-btn-secondary text-xs font-medium inline-flex items-center gap-1.5 cursor-pointer whitespace-nowrap min-h-[44px]"
         >
           <ArrowLeft className="w-4 h-4 text-[var(--amnd-wood)] shrink-0" />
-          {isEn ? (
-            <span>
-              <span className="hidden sm:inline">Back to </span>Yixiu Little Temple
-            </span>
-          ) : (
-            <span>返回一休小庙</span>
-          )}
+          <span>{isEn ? 'Back' : '返回'}</span>
         </button>
 
         <div className="hidden md:flex items-center gap-2 text-xs text-[var(--amnd-text-secondary)]">
@@ -1319,6 +1314,11 @@ export default function Temple3DExperience({
               </button>
             </div>
             <div className="space-y-2 text-xs text-[var(--amnd-text-secondary)] leading-relaxed">
+              <p className="font-serif text-[var(--amnd-text-primary)]">
+                {isEn
+                  ? 'A little place to pause and return to yourself.'
+                  : '累了，就回来歇一歇。'}
+              </p>
               <p>
                 <strong className="text-[var(--amnd-text-primary)]">
                   {isEn ? 'Beijing Time Auto Mode: ' : '北京时间昼夜规则：'}
@@ -1338,14 +1338,6 @@ export default function Temple3DExperience({
                   : isEn
                     ? '360° Overview: drag to orbit around the temple exterior, right-drag or two-finger drag to pan, scroll or pinch to zoom, or switch to Walk to step inside the halls.'
                     : '360° 全景模式：拖动可环绕观察寺院建筑群，右键或双指拖动平移焦点，滚轮或双指缩放；点击顶部“漫游”可由山门步入殿堂内部。'}
-              </p>
-              <p>
-                <strong className="text-[var(--amnd-text-primary)]">
-                  {isEn ? 'Statue Slot: ' : '主尊模型接口：'}
-                </strong>
-                {isEn
-                  ? TEMPLE_MODEL_MANIFEST.mainStatue.notesEn
-                  : TEMPLE_MODEL_MANIFEST.mainStatue.notesZh}
               </p>
             </div>
           </div>
@@ -1417,6 +1409,18 @@ export default function Temple3DExperience({
                   : isEn
                     ? 'Drag to orbit 360° · Right-drag to pan · Scroll or pinch to zoom'
                     : '拖动 360° 环绕 · 右键平移 · 缩放调节远近'}
+              </span>
+              <span className="md:hidden" aria-hidden="true">
+                ·
+              </span>
+              <span className="md:hidden">
+                {cameraMode === 'walk'
+                  ? isEn
+                    ? 'Drag to look'
+                    : '拖动环顾'
+                  : isEn
+                    ? 'Drag to orbit · Pinch zoom'
+                    : '单指环绕 · 双指缩放'}
               </span>
             </>
           )}
