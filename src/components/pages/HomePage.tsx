@@ -235,23 +235,23 @@ export default function HomePage({
         <div className="lg:col-span-7 flex">
           <EditorialImage
             src={templeHallImg}
-            alt={isEn ? 'Modern architectural sanctuary hall illuminated by natural light' : '自然天光与石材构成的现代静观寺庙空间'}
+            alt={isEn ? 'Yixiu Little Temple modern architectural space illuminated by natural light' : '自然天光与石材构成的一休小庙现代静观空间'}
             aspectClassName="aspect-[16/9] lg:aspect-auto lg:h-full min-h-[220px]"
-            fallbackTitle={isEn ? 'Temple · Sanctuary' : 'Temple · 寺庙空间'}
-            fallbackSubtitle={isEn ? 'A space for reflection, spiritual culture and inner connection.' : '一处沉思、精神文化与内在连接的当代空间。'}
+            fallbackTitle={isEn ? 'Yixiu Little Temple' : '一休小庙'}
+            fallbackSubtitle={isEn ? 'A little place to pause and return to yourself.' : '累了，就回来歇一歇。'}
           />
         </div>
         <div className="lg:col-span-5 flex flex-col justify-between text-left space-y-5 py-1 lg:pl-2">
           <div className="space-y-3">
             <div className="flex items-center gap-2 text-xs text-[var(--amnd-text-muted)]">
               <Compass className="w-3.5 h-3.5 text-[var(--amnd-gold)]" />
-              <span>{isEn ? 'Spiritual Culture · Modern Sanctuary' : '精神文化体验空间 · Temple'}</span>
+              <span>{isEn ? 'AMND Manifestation · Sanctuary Space' : 'AMND Manifestation · 精神栖息空间'}</span>
             </div>
             <h3 className="font-serif text-2xl md:text-3xl font-semibold text-[var(--amnd-text-primary)] text-balance">
-              {isEn ? 'Temple · Quiet Reverence' : '寺庙 · 现代精神文化殿堂'}
+              {isEn ? 'Yixiu Little Temple' : '一休小庙'}
             </h3>
             <p className="text-sm text-[var(--amnd-text-secondary)] leading-relaxed">
-              A space for reflection, spiritual culture and inner connection.
+              {isEn ? 'A little place to pause and return to yourself.' : '累了，就回来歇一歇。'}
             </p>
             <p className="text-xs text-[var(--amnd-text-secondary)] leading-relaxed">
               {isEn
@@ -266,7 +266,7 @@ export default function HomePage({
               id="home-enter-temple-btn"
               className="w-full sm:w-auto px-6 py-3 amnd-btn-primary text-xs sm:text-sm font-medium inline-flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap min-h-[44px]"
             >
-              <span>{isEn ? 'Enter Temple Space' : '进入 Temple 精神空间'}</span>
+              <span>{isEn ? 'Enter Yixiu Little Temple' : '进入一休小庙'}</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>

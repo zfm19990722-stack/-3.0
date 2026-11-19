@@ -265,7 +265,8 @@ function addGraniteStairs(
   steps: number,
   axis: 'z+' | 'z-' | 'x+' | 'x-',
   stepMat: THREE.Material,
-  trimMat: THREE.Material
+  trimMat: THREE.Material,
+  baseY = 0
 ) {
   const stepH = totalRise / steps;
   const stepD = runDepth / steps;
@@ -280,7 +281,7 @@ function addGraniteStairs(
         new THREE.BoxGeometry(width, stepH, stepD + 0.02),
         stepMat
       );
-      mesh.position.set(centerX, h - stepH / 2, centerZ + dir * offset);
+      mesh.position.set(centerX, baseY + h - stepH / 2, centerZ + dir * offset);
       mesh.receiveShadow = true;
       mesh.castShadow = true;
       parent.add(mesh);
@@ -290,7 +291,11 @@ function addGraniteStairs(
           new THREE.BoxGeometry(width - 0.04, h - stepH, stepD),
           trimMat
         );
-        riser.position.set(centerX, (h - stepH) / 2, centerZ + dir * offset);
+        riser.position.set(
+          centerX,
+          baseY + (h - stepH) / 2,
+          centerZ + dir * offset
+        );
         riser.receiveShadow = true;
         parent.add(riser);
       }
@@ -300,7 +305,7 @@ function addGraniteStairs(
         new THREE.BoxGeometry(stepD + 0.02, stepH, width),
         stepMat
       );
-      mesh.position.set(centerX + dir * offset, h - stepH / 2, centerZ);
+      mesh.position.set(centerX + dir * offset, baseY + h - stepH / 2, centerZ);
       mesh.receiveShadow = true;
       mesh.castShadow = true;
       parent.add(mesh);
@@ -310,7 +315,11 @@ function addGraniteStairs(
           new THREE.BoxGeometry(stepD, h - stepH, width - 0.04),
           trimMat
         );
-        riser.position.set(centerX + dir * offset, (h - stepH) / 2, centerZ);
+        riser.position.set(
+          centerX + dir * offset,
+          baseY + (h - stepH) / 2,
+          centerZ
+        );
         riser.receiveShadow = true;
         parent.add(riser);
       }
@@ -326,7 +335,7 @@ function addGraniteStairs(
       );
       cheek.position.set(
         centerX + side * (width / 2 + 0.09),
-        cheekH / 2,
+        baseY + cheekH / 2,
         centerZ
       );
       cheek.castShadow = true;
@@ -339,7 +348,7 @@ function addGraniteStairs(
       );
       cheek.position.set(
         centerX,
-        cheekH / 2,
+        baseY + cheekH / 2,
         centerZ + side * (width / 2 + 0.09)
       );
       cheek.castShadow = true;
@@ -505,11 +514,166 @@ function addCourtyardLantern(
 }
 
 /**
+ * Builds crisp open doorway framing: jamb posts (抱框), low wooden threshold (门槛),
+ * stone door pillow blocks (门枕石), pair of inward-opened folding lattice door leaves (敞开格扇),
+ * and a subtle dark-timber inscribed plaque frame (匾额框) above the portal.
+ */
+function addArchitecturalPortal(
+  parent: THREE.Group,
+  opts: {
+    x: number;
+    yFloor: number;
+    z: number;
+    axis: 'x' | 'z';
+    dirSign: 1 | -1; // interior direction along perpendicular axis
+    clearWidth: number;
+    portalHeight: number;
+    hasPlaque?: boolean;
+    stoneMat: THREE.Material;
+    woodMat: THREE.Material;
+    beamMat: THREE.Material;
+    trimMat: THREE.Material;
+  }
+) {
+  const {
+    x,
+    yFloor,
+    z,
+    axis,
+    dirSign,
+    clearWidth,
+    portalHeight,
+    hasPlaque = true,
+    stoneMat,
+    woodMat,
+    beamMat,
+    trimMat,
+  } = opts;
+
+  const halfSpan = clearWidth / 2;
+  const leafWidth = Math.min(0.95, clearWidth * 0.28);
+  const leafHeight = portalHeight - 0.14;
+
+  // Low wooden threshold sill (门槛) + flanking carved stone pillow blocks (门枕石)
+  const sill = new THREE.Mesh(
+    axis === 'x'
+      ? new THREE.BoxGeometry(clearWidth, 0.09, 0.14)
+      : new THREE.BoxGeometry(0.14, 0.09, clearWidth),
+    beamMat
+  );
+  sill.position.set(x, yFloor + 0.045, z);
+  sill.receiveShadow = true;
+  parent.add(sill);
+
+  [-1, 1].forEach((side) => {
+    const offset = side * (halfSpan - 0.08);
+    const pillow = new THREE.Mesh(
+      axis === 'x'
+        ? new THREE.BoxGeometry(0.18, 0.18, 0.36)
+        : new THREE.BoxGeometry(0.36, 0.18, 0.18),
+      stoneMat
+    );
+    pillow.position.set(
+      axis === 'x' ? x + offset : x,
+      yFloor + 0.09,
+      axis === 'x' ? z : z + offset
+    );
+    pillow.castShadow = true;
+    pillow.receiveShadow = true;
+    parent.add(pillow);
+
+    // Vertical wooden door jamb post (抱框)
+    const jamb = new THREE.Mesh(
+      axis === 'x'
+        ? new THREE.BoxGeometry(0.12, portalHeight, 0.16)
+        : new THREE.BoxGeometry(0.16, portalHeight, 0.12),
+      beamMat
+    );
+    jamb.position.set(
+      axis === 'x' ? x + offset : x,
+      yFloor + portalHeight / 2,
+      axis === 'x' ? z : z + offset
+    );
+    jamb.castShadow = true;
+    parent.add(jamb);
+
+    // Opened folding lattice door leaf swung 90° inward into the hall
+    const leafGroup = new THREE.Group();
+    const leafOffset = side * (halfSpan - 0.16);
+    leafGroup.position.set(
+      axis === 'x' ? x + leafOffset : x + dirSign * (leafWidth / 2 + 0.06),
+      yFloor + 0.08 + leafHeight / 2,
+      axis === 'x' ? z + dirSign * (leafWidth / 2 + 0.06) : z + leafOffset
+    );
+
+    const panel = new THREE.Mesh(
+      axis === 'x'
+        ? new THREE.BoxGeometry(0.055, leafHeight, leafWidth)
+        : new THREE.BoxGeometry(leafWidth, leafHeight, 0.055),
+      woodMat
+    );
+    panel.castShadow = true;
+    panel.receiveShadow = true;
+    leafGroup.add(panel);
+
+    const frame = new THREE.Mesh(
+      axis === 'x'
+        ? new THREE.BoxGeometry(0.07, 0.1, leafWidth + 0.02)
+        : new THREE.BoxGeometry(leafWidth + 0.02, 0.1, 0.07),
+      beamMat
+    );
+    const frameTop = frame.clone();
+    frameTop.position.y = leafHeight / 2 - 0.05;
+    const frameMid = frame.clone();
+    frameMid.position.y = -leafHeight * 0.15;
+    leafGroup.add(frameTop, frameMid);
+
+    parent.add(leafGroup);
+  });
+
+  // Subtle horizontal plaque frame above portal lintel (匾额框)
+  if (hasPlaque) {
+    const plaqueW = Math.min(2.05, clearWidth * 0.62);
+    const plaqueH = 0.48;
+    const plaqueCenterY = yFloor + portalHeight + 0.25;
+    const perpOut = -dirSign * 0.2;
+
+    const plaqueFrame = new THREE.Mesh(
+      axis === 'x'
+        ? new THREE.BoxGeometry(plaqueW, plaqueH, 0.08)
+        : new THREE.BoxGeometry(0.08, plaqueH, plaqueW),
+      beamMat
+    );
+    plaqueFrame.position.set(
+      axis === 'x' ? x : x + perpOut,
+      plaqueCenterY,
+      axis === 'x' ? z + perpOut : z
+    );
+    plaqueFrame.castShadow = true;
+    parent.add(plaqueFrame);
+
+    const plaqueField = new THREE.Mesh(
+      axis === 'x'
+        ? new THREE.BoxGeometry(plaqueW - 0.14, plaqueH - 0.14, 0.03)
+        : new THREE.BoxGeometry(0.03, plaqueH - 0.14, plaqueW - 0.14),
+      trimMat
+    );
+    plaqueField.position.set(
+      axis === 'x' ? x : x + perpOut - dirSign * 0.04,
+      plaqueCenterY,
+      axis === 'x' ? z + perpOut - dirSign * 0.04 : z
+    );
+    parent.add(plaqueField);
+  }
+}
+
+/**
  * Constructs the connected Chinese Buddhist courtyard compound (四合院)
  * with strictly non-overlapping roof lines, clear open courtyard center,
- * and proportionate eave overhangs (~24.8m × 28.4m footprint):
- * - Main Hall (大雄宝殿) on North axis (Z: -16.4..-8.4, terrace to -5.4)
- * - Left & Right Side Halls (东西偏殿) (X: ±[6.6..11.8], Z: -4.2..+4.2)
+ * deepened Main Hall (10.97m clear), widened Side Halls (5.91m clear E-W),
+ * and explicit open doorway architecture:
+ * - Main Hall (大雄宝殿) on North axis (Z: -20.0..-8.4, terrace to -5.4)
+ * - Left & Right Side Halls (东西偏殿) (X: ±[6.6..13.2], Z: -4.2..+4.2)
  * - Continuous Covered Corridors (NW/NE/SW/SE 回廊 + square corner caps)
  * - South Entrance Gate (山门) (Z: +8.4..+11.2)
  * - Enclosing Compound Perimeter Wall (院墙)
@@ -545,10 +709,10 @@ export function buildTempleCourtyard(
   // 1. CONTINUOUS CHARCOAL STONE COURTYARD FLOOR & CENTRAL AXIAL APPROACH
   // =========================================================================
   const courtyardFloor = new THREE.Mesh(
-    new THREE.BoxGeometry(24.8, 0.08, 28.4),
+    new THREE.BoxGeometry(27.8, 0.08, 32.6),
     palette.charcoalStonePaving
   );
-  courtyardFloor.position.set(0, -0.04, -2.2);
+  courtyardFloor.position.set(0, -0.04, -4.3);
   courtyardFloor.receiveShadow = true;
   group.add(courtyardFloor);
 
@@ -572,26 +736,35 @@ export function buildTempleCourtyard(
   });
 
   // =========================================================================
-  // 2. MAIN HALL (大雄宝殿) — NORTH AXIS (Z: -16.4 to -8.4, Y_floor: +0.60)
+  // 2. MAIN HALL (大雄宝殿) — NORTH AXIS (Z: -20.0 to -8.4, internal 10.97m deep)
   // =========================================================================
   const mainHallY = 0.6;
-  const mainColH = 4.45;
+  const mainColH = 4.75;
 
-  // Main Hall Plinth & Sunlit Front Terrace (月台 extending to Z = -5.4)
-  const mainHallPlinth = new THREE.Mesh(
-    new THREE.BoxGeometry(15.6, mainHallY, 11.0),
+  // Main Hall Body Plinth (Z: -20.0 to -8.4, W: 15.6m) & Sunlit Front Terrace (月台 Z: -8.4 to -5.4, W: 13.2m)
+  const mainHallBodyPlinth = new THREE.Mesh(
+    new THREE.BoxGeometry(15.6, mainHallY, 11.6),
     palette.charcoalGraniteTrim
   );
-  mainHallPlinth.position.set(0, mainHallY / 2, -10.9);
-  mainHallPlinth.receiveShadow = true;
-  mainHallPlinth.castShadow = true;
-  group.add(mainHallPlinth);
+  mainHallBodyPlinth.position.set(0, mainHallY / 2, -14.2);
+  mainHallBodyPlinth.receiveShadow = true;
+  mainHallBodyPlinth.castShadow = true;
+  group.add(mainHallBodyPlinth);
+
+  const mainTerracePlinth = new THREE.Mesh(
+    new THREE.BoxGeometry(13.2, mainHallY, 3.0),
+    palette.charcoalGraniteTrim
+  );
+  mainTerracePlinth.position.set(0, mainHallY / 2, -6.9);
+  mainTerracePlinth.receiveShadow = true;
+  mainTerracePlinth.castShadow = true;
+  group.add(mainTerracePlinth);
 
   const mainHallFloorTop = new THREE.Mesh(
-    new THREE.BoxGeometry(14.8, 0.03, 8.0),
+    new THREE.BoxGeometry(14.8, 0.03, 11.6),
     palette.stonePedestal
   );
-  mainHallFloorTop.position.set(0, mainHallY + 0.015, -12.4);
+  mainHallFloorTop.position.set(0, mainHallY + 0.015, -14.2);
   mainHallFloorTop.receiveShadow = true;
   group.add(mainHallFloorTop);
 
@@ -610,9 +783,9 @@ export function buildTempleCourtyard(
   );
 
   // Low stone terrace coping (栏板) flanking stairs along Z = -5.5
-  [-5.05, 5.05].forEach((cx) => {
+  [-4.35, 4.35].forEach((cx) => {
     const curb = new THREE.Mesh(
-      new THREE.BoxGeometry(5.3, 0.22, 0.16),
+      new THREE.BoxGeometry(4.1, 0.22, 0.16),
       palette.stonePedestal
     );
     curb.position.set(cx, mainHallY + 0.11, -5.5);
@@ -621,7 +794,7 @@ export function buildTempleCourtyard(
     group.add(curb);
   });
 
-  [-7.65, -2.25, 2.25, 7.65].forEach((px) => {
+  [-6.45, -2.25, 2.25, 6.45].forEach((px) => {
     const post = new THREE.Mesh(
       new THREE.BoxGeometry(0.22, 0.42, 0.22),
       palette.stonePedestal
@@ -631,18 +804,21 @@ export function buildTempleCourtyard(
     group.add(post);
   });
 
-  // Main Hall 5-Bay Timber Column Grid
+  // Main Hall 5-Bay × 3-Depth Timber Column Grid (Z: -8.65 front -> -19.70 north)
   const mainColXs = [-7.1, -4.45, -1.9, 1.9, 4.45, 7.1];
   mainColXs.forEach((cx) => {
     registerColumn(cx, mainHallY, -8.65, 0.24, mainColH);
-    registerColumn(cx, mainHallY, -16.1, 0.24, mainColH);
+    registerColumn(cx, mainHallY, -19.7, 0.24, mainColH);
     addCorbelBracket(group, cx, mainHallY + mainColH, -8.65, palette.darkWalnutWood);
   });
   [-7.1, 7.1].forEach((sx) => {
     registerColumn(sx, mainHallY, -12.35, 0.24, mainColH);
+    registerColumn(sx, mainHallY, -16.05, 0.24, mainColH);
   });
+  // Two sets of tall interior nave columns creating authentic deep 3-bay interior space
   [-4.45, -1.9, 1.9, 4.45].forEach((ix) => {
-    registerColumn(ix, mainHallY, -11.2, 0.22, mainColH + 0.75);
+    registerColumn(ix, mainHallY, -12.95, 0.22, mainColH + 0.72);
+    registerColumn(ix, mainHallY, -16.45, 0.22, mainColH + 0.72);
   });
 
   const mainFrontBeam = new THREE.Mesh(
@@ -654,58 +830,73 @@ export function buildTempleCourtyard(
   group.add(mainFrontBeam);
 
   const mainRearBeam = mainFrontBeam.clone();
-  mainRearBeam.position.z = -16.1;
+  mainRearBeam.position.z = -19.7;
   group.add(mainRearBeam);
 
   mainColXs.forEach((cx) => {
     const crossBeam = new THREE.Mesh(
-      new THREE.BoxGeometry(0.26, 0.32, 7.7),
+      new THREE.BoxGeometry(0.26, 0.32, 11.35),
       palette.darkWalnutWood
     );
-    crossBeam.position.set(cx, mainHallY + mainColH + 0.1, -12.38);
+    crossBeam.position.set(cx, mainHallY + mainColH + 0.1, -14.18);
     group.add(crossBeam);
   });
 
   const mainCeiling = new THREE.Mesh(
-    new THREE.BoxGeometry(14.6, 0.16, 7.8),
+    new THREE.BoxGeometry(14.6, 0.16, 11.4),
     palette.darkTimberCeiling
   );
-  mainCeiling.position.set(0, mainHallY + mainColH + 0.4, -12.38);
+  mainCeiling.position.set(0, mainHallY + mainColH + 0.4, -14.18);
   group.add(mainCeiling);
 
   const mainNorthWall = new THREE.Mesh(
     new THREE.BoxGeometry(14.6, mainColH + 0.2, 0.26),
     palette.courtyardEarthWall
   );
-  mainNorthWall.position.set(0, mainHallY + (mainColH + 0.2) / 2, -16.22);
+  mainNorthWall.position.set(0, mainHallY + (mainColH + 0.2) / 2, -19.82);
   mainNorthWall.receiveShadow = true;
   group.add(mainNorthWall);
 
   const altarBackdropWood = new THREE.Mesh(
-    new THREE.BoxGeometry(4.4, 4.2, 0.16),
+    new THREE.BoxGeometry(4.6, 4.5, 0.16),
     palette.darkWalnutWood
   );
-  altarBackdropWood.position.set(0, mainHallY + 2.1, -16.02);
+  altarBackdropWood.position.set(0, mainHallY + 2.25, -19.62);
   group.add(altarBackdropWood);
 
   [-7.25, 7.25].forEach((wx) => {
     const sideWall = new THREE.Mesh(
-      new THREE.BoxGeometry(0.24, mainColH + 0.2, 7.6),
+      new THREE.BoxGeometry(0.24, mainColH + 0.2, 11.2),
       palette.courtyardEarthWall
     );
-    sideWall.position.set(wx, mainHallY + (mainColH + 0.2) / 2, -12.38);
+    sideWall.position.set(wx, mainHallY + (mainColH + 0.2) / 2, -14.22);
     sideWall.receiveShadow = true;
     sideWall.castShadow = true;
     group.add(sideWall);
   });
 
-  // Main Hall South Facade: wide open 3.8m central bay + wooden lattice flanking bays
+  // Main Hall South Facade: wide open 3.32m central bay with open doors & lintel plaque
   const centralPortalLintel = new THREE.Mesh(
     new THREE.BoxGeometry(3.8, 0.28, 0.24),
     palette.darkWalnutWood
   );
-  centralPortalLintel.position.set(0, mainHallY + 3.8, -8.65);
+  centralPortalLintel.position.set(0, mainHallY + 4.0, -8.65);
   group.add(centralPortalLintel);
+
+  addArchitecturalPortal(group, {
+    x: 0,
+    yFloor: mainHallY + 0.03,
+    z: -8.65,
+    axis: 'x',
+    dirSign: -1,
+    clearWidth: 3.3,
+    portalHeight: 3.83,
+    hasPlaque: true,
+    stoneMat: palette.stonePedestal,
+    woodMat: palette.naturalWood,
+    beamMat: palette.darkWalnutWood,
+    trimMat: palette.roofRidgeSlate,
+  });
 
   [-3.18, 3.18].forEach((bx) => {
     addLatticeWallBay(
@@ -739,58 +930,58 @@ export function buildTempleCourtyard(
   // Proportioned Double-Eave Roof (重檐歇山顶: front lower eave stops cleanly at Z = -7.80)
   const mainLowerEaveRoof = createChineseCurvedRoof({
     eaveHalfW: 8.15,
-    eaveHalfD: 4.55,
-    ridgeHalfW: 6.7,
-    topHalfD: 3.1,
-    height: 0.95,
+    eaveHalfD: 6.35,
+    ridgeHalfW: 6.65,
+    topHalfD: 4.65,
+    height: 1.05,
     cornerLift: 0.3,
     withMainRidge: false,
     roofMat: palette.roofTileCharcoal,
     ridgeMat: palette.roofRidgeSlate,
     woodMat: palette.darkWalnutWood,
   });
-  mainLowerEaveRoof.position.set(0, mainHallY + mainColH + 0.14, -12.35);
+  mainLowerEaveRoof.position.set(0, mainHallY + mainColH + 0.14, -14.15);
   group.add(mainLowerEaveRoof);
 
   const upperNeck = new THREE.Mesh(
-    new THREE.BoxGeometry(12.8, 0.58, 5.8),
+    new THREE.BoxGeometry(12.6, 0.58, 8.8),
     palette.darkWalnutWood
   );
-  upperNeck.position.set(0, mainHallY + mainColH + 1.32, -12.35);
+  upperNeck.position.set(0, mainHallY + mainColH + 1.36, -14.15);
   upperNeck.castShadow = true;
   group.add(upperNeck);
 
   const mainUpperRoof = createChineseCurvedRoof({
     eaveHalfW: 7.65,
-    eaveHalfD: 3.85,
+    eaveHalfD: 5.35,
     ridgeHalfW: 4.8,
     topHalfD: 0,
-    height: 2.05,
+    height: 2.2,
     cornerLift: 0.36,
     withMainRidge: true,
     roofMat: palette.roofTileCharcoal,
     ridgeMat: palette.roofRidgeSlate,
     woodMat: palette.darkWalnutWood,
   });
-  mainUpperRoof.position.set(0, mainHallY + mainColH + 1.56, -12.35);
+  mainUpperRoof.position.set(0, mainHallY + mainColH + 1.6, -14.15);
   group.add(mainUpperRoof);
 
   // =========================================================================
-  // 3. LEFT & RIGHT SIDE HALLS (东西偏殿) — X: ±[6.6, 11.8], Z: [-4.2, +4.2]
+  // 3. LEFT & RIGHT SIDE HALLS (东西偏殿) — X: ±[6.6, 13.2], internal 5.91m E-W clear
   // =========================================================================
   const sideHallY = 0.3;
-  const sideColH = 3.25;
+  const sideColH = 3.45;
 
   [-1, 1].forEach((sideSign) => {
     const isWest = sideSign < 0;
     const innerX = sideSign * 6.6;
-    const outerX = sideSign * 11.8;
-    const centerX = sideSign * 9.2; // 5.2m wide
+    const outerX = sideSign * 13.2;
+    const centerX = sideSign * 9.9; // 6.6m wide plinth
     const frontColX = sideSign * 6.85;
-    const rearColX = sideSign * 11.45;
+    const rearColX = sideSign * 12.92;
 
     const plinth = new THREE.Mesh(
-      new THREE.BoxGeometry(5.2, sideHallY, 8.4),
+      new THREE.BoxGeometry(6.6, sideHallY, 8.4),
       palette.charcoalGraniteTrim
     );
     plinth.position.set(centerX, sideHallY / 2, 0);
@@ -799,7 +990,7 @@ export function buildTempleCourtyard(
     group.add(plinth);
 
     const floorSurface = new THREE.Mesh(
-      new THREE.BoxGeometry(4.7, 0.025, 7.9),
+      new THREE.BoxGeometry(6.1, 0.025, 7.9),
       palette.stonePedestal
     );
     floorSurface.position.set(centerX, sideHallY + 0.012, 0);
@@ -832,7 +1023,7 @@ export function buildTempleCourtyard(
       );
 
       const beam = new THREE.Mesh(
-        new THREE.BoxGeometry(4.7, 0.22, 0.2),
+        new THREE.BoxGeometry(6.1, 0.22, 0.2),
         palette.darkWalnutWood
       );
       beam.position.set(centerX, sideHallY + sideColH + 0.06, cz);
@@ -849,7 +1040,7 @@ export function buildTempleCourtyard(
     });
 
     const sideCeiling = new THREE.Mesh(
-      new THREE.BoxGeometry(4.7, 0.14, 7.9),
+      new THREE.BoxGeometry(6.1, 0.14, 7.9),
       palette.darkTimberCeiling
     );
     sideCeiling.position.set(centerX, sideHallY + sideColH + 0.24, 0);
@@ -859,14 +1050,14 @@ export function buildTempleCourtyard(
       new THREE.BoxGeometry(0.24, sideColH + 0.15, 8.1),
       palette.courtyardEarthWall
     );
-    backWall.position.set(outerX - sideSign * 0.18, sideHallY + sideColH / 2, 0);
+    backWall.position.set(outerX - sideSign * 0.14, sideHallY + sideColH / 2, 0);
     backWall.receiveShadow = true;
     backWall.castShadow = true;
     group.add(backWall);
 
     [-4.1, 4.1].forEach((gz) => {
       const gableWall = new THREE.Mesh(
-        new THREE.BoxGeometry(4.9, sideColH + 0.15, 0.22),
+        new THREE.BoxGeometry(6.3, sideColH + 0.15, 0.22),
         palette.courtyardEarthWall
       );
       gableWall.position.set(centerX, sideHallY + sideColH / 2, gz);
@@ -878,8 +1069,23 @@ export function buildTempleCourtyard(
       new THREE.BoxGeometry(0.22, 0.22, 2.8),
       palette.darkWalnutWood
     );
-    portalHeader.position.set(frontColX, sideHallY + 2.75, 0);
+    portalHeader.position.set(frontColX, sideHallY + 2.95, 0);
     group.add(portalHeader);
+
+    addArchitecturalPortal(group, {
+      x: frontColX,
+      yFloor: sideHallY + 0.025,
+      z: 0,
+      axis: 'z',
+      dirSign: sideSign > 0 ? 1 : -1,
+      clearWidth: 2.42,
+      portalHeight: 2.82,
+      hasPlaque: true,
+      stoneMat: palette.stonePedestal,
+      woodMat: palette.naturalWood,
+      beamMat: palette.darkWalnutWood,
+      trimMat: palette.roofRidgeSlate,
+    });
 
     [-2.7, 2.7].forEach((bz) => {
       addLatticeWallBay(
@@ -896,25 +1102,25 @@ export function buildTempleCourtyard(
       );
     });
 
-    // Dignified side-hall altar bases reserved for Phase 2A.2 statues
+    // Dignified side-hall altar bases shifted back for >0.60m Phase 3 shrine clearance
     [-2.1, 2.1].forEach((az) => {
       const sideAltarBase = new THREE.Mesh(
-        new THREE.BoxGeometry(1.2, 0.56, 1.9),
+        new THREE.BoxGeometry(1.1, 0.56, 1.9),
         palette.charcoalGraniteTrim
       );
-      sideAltarBase.position.set(sideSign * 10.55, sideHallY + 0.28, az);
+      sideAltarBase.position.set(sideSign * 11.75, sideHallY + 0.28, az);
       sideAltarBase.castShadow = true;
       sideAltarBase.receiveShadow = true;
       group.add(sideAltarBase);
     });
 
-    // Restrained Side Hall Roof: Z ∈ [-4.55, +4.55], inner X eave at ±6.20 (12.4m clear open sky!)
+    // Widened Side Hall Roof: Z ∈ [-4.55, +4.55], inner X eave at ±6.26m (12.52m open yard!)
     const sideRoof = createChineseCurvedRoof({
       eaveHalfW: 4.55,
-      eaveHalfD: 2.95,
+      eaveHalfD: 3.62,
       ridgeHalfW: 2.95,
       topHalfD: 0,
-      height: 1.45,
+      height: 1.65,
       cornerLift: 0.24,
       withMainRidge: true,
       roofMat: palette.roofTileCharcoal,
@@ -922,7 +1128,7 @@ export function buildTempleCourtyard(
       woodMat: palette.darkWalnutWood,
     });
     sideRoof.rotation.y = Math.PI / 2;
-    sideRoof.position.set(centerX - sideSign * 0.05, sideHallY + sideColH + 0.12, 0);
+    sideRoof.position.set(sideSign * 9.88, sideHallY + sideColH + 0.12, 0);
     group.add(sideRoof);
   });
 
@@ -969,7 +1175,7 @@ export function buildTempleCourtyard(
   };
 
   [-1, 1].forEach((sideSign) => {
-    // 4A. North Link Corridor (Z: -8.4 to -4.2, bridging Side Hall to Main Hall wing)
+    // 4A. North Link Corridor (Z: -8.4 to -4.2, bridging Side Hall to Main Hall terrace)
     const nwPlinth = new THREE.Mesh(
       new THREE.BoxGeometry(2.0, corrY, 4.2),
       palette.charcoalGraniteTrim
@@ -978,17 +1184,34 @@ export function buildTempleCourtyard(
     nwPlinth.receiveShadow = true;
     group.add(nwPlinth);
 
+    // Granite transition steps bridging Y=0.30 corridor up to Y=0.60 Main Hall terrace
     addGraniteStairs(
       group,
-      sideSign * 7.2,
-      -7.85,
-      1.2,
+      sideSign * 6.95,
+      -7.08,
+      1.1,
       0.7,
       0.3,
       2,
-      'z-',
+      sideSign < 0 ? 'x-' : 'x+',
       palette.stonePedestal,
-      palette.charcoalGraniteTrim
+      palette.charcoalGraniteTrim,
+      corrY
+    );
+
+    // Granite steps bridging Y=0.00 courtyard up to Y=0.30 corridor walk between terrace & side hall
+    addGraniteStairs(
+      group,
+      sideSign * 6.3,
+      -4.8,
+      0.86,
+      0.6,
+      0.3,
+      2,
+      sideSign < 0 ? 'x+' : 'x-',
+      palette.stonePedestal,
+      palette.charcoalGraniteTrim,
+      0
     );
 
     [-7.95, -6.2, -4.35].forEach((cz) => {
@@ -1214,6 +1437,22 @@ export function buildTempleCourtyard(
   gateCeiling.position.set(0, gateY + gateColH + 0.18, 9.8);
   group.add(gateCeiling);
 
+  // Open inward wooden gate leaves & stone door pillows at South Gate (Z = 9.8)
+  addArchitecturalPortal(group, {
+    x: 0,
+    yFloor: gateY,
+    z: 9.8,
+    axis: 'x',
+    dirSign: -1,
+    clearWidth: 3.04,
+    portalHeight: gateColH - 0.14,
+    hasPlaque: false,
+    stoneMat: palette.stonePedestal,
+    woodMat: palette.naturalWood,
+    beamMat: palette.darkWalnutWood,
+    trimMat: palette.roofRidgeSlate,
+  });
+
   // South Gate Roof: X ∈ [-3.75..+3.75], Z ∈ [+7.95..+11.65]
   const gateRoof = createChineseCurvedRoof({
     eaveHalfW: 3.75,
@@ -1273,8 +1512,8 @@ export function buildTempleCourtyard(
   };
 
   [-1, 1].forEach((sideSign) => {
-    addPerimeterWallSegment(sideSign * 8.7, -10.3, 12.2, 'z');
-    addPerimeterWallSegment(sideSign * 8.2, -16.4, 1.2, 'x');
+    addPerimeterWallSegment(sideSign * 8.7, -12.1, 15.8, 'z');
+    addPerimeterWallSegment(sideSign * 8.2, -19.95, 1.2, 'x');
     addPerimeterWallSegment(sideSign * 8.7, 7.4, 6.4, 'z');
     addPerimeterWallSegment(sideSign * 6.05, 10.65, 5.4, 'x');
   });

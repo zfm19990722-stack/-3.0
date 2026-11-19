@@ -104,13 +104,15 @@ export default function TemplePage({
           <div className="space-y-3">
             <div className="flex items-center gap-2 text-xs text-[var(--amnd-text-muted)]">
               <Compass className="w-3.5 h-3.5 text-[var(--amnd-gold)]" />
-              <span>{isEn ? 'Modern Spiritual Sanctuary' : '现代精神文化殿堂'}</span>
+              <span>{isEn ? 'AMND Manifestation · Spiritual Sanctuary' : 'AMND Manifestation · 精神栖息空间'}</span>
             </div>
             <h2 className="font-serif text-3xl md:text-4xl font-semibold text-[var(--amnd-text-primary)] tracking-tight">
-              Temple · {isEn ? 'Sanctuary' : '寺庙'}
+              {isEn ? 'Yixiu Little Temple' : '一休小庙'}
             </h2>
             <p className="text-sm text-[var(--amnd-text-primary)] font-medium">
-              A space for reflection, reverence and inner peace.
+              {isEn
+                ? 'Welcome to Yixiu Little Temple · A little place to pause and return to yourself.'
+                : '欢迎来到一休小庙 · 累了，就回来歇一歇。'}
             </p>
             <p className="text-xs md:text-[13px] text-[var(--amnd-text-secondary)] leading-relaxed">
               {isEn
@@ -127,7 +129,7 @@ export default function TemplePage({
               className="px-5 py-3 amnd-btn-primary text-xs sm:text-sm font-medium inline-flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap min-h-[44px]"
             >
               <Box className="w-4 h-4" />
-              <span>{isEn ? 'Enter 3D Sanctuary Hall' : '进入 3D 静观大殿'}</span>
+              <span>{isEn ? 'Enter Yixiu Little Temple (3D)' : '进入一休小庙 3D 大殿'}</span>
             </button>
             <button
               type="button"
@@ -151,11 +153,11 @@ export default function TemplePage({
           <div className="relative w-full flex rounded-2xl overflow-hidden">
             <EditorialImage
               src={templeHallImg}
-              alt={isEn ? 'Minimalist modern sanctuary hall bathed in daylight' : '自然天光映照的现代简约静观殿堂'}
+              alt={isEn ? 'Yixiu Little Temple main sanctuary hall bathed in daylight' : '自然天光映照的一休小庙静观殿堂'}
               aspectClassName="aspect-[16/9] lg:aspect-auto lg:h-full min-h-[240px]"
               className={`transition-all duration-700 ${isNightEnv ? 'brightness-[0.65] contrast-[1.06]' : 'brightness-100'}`}
-              fallbackTitle="Temple · Modern Spiritual Sanctuary"
-              fallbackSubtitle="A space for reflection, reverence and inner peace."
+              fallbackTitle={isEn ? 'Yixiu Little Temple' : '一休小庙'}
+              fallbackSubtitle={isEn ? 'A little place to pause and return to yourself.' : '累了，就回来歇一歇。'}
             />
             <div
               aria-hidden="true"
@@ -292,7 +294,7 @@ export default function TemplePage({
               <div className="space-y-1">
                 <p className="text-xs sm:text-sm font-semibold text-[var(--amnd-text-primary)] flex items-center gap-2">
                   <Box className="w-4 h-4 text-[var(--amnd-gold)]" />
-                  <span>{isEn ? 'Explore Interactive 3D Sanctuary Hall (V2.1)' : '步入 3D 静观大殿空间（V2.1 基础版）'}</span>
+                  <span>{isEn ? 'Explore Yixiu Little Temple in 3D' : '步入一休小庙 3D 立体空间'}</span>
                 </p>
                 <p className="text-xs text-[var(--amnd-text-secondary)]">
                   {isEn
@@ -521,7 +523,7 @@ export default function TemplePage({
                 style={{ animationDuration: '6s' }}
               />
               <p className="font-serif text-base font-medium">
-                {isEn ? 'Loading 3D Sanctuary Hall…' : '正在加载 3D 静观大殿…'}
+                {isEn ? 'Loading Yixiu Little Temple…' : '正在加载一休小庙 3D 空间…'}
               </p>
             </div>
           }

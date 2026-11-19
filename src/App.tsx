@@ -1102,6 +1102,17 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  useEffect(() => {
+    if (currentView === 'temple') {
+      document.title =
+        language === 'en'
+          ? 'Yixiu Little Temple · AMND Manifestation'
+          : '一休小庙 · AMND Manifestation';
+    } else {
+      document.title = 'AMND Manifestation · Amanda 的学海魔法屋';
+    }
+  }, [currentView, language]);
+
   const handleEnterMeditationSpace = (wishToUse?: Wish) => {
     setCurrentView('stillness');
     setShowMobileTools(false);
@@ -1149,7 +1160,7 @@ export default function App() {
   }[] = [
     { id: 'home', label: language === 'en' ? 'Home' : '归心', mobileLabel: language === 'en' ? 'Home' : '归心', icon: Home },
     { id: 'wisdom', label: language === 'en' ? 'Wisdom' : '智慧', mobileLabel: language === 'en' ? 'Wisdom' : '智慧', icon: BookOpen },
-    { id: 'temple', label: language === 'en' ? 'Temple' : '寺庙', mobileLabel: language === 'en' ? 'Temple' : '寺庙', icon: Compass },
+    { id: 'temple', label: language === 'en' ? 'Yixiu Little Temple' : '一休小庙', mobileLabel: language === 'en' ? 'Yixiu Little Temple' : '一休小庙', icon: Compass },
     { id: 'stillness', label: language === 'en' ? 'Stillness' : '静心', mobileLabel: language === 'en' ? 'Still' : '静心', icon: Wind },
     { id: 'manifestation', label: language === 'en' ? 'Manifestation' : '显化', mobileLabel: language === 'en' ? 'Manifest' : '显化', icon: Sparkles },
     { id: 'myspace', label: language === 'en' ? 'My Space' : '我的空间', mobileLabel: language === 'en' ? 'Space' : '我的', icon: User },
@@ -2592,7 +2603,15 @@ export default function App() {
               }`}
             >
               <Icon className="w-4 h-4 shrink-0" />
-              <span className="text-[10px] leading-none whitespace-nowrap">{item.mobileLabel}</span>
+              <span
+                className={`leading-tight text-center ${
+                  item.id === 'temple' && language === 'en'
+                    ? 'text-[9px] px-0.5 line-clamp-2'
+                    : 'text-[10px] leading-none whitespace-nowrap'
+                }`}
+              >
+                {item.mobileLabel}
+              </span>
             </button>
           );
         })}
