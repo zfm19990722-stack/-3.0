@@ -36,6 +36,12 @@ function smoothMax(a: number, b: number, k = 4.5): number {
   return Math.max(a, b) + h * h * k * 0.25;
 }
 
+function smoothMin(a: number, b: number, k = 0.22): number {
+  if (k <= 1e-5) return Math.min(a, b);
+  const h = Math.max(k - Math.abs(a - b), 0) / k;
+  return Math.min(a, b) - h * h * k * 0.25;
+}
+
 function gaussianLobe(
   x: number,
   z: number,
@@ -106,34 +112,123 @@ export function evalValleyHeight(x: number, z: number): number {
   const eastSideBias =
     smoothstep(14.5, 42.0, x) *
     (1 - smoothstep(10.0, 34.0, Math.abs(z + 2.0))) *
-    0.34;
+    0.3;
   const westSideBias =
     smoothstep(-14.5, -42.0, x) *
     (1 - smoothstep(10.0, 34.0, Math.abs(z + 2.0))) *
-    0.2;
+    0.18;
   const microUndulation =
-    (Math.sin(x * 0.085) * Math.cos(z * 0.075) * 0.07 +
-      Math.sin((x + z) * 0.045) * 0.05) *
+    (Math.sin(x * 0.085) * Math.cos(z * 0.075) * 0.055 +
+      Math.sin((x + z) * 0.045) * 0.038) *
     smoothstep(1.2, 10.0, distToFloor);
 
-  // Subtle reserved South Gate approach & Zhuque creek swale (Z ≈ +22..+33, gently curved)
-  const creekCenterZ = 27.5 + Math.sin(x * 0.065) * 3.2;
-  const creekBand = 1 - smoothstep(1.8, 6.2, Math.abs(z - creekCenterZ));
-  const creekEastWestFade = 1 - smoothstep(32.0, 56.0, Math.abs(x));
-  const pondLobe = gaussianLobe(x, z, 7.5, 29.0, 8.5, 5.2, 1.0);
-  const southGatePathFlat =
-    1 -
-    smoothstep(2.8, 6.5, Math.abs(x)) *
-      (1 - smoothstep(12.0, 21.5, z));
-  const creekDepression =
-    -0.24 *
-    Math.max(creekBand * creekEastWestFade, pondLobe * 0.95) *
-    (1 - 0.65 * (1 - southGatePathFlat) * smoothstep(12.0, 19.5, z));
+  // 2B. N1-B1-V1.4 Reshaped South Creek, Mossy Banks & Independent East Pond
+  // Asymmetric organic S-curve (~51m dominant wavelength, ~4.35m lateral swing)
+  const creekCenterZ =
+    27.4 +
+    4.05 * Math.sin(x * 0.123 + 0.16) +
+    0.72 * Math.sin(x * 0.058 - 0.85) +
+    0.34 * Math.cos(x * 0.215 + 0.65);
+
+  // Derivative dZ/dX keeps true perpendicular stream width & bank slope even on bends
+  const dCenterZdX =
+    4.05 * 0.123 * Math.cos(x * 0.123 + 0.16) +
+    0.72 * 0.058 * Math.cos(x * 0.058 - 0.85) -
+    0.34 * 0.215 * Math.sin(x * 0.215 + 0.65);
+  const normalScale = Math.min(1.32, Math.hypot(1, dCenterZdX));
+
+  // Gentle natural width modulation along stream (narrower riffles vs slightly softer bends)
+  const widthFactor =
+    1.0 +
+    0.09 * Math.sin(x * 0.23 + 0.4) +
+    0.06 * Math.cos(x * 0.13 - 0.9);
+  const absDn = Math.abs(z - creekCenterZ) / (widthFactor * normalScale);
+
+  const creekEastWestFade = 1 - smoothstep(35.0, 48.0, Math.abs(x));
+
+  // Gentle bank terrace across south foreground (strictly fades in for Z > 18.8 so
+  // SouthGateArrivalPad Z≈15.4-16.8 and gate apron Z<=18.8 stay untouched)
+  const southBankMask =
+    smoothstep(18.8, 22.0, z) *
+    (1 - smoothstep(46.0, 66.0, z)) *
+    (1 - smoothstep(38.0, 56.0, Math.abs(x)));
+  // Keep future South Gate -> Bridge approach slightly gentler around |X| < 3.5
+  const bridgeShoulderRelief =
+    1 - 0.28 * (1 - smoothstep(2.0, 5.5, Math.abs(x))) * (1 - smoothstep(22.0, 27.0, z));
+
+  // V1.5A: Low, soft natural south-east earthen enclosure framing the quiet East Pond
+  // (+0.16m..+0.24m crest outside south rim, dipping naturally so it never looks like a dike)
+  const seEnclosureBand =
+    smoothstep(6.8, 10.5, x) *
+    (1 - smoothstep(22.5, 26.8, x)) *
+    smoothstep(34.6, 38.0, z) *
+    (1 - smoothstep(41.8, 48.0, z));
+  const seNaturalSwell =
+    0.108 +
+    0.036 * Math.sin((x - 10.2) * 0.44 + 0.25) +
+    0.022 * Math.cos((z - 38.0) * 0.65 - x * 0.12);
+  const eastPondSouthEnclosure = seEnclosureBand * Math.max(0.035, seNaturalSwell);
+
+  const bankTerrace =
+    (0.155 + 0.032 * Math.sin(x * 0.095 + z * 0.07)) *
+      southBankMask *
+      bridgeShoulderRelief +
+    eastPondSouthEnclosure;
+
+  // Channel profile: rounded streambed rising cleanly over 13-20 deg banks
+  const channelWallT = 1 - smoothstep(0.68, 2.82, absDn);
+  const channelBedDepth = 0.59 + 0.04 * Math.cos(x * 0.19 - 0.5);
+  const creekCarve = -channelBedDepth * channelWallT * creekEastWestFade;
+
+  // V1.5A Independent Quiet East Pond basin (~15.5m x 11.5m, organic asymmetric belly, ~47cm deep)
+  // Soft domain warp avoids artificial ellipse silhouette while preserving C1 continuity
+  const warpX = 0.52 * Math.sin(z * 0.34 - 0.6) + 0.28 * Math.cos(x * 0.24);
+  const warpZ =
+    0.36 * Math.sin(x * 0.29 + 0.8) + 0.2 * Math.cos((x - z) * 0.22);
+
+  // Main tranquil pond belly skewed gently south-east of stream centerline
+  const pondDx = (x - 15.0 + warpX * 0.5) / 7.5;
+  const pondDz = (z - 31.35 + warpZ * 0.55) / 6.12;
+  const pondR2 = pondDx * pondDx + pondDz * pondDz;
+  const pondMainLobe = pondR2 < 4.5 ? Math.exp(-pondR2 * 0.92) : 0;
+
+  // Gradual west-mouth flare (X≈6.5..12.0) so main creek widens smoothly into the pond
+  const westMouthDx = (x - 10.1 + warpX * 0.3) / 4.7;
+  const westMouthDz = (z - 30.8 + warpZ * 0.3) / 4.1;
+  const westMouthR2 = westMouthDx * westMouthDx + westMouthDz * westMouthDz;
+  const westMouthLobe = westMouthR2 < 4.2 ? Math.exp(-westMouthR2 * 0.96) * 0.72 : 0;
+
+  // Long, gentle east-outlet taper (X≈18.5..24.5) so pond narrows softly without X=22-23 pinching
+  const eastTailDx = (x - 20.55 + warpX * 0.3) / 4.75;
+  const eastTailDz = (z - 30.18 + warpZ * 0.3) / 3.55;
+  const eastTailR2 = eastTailDx * eastTailDx + eastTailDz * eastTailDz;
+  const eastTailLobe = eastTailR2 < 4.2 ? Math.exp(-eastTailR2 * 0.96) * 0.62 : 0;
+
+  // Smooth C1 union of the three asymmetric lobes (never hard max cusps)
+  const pondRaw = smoothMax(
+    pondMainLobe,
+    smoothMax(westMouthLobe, eastTailLobe, 0.22),
+    0.24
+  );
+  const pondShape =
+    pondRaw * (1 + 0.045 * Math.sin(x * 0.27 + z * 0.23));
+  const pondIntensity = THREE.MathUtils.clamp(pondShape, 0, 1.18);
+  // Deepens tranquil center to ~ -0.578m (~47.3cm water depth) with soft shallow shore shelves
+  const pondCarve = -0.702 * smoothstep(0.05, 0.92, pondIntensity);
+
+  // Localized C1 smoothMin strictly scoped to the East Pond corridor (zero side-effect on bridge/upstream)
+  const pondBlendK =
+    0.25 *
+    smoothstep(4.2, 7.2, x) *
+    (1 - smoothstep(24.0, 28.0, x)) *
+    smoothstep(22.0, 25.0, z) *
+    (1 - smoothstep(37.5, 40.5, z));
+  const totalCarve = smoothMin(creekCarve, pondCarve, pondBlendK);
 
   const nearFloorY = THREE.MathUtils.clamp(
-    eastSideBias + westSideBias + microUndulation + creekDepression,
-    -0.28,
-    0.36
+    eastSideBias + westSideBias + microUndulation + bankTerrace + totalCarve,
+    -0.6,
+    0.34
   );
 
   // 3. Outer mountain & hill envelope (strictly gated outside Overview camera volume)
@@ -225,8 +320,10 @@ export function evalValleyHeight(x: number, z: number): number {
 }
 
 const COLOR_VERGE = new THREE.Color(0x747360); // Warm mossy earth near courtyard
-const COLOR_CREEK_BED = new THREE.Color(0x645f50); // Damp riverbed slate-earth
-const COLOR_MEADOW_LOW = new THREE.Color(0x616d52); // Muted moss green
+const COLOR_BED_DEEP = new THREE.Color(0x26312e); // Deep quiet cyan-slate pond & streambed
+const COLOR_BED_SHALLOW = new THREE.Color(0x566059); // Natural blue-grey shallow gravel bed
+const COLOR_WET_BANK = new THREE.Color(0x3c4335); // Tight damp moss-mud shoreline rim
+const COLOR_MEADOW_LOW = new THREE.Color(0x6b7b52); // Natural Jiangnan dry moss & grass slope
 const COLOR_HILL_MID = new THREE.Color(0x4c5e4a); // Restrained Jiangnan forest green
 const COLOR_RIDGE_HIGH = new THREE.Color(0x5b6e68); // Muted blue-green ridge
 const COLOR_DISTANT_MIST = new THREE.Color(0x73837e); // Lighter desaturated mountain blue-green
@@ -240,14 +337,49 @@ function computeTerrainVertexColor(
   z: number,
   target: THREE.Color
 ) {
+  // South creek & pond 4-layer stratification:
+  // 1) Deep bed (y < -0.14..-0.38) -> 2) Shallow bed (y < -0.105)
+  // 3) Tight wet shoreline rim (y ∈ [-0.105, -0.045]) -> 4) Dry moss grass (y >= +0.025)
+  // Organic shorelineJitter modulates color lookup only (never terrain vertex height).
+  if (z > 18.2 && y < 0.08) {
+    const shorelineJitter =
+      (Math.sin(x * 0.95 + z * 0.72) * 0.55 +
+        Math.cos(x * 1.63 - z * 1.31) * 0.45) *
+      0.008;
+    const lookupY = y + shorelineJitter;
+    const microTone =
+      (Math.sin(x * 0.62 - z * 0.54) + Math.cos(x * 0.37 + z * 0.49)) * 0.011;
+
+    if (lookupY < -0.105) {
+      const deepT = smoothstep(-0.14, -0.38, lookupY);
+      target.lerpColors(COLOR_BED_SHALLOW, COLOR_BED_DEEP, deepT);
+      target.offsetHSL(0, 0, microTone * 0.45);
+      return;
+    }
+    if (lookupY < -0.045) {
+      const rimT = smoothstep(-0.105, -0.055, lookupY);
+      target.lerpColors(COLOR_BED_SHALLOW, COLOR_WET_BANK, rimT);
+      target.offsetHSL(0, -0.006, microTone * 0.65);
+      return;
+    }
+    const dryT = smoothstep(-0.045, 0.025, lookupY);
+    target.lerpColors(COLOR_WET_BANK, COLOR_MEADOW_LOW, dryT);
+    const nBank =
+      (Math.sin(x * 0.18 + z * 0.14) + Math.cos(x * 0.1 - z * 0.16)) * 0.014;
+    target.offsetHSL(0, -0.008 * dryT, nBank * dryT + microTone * 0.55);
+    return;
+  }
+
   if (y < -0.06) {
-    target.copy(COLOR_CREEK_BED);
+    target.copy(COLOR_BED_SHALLOW);
     return;
   }
 
   if (y < 0.8) {
     const t = smoothstep(-0.05, 0.8, y);
-    target.lerpColors(COLOR_VERGE, COLOR_MEADOW_LOW, t);
+    const southBankBlend = smoothstep(18.2, 20.5, z);
+    _tmpColor.lerpColors(COLOR_VERGE, COLOR_MEADOW_LOW, southBankBlend);
+    target.lerpColors(_tmpColor, COLOR_MEADOW_LOW, t);
   } else if (y < 9.5) {
     const t = smoothstep(0.8, 9.5, y);
     target.lerpColors(COLOR_MEADOW_LOW, COLOR_HILL_MID, t);
@@ -344,53 +476,155 @@ function buildDistantXuanwuSilhouette(material: THREE.Material): THREE.Mesh {
 }
 
 /**
- * Constructs the Phase 2C.1 Jiangnan Mountain Valley terrain & spatial blockout:
- * - Single contiguous low-poly heightfield (340m × 325m, X ∈ [-170,+170], Z ∈ [-150,+175])
- *   extending far beyond max orbit extremes into atmospheric fog
+ * Builds monotonically increasing axis coordinates concentrating ~0.68m x 0.95m
+ * triangle resolution inside the south creek & pond corridor while keeping outer
+ * valleys and mountains lightweight (~23k verts total, zero seam T-junctions).
+ */
+function buildNonUniformAxis(
+  zones: { start: number; end: number; step: number }[]
+): number[] {
+  const coords: number[] = [];
+  zones.forEach((zone, zIdx) => {
+    const segs = Math.max(1, Math.round((zone.end - zone.start) / zone.step));
+    const iStart = zIdx === 0 ? 0 : 1;
+    for (let i = iStart; i <= segs; i++) {
+      coords.push(zone.start + ((zone.end - zone.start) * i) / segs);
+    }
+  });
+  return coords;
+}
+
+/**
+ * Generates a lightweight seamless 256x256 near-white moss/earth micro-grain
+ * CanvasTexture so valleyMat breaks up smooth shoreline gradients without
+ * darkening terrain vertex colors or introducing visible repeat seams.
+ */
+function createTerrainMossGrainTexture(): THREE.CanvasTexture {
+  const size = 256;
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d')!;
+
+  ctx.fillStyle = '#eff1ec';
+  ctx.fillRect(0, 0, size, size);
+
+  const colors = ['#e2e6dc', '#f5f6f1', '#e5e1d7', '#dde2d6'];
+  for (let i = 0; i < 1400; i++) {
+    const x = ((i * 89 + (i % 19) * 23) % size + size) % size;
+    const y = ((i * 53 + (i % 29) * 17) % size + size) % size;
+    const rx = 2.0 + (i % 5) * 1.1;
+    const ry = 1.6 + (i % 4) * 0.9;
+    ctx.fillStyle = colors[i % colors.length];
+    ctx.globalAlpha = 0.08 + (i % 5) * 0.028;
+
+    // Wrap across periodic tile boundaries for zero repeat seams
+    for (let ox = -size; ox <= size; ox += size) {
+      const px = x + ox;
+      if (px + rx < 0 || px - rx > size) continue;
+      for (let oy = -size; oy <= size; oy += size) {
+        const py = y + oy;
+        if (py + ry < 0 || py - ry > size) continue;
+        ctx.beginPath();
+        ctx.ellipse(px, py, rx, ry, (i % 7) * 0.45, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+  }
+  ctx.globalAlpha = 1;
+
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.wrapS = THREE.RepeatWrapping;
+  tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set(95, 91);
+  tex.anisotropy = 4;
+  return tex;
+}
+
+/**
+ * Constructs the Phase 2C.1 / N1-B1-V1.4 Jiangnan Mountain Valley terrain:
+ * - Single contiguous rectilinear heightfield (X ∈ [-170,+170], Z ∈ [-150,+175])
+ *   with local south-creek enrichment (~0.95m X × ~0.68m Z) and coarse outer hills
  * - Secondary distant northern Xuanwu mountain silhouette ribbon
- * - Zero trees, bamboo, water, bridges, or rocks (reserved cleanly for Phase 2C.2+)
  */
 export function buildTempleValley(): ValleyBuildResult {
   const group = new THREE.Group();
   group.name = 'temple-jiangnan-valley-blockout';
 
-  const width = 340;
-  const depth = 325;
-  const centerZ = 12.5;
-  const segX = 136;
-  const segZ = 130;
+  const xCoords = buildNonUniformAxis([
+    { start: -170, end: -48, step: 4.0 },
+    { start: -48, end: 46, step: 0.95 },
+    { start: 46, end: 170, step: 4.0 },
+  ]);
+  const zCoords = buildNonUniformAxis([
+    { start: -150, end: 12, step: 3.2 },
+    { start: 12, end: 18, step: 1.5 },
+    { start: 18, end: 42, step: 0.65 },
+    { start: 42, end: 175, step: 3.4 },
+  ]);
 
-  const terrainGeo = new THREE.PlaneGeometry(width, depth, segX, segZ);
-  terrainGeo.rotateX(-Math.PI / 2);
-  terrainGeo.translate(0, 0, centerZ);
+  const cols = xCoords.length;
+  const rows = zCoords.length;
+  const vertexCount = cols * rows;
 
-  const posAttr = terrainGeo.attributes.position as THREE.BufferAttribute;
-  const vertexCount = posAttr.count;
+  const positions = new Float32Array(vertexCount * 3);
   const colors = new Float32Array(vertexCount * 3);
+  const uvs = new Float32Array(vertexCount * 2);
+  const indices: number[] = [];
 
-  for (let i = 0; i < vertexCount; i++) {
-    const vx = posAttr.getX(i);
-    const vz = posAttr.getZ(i);
-    const vy = evalValleyHeight(vx, vz);
-    posAttr.setY(i, vy);
+  for (let iz = 0; iz < rows; iz++) {
+    const vz = zCoords[iz];
+    const vUv = 1 - (vz + 150) / 325;
+    for (let ix = 0; ix < cols; ix++) {
+      const vx = xCoords[ix];
+      const vy = evalValleyHeight(vx, vz);
+      const idx = iz * cols + ix;
 
-    computeTerrainVertexColor(vx, vy, vz, _tmpColor);
-    colors[i * 3] = _tmpColor.r;
-    colors[i * 3 + 1] = _tmpColor.g;
-    colors[i * 3 + 2] = _tmpColor.b;
+      positions[idx * 3] = vx;
+      positions[idx * 3 + 1] = vy;
+      positions[idx * 3 + 2] = vz;
+
+      uvs[idx * 2] = (vx + 170) / 340;
+      uvs[idx * 2 + 1] = vUv;
+
+      computeTerrainVertexColor(vx, vy, vz, _tmpColor);
+      colors[idx * 3] = _tmpColor.r;
+      colors[idx * 3 + 1] = _tmpColor.g;
+      colors[idx * 3 + 2] = _tmpColor.b;
+    }
   }
 
-  posAttr.needsUpdate = true;
+  for (let iz = 0; iz < rows - 1; iz++) {
+    for (let ix = 0; ix < cols - 1; ix++) {
+      const a = iz * cols + ix;
+      const b = a + 1;
+      const c = (iz + 1) * cols + ix;
+      const d = c + 1;
+      // Upward +Y normal winding matching PlaneGeometry rotated -PI/2
+      indices.push(a, c, b, b, c, d);
+    }
+  }
+
+  const terrainGeo = new THREE.BufferGeometry();
+  terrainGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  terrainGeo.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
   terrainGeo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  terrainGeo.setIndex(indices);
   terrainGeo.computeVertexNormals();
   terrainGeo.computeBoundingBox();
   terrainGeo.computeBoundingSphere();
 
+  const valleyGrainTex = createTerrainMossGrainTexture();
   const valleyMat = new THREE.MeshStandardMaterial({
+    map: valleyGrainTex,
     vertexColors: true,
     roughness: 0.94,
     metalness: 0.01,
     envMapIntensity: 0.35,
+  });
+  valleyMat.addEventListener('dispose', () => {
+    valleyGrainTex.dispose();
   });
 
   const terrainMesh = new THREE.Mesh(terrainGeo, valleyMat);

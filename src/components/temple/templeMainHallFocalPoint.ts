@@ -3,13 +3,13 @@ import { TempleMaterialPalette } from './templeProceduralMaterials';
 import { TempleModelSlot } from './templeModelManifest';
 
 export interface MainHallFocalPointBuild {
-  /** Stepped Sumeru dais + Lotus pedestal sitting on Main Hall floor [0, 0.63, -17.70] */
+  /** Stepped Sumeru dais + Lotus pedestal sitting on Main Hall floor [0, 1.83, -21.10] */
   pedestalGroup: THREE.Group;
-  /** Empty GLB mount seated flush on lotus pedestal crown (world [0, 2.13, -17.70], facing +Z south) */
+  /** Empty GLB mount seated flush on lotus pedestal crown (world [0, 3.33, -21.10], facing +Z south) */
   buddhaModelAnchor: THREE.Group;
-  /** Traditional dark hardwood Chinese Buddhist altar [0, 0.63, -14.35], top at world Y = 1.49 */
+  /** Traditional dark hardwood Chinese Buddhist altar [0, 1.83, -17.75], top at world Y = 2.69 */
   altarGroup: THREE.Group;
-  /** Carved wooden shrine niche & restrained architectural halo behind the dais [0, 0.63, -19.25] */
+  /** Carved wooden shrine niche & restrained architectural halo behind the dais [0, 1.83, -22.65] */
   backdropGroup: THREE.Group;
 }
 
@@ -95,7 +95,7 @@ export function buildLotusPedestalAndBuddhaAnchor(
   contactShadow.position.y = 0.004;
   pedestalGroup.add(contactShadow);
 
-  // 1. Stepped Traditional Sumeru Architectural Dais (须弥座: local y = 0.00 -> 0.86, world Y = 1.490m)
+  // 1. Stepped Traditional Sumeru Architectural Dais (须弥座: local y = 0.00 -> 0.86, world Y = 2.690m)
   // 下枋底座 (2.90m W × 2.15m D × 0.24m H)
   const daisLower = new THREE.Mesh(
     new THREE.BoxGeometry(2.9, 0.24, 2.15),
@@ -171,7 +171,7 @@ export function buildLotusPedestalAndBuddhaAnchor(
   daisDeck.receiveShadow = true;
   pedestalGroup.add(daisDeck);
 
-  // 2. Sculpted Double-Lotus Pedestal (仰覆莲座: y = 0.86 -> 1.50, crown world Y = 2.130m)
+  // 2. Sculpted Double-Lotus Pedestal (仰覆莲座: y = 0.86 -> 1.50, crown world Y = 3.330m)
   // 下盘径 1.88m (r=0.94), 束腰径 1.22m (r=0.61), 冠径 1.66m (r=0.83), 高 0.64m
   const lotusGroup = new THREE.Group();
   lotusGroup.name = 'temple-lotus-pedestal';
@@ -249,7 +249,7 @@ export function buildLotusPedestalAndBuddhaAnchor(
 
   pedestalGroup.add(lotusGroup);
 
-  // 3. Dedicated Shakyamuni Buddha GLB Model Slot (world [0, 2.13, -17.70], facing +Z south)
+  // 3. Dedicated Shakyamuni Buddha GLB Model Slot (world [0, 3.33, -21.10], facing +Z south)
   // Intentionally left bare in Phase 2A — zero placeholder spheres, cylinders, or stone tablets.
   const mountOffsetY = slot.pedestalTopOffsetY ?? 1.5;
   const buddhaModelAnchor = new THREE.Group();
@@ -264,7 +264,7 @@ export function buildLotusPedestalAndBuddhaAnchor(
 
 /**
  * Builds the traditional dark hardwood Main Hall offering altar (翘头长条供案)
- * Scheme A1: 3.10m wide × 0.88m deep × 0.86m high -> mensa top at world Y = 1.490m.
+ * Scheme A1 + Scheme C podium: 3.10m wide × 0.88m deep × 0.86m high -> mensa top at world Y = 2.690m.
  */
 export function buildMainAltar(
   palette: TempleMaterialPalette,
@@ -422,17 +422,17 @@ export function buildMainAltar(
 
 /**
  * Builds the traditional Chinese wooden shrine niche & circular architectural aureole
- * under Scheme A1:
- * - Anchor: [0, 0.630, -19.250]
+ * under Scheme A1 + Scheme C elevated podium:
+ * - Anchor: [0, 1.830, -22.650]
  * - Cornice width: 4.32m (X ∈ [-2.160, +2.160])
- * - Height: 4.250m -> World Top Y = 4.880m (0.20m below lowest beam 5.08m, 0.41m below crossBeam 5.29m)
- * - Z bounds: [-19.460, -19.010] (0.08m ahead of north wall paneling, 0.235m behind Sumeru dais)
- * - Aureole: outer Ø2.24m centered at world Y = 3.500m
+ * - Height: 4.250m -> World Top Y = 6.080m (0.20m below lowest beam 6.28m, 0.41m below crossBeam 6.49m)
+ * - Z bounds: [-22.860, -22.410] (0.08m ahead of north wall paneling, 0.235m behind Sumeru dais)
+ * - Aureole: outer Ø2.24m centered at world Y = 4.700m
  */
 export function buildSacredBackdrop(palette: TempleMaterialPalette): THREE.Group {
   const backdropGroup = new THREE.Group();
   backdropGroup.name = 'temple-main-hall-sacred-backdrop';
-  backdropGroup.position.set(0, 0.63, -19.25);
+  backdropGroup.position.set(0, 1.83, -22.65);
 
   // 1. Stone & Hardwood Shrine Base Sill (y = 0.00 -> 0.34, world Y = 0.63 -> 0.97)
   const stoneSill = new THREE.Mesh(
@@ -537,8 +537,8 @@ export function buildSacredBackdrop(palette: TempleMaterialPalette): THREE.Group
     backdropGroup.add(corbel);
   });
 
-  // 5. Restrained Circular Architectural Aureole (背光: outer Ø2.24m, centered at world Y = 3.500m)
-  const aureoleY = 2.87; // 0.63 + 2.87 = 3.500m
+  // 5. Restrained Circular Architectural Aureole (背光: outer Ø2.24m, centered at world Y = 4.700m)
+  const aureoleY = 2.87; // 1.83 + 2.87 = 4.700m
   const aureoleGroup = new THREE.Group();
   aureoleGroup.position.set(0, aureoleY, 0.04);
 

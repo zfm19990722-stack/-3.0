@@ -25,10 +25,10 @@ export interface WalkActorState {
 
 export const WALK_DEFAULTS = {
   spawnX: 0,
-  spawnY: 0.3,
-  spawnZ: 9.2,
-  spawnYaw: 0, // Facing North (-Z) along central axis toward Main Hall
-  spawnPitch: 0.03,
+  spawnY: 0.025,
+  spawnZ: 11.2,
+  spawnYaw: 0, // Facing North (-Z) from inside South Gate across open forecourt toward Main Hall
+  spawnPitch: 0.06,
   eyeHeight: 1.65,
   radius: 0.27,
   height: 1.72,

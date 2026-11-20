@@ -1,10 +1,10 @@
 import * as THREE from 'three';
 
 /**
- * Courtyard 360° Overview Camera Safety & Orbit Configuration (Phase 2B.1).
- * Keeps OrbitControls strictly exterior to all solid temple structures,
- * walls, columns, lanterns, curved Chinese roofs, and above ground,
- * with continuous swept-segment sliding and zero fighting with OrbitControls.
+ * Courtyard 360° Overview Camera Safety & Orbit Configuration (Phase 2C.2C).
+ * Aligned strictly with Phase 2C.2B Open Mountain Temple Layout (Scheme C):
+ * keeps OrbitControls exterior to Main Hall, Side Halls, South Gate, elevated
+ * podium/terrace/stairs, courtyard lanterns, curved roofs, and ground.
  */
 
 export const OVERVIEW_ORBIT_CONFIG = {
@@ -19,12 +19,12 @@ export const OVERVIEW_ORBIT_CONFIG = {
 } as const;
 
 export const OVERVIEW_TARGET_BOUNDS = {
-  minX: -11.5,
-  maxX: 11.5,
+  minX: -13.5,
+  maxX: 13.5,
   minY: 0.65,
-  maxY: 5.2,
-  minZ: -17.5,
-  maxZ: 8.5,
+  maxY: 6.0,
+  minZ: -20.5,
+  maxZ: 14.5,
 } as const;
 
 /** Safety radius around perspective camera (near = 0.15m + FOV corner cushion) */
@@ -70,200 +70,134 @@ interface CylinderSpec {
 }
 
 const SOLID_BOXES: readonly SolidBoxSpec[] = [
-  // 1. Main Hall (大雄宝殿) solid interior & structural envelope
+  // 1. Main Hall (大雄宝殿 @ (0, +1.800, -17.600)) solid podium, interior & neck
+  {
+    id: 'main-hall-podium-and-terrace',
+    minX: -7.8,
+    maxX: 7.8,
+    minY: 0,
+    maxY: 1.82,
+    minZ: -23.4,
+    maxZ: -8.6,
+  },
   {
     id: 'main-hall-body',
     minX: -7.45,
     maxX: 7.45,
-    minY: 0,
-    maxY: 5.55,
-    minZ: -19.98,
-    maxZ: -8.4,
+    minY: 1.8,
+    maxY: 6.75,
+    minZ: -23.38,
+    maxZ: -11.95,
   },
-  // Main Hall upper neck beneath upper roof
   {
     id: 'main-hall-upper-neck',
     minX: -6.35,
     maxX: 6.35,
-    minY: 5.55,
-    maxY: 7.05,
-    minZ: -18.6,
-    maxZ: -9.7,
+    minY: 6.75,
+    maxY: 8.25,
+    minZ: -22.0,
+    maxZ: -13.15,
   },
-  // Main Hall terrace & front stairs (low stone plinth)
+  // Two-Flight Stone Stairs & Widened Mid-Landing
   {
-    id: 'main-terrace',
-    minX: -6.65,
-    maxX: 6.65,
+    id: 'upper-stair-podium',
+    minX: -3.38,
+    maxX: 3.38,
     minY: 0,
-    maxY: 0.72,
-    minZ: -8.4,
-    maxZ: -5.4,
+    maxY: 1.8,
+    minZ: -8.6,
+    maxZ: -6.0,
     preferLiftOnly: true,
   },
   {
-    id: 'main-terrace-stairs',
-    minX: -2.35,
-    maxX: 2.35,
+    id: 'mid-landing',
+    minX: -4.4,
+    maxX: 4.4,
     minY: 0,
-    maxY: 0.65,
-    minZ: -5.4,
-    maxZ: -4.15,
+    maxY: 0.92,
+    minZ: -6.0,
+    maxZ: -4.4,
+    preferLiftOnly: true,
+  },
+  {
+    id: 'lower-stair-flight',
+    minX: -3.38,
+    maxX: 3.38,
+    minY: 0,
+    maxY: 0.9,
+    minZ: -4.4,
+    maxZ: -1.6,
     preferLiftOnly: true,
   },
 
-  // 2. Left (West, -X) & Right (East, +X) Side Halls (东西偏殿)
+  // 2. Relocated West (-X) & East (+X) Side Halls (东西偏殿 @ (±11.800, +0.360, +2.400))
   ...([-1, 1] as const).flatMap((sideSign): SolidBoxSpec[] => {
-    const x1 = sideSign * 6.55;
-    const x2 = sideSign * 13.3;
-    const stairX1 = sideSign * 5.85;
-    const stairX2 = sideSign * 6.6;
+    const x1 = sideSign * 8.5;
+    const x2 = sideSign * 15.1;
+    const stairX1 = sideSign * 7.7;
+    const stairX2 = sideSign * 8.55;
     return [
       {
         id: sideSign < 0 ? 'west-side-hall' : 'east-side-hall',
         minX: Math.min(x1, x2),
         maxX: Math.max(x1, x2),
         minY: 0,
-        maxY: 3.92,
-        minZ: -4.24,
-        maxZ: 4.24,
+        maxY: 4.05,
+        minZ: -1.8,
+        maxZ: 6.6,
       },
       {
         id: sideSign < 0 ? 'west-side-stairs' : 'east-side-stairs',
         minX: Math.min(stairX1, stairX2),
         maxX: Math.max(stairX1, stairX2),
         minY: 0,
-        maxY: 0.38,
-        minZ: -1.65,
-        maxZ: 1.65,
+        maxY: 0.42,
+        minZ: 1.0,
+        maxZ: 3.8,
         preferLiftOnly: true,
       },
     ];
   }),
 
-  // 3. Covered Corridors & Corner Pavilions (回廊与角亭)
-  ...([-1, 1] as const).flatMap((sideSign): SolidBoxSpec[] => {
-    const cx1 = sideSign * 6.55;
-    const cx2 = sideSign * 8.65;
-    const ew1 = sideSign * 3.4;
-    const ew2 = sideSign * 6.6;
-    return [
-      {
-        id: sideSign < 0 ? 'nw-corridor' : 'ne-corridor',
-        minX: Math.min(cx1, cx2),
-        maxX: Math.max(cx1, cx2),
-        minY: 0,
-        maxY: 2.78,
-        minZ: -8.4,
-        maxZ: -4.2,
-      },
-      {
-        id: sideSign < 0 ? 'sw-ns-corridor' : 'se-ns-corridor',
-        minX: Math.min(cx1, cx2),
-        maxX: Math.max(cx1, cx2),
-        minY: 0,
-        maxY: 2.78,
-        minZ: 4.2,
-        maxZ: 8.6,
-      },
-      {
-        id: sideSign < 0 ? 'sw-corner-pavilion' : 'se-corner-pavilion',
-        minX: Math.min(cx1, cx2),
-        maxX: Math.max(cx1, cx2),
-        minY: 0,
-        maxY: 2.78,
-        minZ: 8.6,
-        maxZ: 10.6,
-      },
-      {
-        id: sideSign < 0 ? 'sw-ew-corridor' : 'se-ew-corridor',
-        minX: Math.min(ew1, ew2),
-        maxX: Math.max(ew1, ew2),
-        minY: 0,
-        maxY: 2.78,
-        minZ: 8.6,
-        maxZ: 10.6,
-      },
-    ];
-  }),
-
-  // 4. South Gate (山门)
+  // 3. Relocated South Gate (南山门 @ (0, +0.240, +14.000)) & Gate Steps
   {
     id: 'south-gate-body',
     minX: -3.44,
     maxX: 3.44,
     minY: 0,
-    maxY: 3.4,
-    minZ: 8.38,
-    maxZ: 11.22,
+    maxY: 3.35,
+    minZ: 12.6,
+    maxZ: 15.4,
   },
   {
-    id: 'south-gate-steps',
+    id: 'south-gate-inner-steps',
     minX: -1.98,
     maxX: 1.98,
     minY: 0,
-    maxY: 0.36,
-    minZ: 7.62,
-    maxZ: 8.42,
+    maxY: 0.3,
+    minZ: 11.8,
+    maxZ: 12.62,
     preferLiftOnly: true,
   },
-
-  // 5. Compound Perimeter Enclosure Walls (院墙)
-  ...([-1, 1] as const).flatMap((sideSign): SolidBoxSpec[] => {
-    const wx1 = sideSign * 8.45;
-    const wx2 = sideSign * 8.95;
-    const swx1 = sideSign * 3.35;
-    const swx2 = sideSign * 8.78;
-    const nwx1 = sideSign * 7.55;
-    const nwx2 = sideSign * 8.85;
-    return [
-      {
-        id: sideSign < 0 ? 'perimeter-west-north' : 'perimeter-east-north',
-        minX: Math.min(wx1, wx2),
-        maxX: Math.max(wx1, wx2),
-        minY: 0,
-        maxY: 2.82,
-        minZ: -20.05,
-        maxZ: -4.18,
-      },
-      {
-        id: sideSign < 0 ? 'perimeter-west-south' : 'perimeter-east-south',
-        minX: Math.min(wx1, wx2),
-        maxX: Math.max(wx1, wx2),
-        minY: 0,
-        maxY: 2.82,
-        minZ: 4.18,
-        maxZ: 10.68,
-      },
-      {
-        id: sideSign < 0 ? 'perimeter-south-west' : 'perimeter-south-east',
-        minX: Math.min(swx1, swx2),
-        maxX: Math.max(swx1, swx2),
-        minY: 0,
-        maxY: 2.82,
-        minZ: 10.4,
-        maxZ: 10.9,
-      },
-      {
-        id: sideSign < 0 ? 'perimeter-north-west' : 'perimeter-north-east',
-        minX: Math.min(nwx1, nwx2),
-        maxX: Math.max(nwx1, nwx2),
-        minY: 0,
-        maxY: 2.82,
-        minZ: -20.2,
-        maxZ: -19.7,
-      },
-    ];
-  }),
+  {
+    id: 'south-gate-outer-steps',
+    minX: -1.98,
+    maxX: 1.98,
+    minY: 0,
+    maxY: 0.3,
+    minZ: 15.38,
+    maxZ: 16.24,
+    preferLiftOnly: true,
+  },
 ];
 
 const CURVED_ROOFS: readonly CurvedRoofSpec[] = [
-  // Main Hall Lower Eave Roof
+  // Main Hall Lower Eave Roof (world baseY = 1.80 + 4.75 + 0.14 = 6.69, centerZ = -17.55)
   {
     id: 'main-lower-roof',
     centerX: 0,
-    centerZ: -14.15,
-    baseY: 5.49,
+    centerZ: -17.55,
+    baseY: 6.69,
     rotated90: false,
     eaveHalfW: 8.15,
     eaveHalfD: 6.35,
@@ -272,14 +206,14 @@ const CURVED_ROOFS: readonly CurvedRoofSpec[] = [
     height: 1.05,
     cornerLift: 0.3,
     withMainRidge: false,
-    skirtApproachMinY: 4.95,
+    skirtApproachMinY: 6.15,
   },
-  // Main Hall Upper Roof
+  // Main Hall Upper Roof (world baseY = 1.80 + 4.75 + 1.60 = 8.15, centerZ = -17.55)
   {
     id: 'main-upper-roof',
     centerX: 0,
-    centerZ: -14.15,
-    baseY: 6.95,
+    centerZ: -17.55,
+    baseY: 8.15,
     rotated90: false,
     eaveHalfW: 7.65,
     eaveHalfD: 5.35,
@@ -288,15 +222,15 @@ const CURVED_ROOFS: readonly CurvedRoofSpec[] = [
     height: 2.2,
     cornerLift: 0.36,
     withMainRidge: true,
-    skirtApproachMinY: 6.35,
+    skirtApproachMinY: 7.55,
   },
-  // Left & Right Side Hall Roofs (rotated 90 deg)
+  // Relocated West & East Side Hall Roofs (rotated 90 deg, centerX = ±11.78, centerZ = +2.40, baseY = 3.93)
   ...([-1, 1] as const).map(
     (sideSign): CurvedRoofSpec => ({
       id: sideSign < 0 ? 'west-side-roof' : 'east-side-roof',
-      centerX: sideSign * 9.88,
-      centerZ: 0,
-      baseY: 3.87,
+      centerX: sideSign * 11.78,
+      centerZ: 2.4,
+      baseY: 3.93,
       rotated90: true,
       eaveHalfW: 4.55,
       eaveHalfD: 3.62,
@@ -305,87 +239,15 @@ const CURVED_ROOFS: readonly CurvedRoofSpec[] = [
       height: 1.65,
       cornerLift: 0.24,
       withMainRidge: true,
-      skirtApproachMinY: 3.55,
+      skirtApproachMinY: 3.6,
     })
   ),
-  // NW / NE Corridor Roofs (rotated 90 deg)
-  ...([-1, 1] as const).map(
-    (sideSign): CurvedRoofSpec => ({
-      id: sideSign < 0 ? 'nw-corridor-roof' : 'ne-corridor-roof',
-      centerX: sideSign * 7.6,
-      centerZ: -6.18,
-      baseY: 2.74,
-      rotated90: true,
-      eaveHalfW: 1.52,
-      eaveHalfD: 1.32,
-      ridgeHalfW: 1.2,
-      topHalfD: 0,
-      height: 0.72,
-      cornerLift: 0.12,
-      withMainRidge: true,
-      skirtApproachMinY: 2.55,
-    })
-  ),
-  // SW / SE N-S Corridor Roofs (rotated 90 deg)
-  ...([-1, 1] as const).map(
-    (sideSign): CurvedRoofSpec => ({
-      id: sideSign < 0 ? 'sw-ns-corridor-roof' : 'se-ns-corridor-roof',
-      centerX: sideSign * 7.6,
-      centerZ: 6.4,
-      baseY: 2.74,
-      rotated90: true,
-      eaveHalfW: 1.72,
-      eaveHalfD: 1.3,
-      ridgeHalfW: 1.35,
-      topHalfD: 0,
-      height: 0.72,
-      cornerLift: 0.12,
-      withMainRidge: true,
-      skirtApproachMinY: 2.55,
-    })
-  ),
-  // SW / SE Corner Pavilion Roofs
-  ...([-1, 1] as const).map(
-    (sideSign): CurvedRoofSpec => ({
-      id: sideSign < 0 ? 'sw-corner-roof' : 'se-corner-roof',
-      centerX: sideSign * 7.6,
-      centerZ: 9.6,
-      baseY: 2.74,
-      rotated90: false,
-      eaveHalfW: 1.24,
-      eaveHalfD: 1.24,
-      ridgeHalfW: 0.05,
-      topHalfD: 0,
-      height: 0.88,
-      cornerLift: 0.16,
-      withMainRidge: true,
-      skirtApproachMinY: 2.55,
-    })
-  ),
-  // South E-W Corridor Roofs
-  ...([-1, 1] as const).map(
-    (sideSign): CurvedRoofSpec => ({
-      id: sideSign < 0 ? 'sw-ew-corridor-roof' : 'se-ew-corridor-roof',
-      centerX: sideSign * 5.02,
-      centerZ: 9.6,
-      baseY: 2.74,
-      rotated90: false,
-      eaveHalfW: 1.15,
-      eaveHalfD: 1.28,
-      ridgeHalfW: 0.9,
-      topHalfD: 0,
-      height: 0.72,
-      cornerLift: 0.12,
-      withMainRidge: true,
-      skirtApproachMinY: 2.55,
-    })
-  ),
-  // South Gate Roof
+  // Relocated South Gate Roof (centerZ = +14.00, baseY = 0.24 + 2.95 + 0.12 = 3.31)
   {
     id: 'south-gate-roof',
     centerX: 0,
-    centerZ: 9.8,
-    baseY: 3.37,
+    centerZ: 14.0,
+    baseY: 3.31,
     rotated90: false,
     eaveHalfW: 3.75,
     eaveHalfD: 1.85,
@@ -394,13 +256,13 @@ const CURVED_ROOFS: readonly CurvedRoofSpec[] = [
     height: 1.35,
     cornerLift: 0.24,
     withMainRidge: true,
-    skirtApproachMinY: 3.12,
+    skirtApproachMinY: 3.05,
   },
 ];
 
 const CYLINDER_OBSTACLES: readonly CylinderSpec[] = [
-  { id: 'courtyard-lantern-west', x: -3.0, z: -4.25, radius: 0.4, maxY: 1.74 },
-  { id: 'courtyard-lantern-east', x: 3.0, z: -4.25, radius: 0.4, maxY: 1.74 },
+  { id: 'courtyard-lantern-west', x: -3.8, z: -5.2, radius: 0.4, maxY: 2.64 },
+  { id: 'courtyard-lantern-east', x: 3.8, z: -5.2, radius: 0.4, maxY: 2.64 },
 ];
 
 // Reusable scratch vectors (zero per-frame GC allocation)
@@ -551,7 +413,7 @@ export function evaluateOverviewRoofTopY(
 
 /**
  * Clamps OrbitControls target inside the temple compound envelope so users
- * can pan across Main Hall, Side Halls, Corridors, and South Gate without
+ * can pan across Main Hall, Side Halls, Forecourt, and South Gate without
  * drifting into empty void.
  */
 export function clampOverviewTarget(target: THREE.Vector3): boolean {
@@ -718,7 +580,7 @@ function depenetrateSingleBox(
     return true;
   }
 
-  // Check if camera is skimming near top of low wall/corridor/building
+  // Check if camera is skimming near top of low plinth/building
   const distTop = maxY - pos.y;
   if (distTop <= 0.72 && prevSafePos.y >= box.maxY - 0.15) {
     pos.y = maxY + 0.002;
@@ -782,7 +644,7 @@ function resolveSingleStep(
   // 2. Curved roof slope smooth glide (prevents roof penetration without snapping)
   resolveRoofSurfaceForPoint(p1, pad);
 
-  // 3. Swept-segment face slide against solid building bodies & walls
+  // 3. Swept-segment face slide against solid building bodies & podiums
   for (let pass = 0; pass < 3; pass++) {
     let earliestT = 2;
     let earliestBox: SolidBoxSpec | null = null;
@@ -925,7 +787,7 @@ export function isOverviewCameraColliding(
 }
 
 /**
- * Resolves camera position safely outside all architectural bodies, roofs, walls,
+ * Resolves camera position safely outside all architectural bodies, roofs, podiums,
  * lanterns, and ground using multi-substep swept sliding from `prevSafePos`.
  * Also prevents OrbitControls `minDistance` fighting when panned adjacent to a facade.
  *
@@ -981,7 +843,7 @@ export function resolveOverviewCameraPosition(
 }
 
 /**
- * Smoothly returns camera and target to the South Gate Courtyard default view
+ * Smoothly returns camera and target to the South Gate Forecourt default view
  * using spherical azimuth/polar/radius interpolation around the target so
  * resetting from 180° behind the Main Hall sweeps gracefully around the exterior
  * rather than cutting straight through the Main Hall interior.

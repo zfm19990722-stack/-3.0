@@ -23,6 +23,7 @@ import {
 } from './templeProceduralMaterials';
 import { buildTempleCourtyard } from './templeCourtyardBuilder';
 import { buildTempleValley } from './templeValleyBuilder';
+import { buildTempleWaterAndBanks } from './templeWaterAndBanksBuilder';
 import {
   buildLotusPedestalAndBuddhaAnchor,
   buildMainAltar,
@@ -50,8 +51,8 @@ interface Temple3DExperienceProps {
   interactionBridge?: Temple3DInteractionBridge;
 }
 
-const DEFAULT_CAMERA_POS = new THREE.Vector3(0, 4.65, 7.6);
-const DEFAULT_TARGET_POS = new THREE.Vector3(0, 1.85, -7.5);
+const DEFAULT_CAMERA_POS = new THREE.Vector3(0, 4.85, 10.4);
+const DEFAULT_TARGET_POS = new THREE.Vector3(0, 2.95, -10.8);
 
 // Day vs Night lighting color constants (pre-allocated outside render loop)
 const DAY_BG_COLOR = new THREE.Color(0xe6dfd3);
@@ -399,6 +400,12 @@ export default function Temple3DExperience({
     const valley = buildTempleValley();
     scene.add(valley.group);
 
+    // 1C. N1-B1 SOUTH CREEK, EAST POND & NATURAL STONE BANKS
+    const waterAndBanks = buildTempleWaterAndBanks(valley.group, maxAnisotropy);
+    scene.add(waterAndBanks.group);
+    extraTextures.push(...waterAndBanks.textures);
+    extraMaterials.push(...waterAndBanks.materials);
+
     // ------------------------------------------------------------
     // 2. ANCHORS FOR SANCTUARY ELEMENTS & FUTURE V2.2 / V2.3 ASSETS
     // ------------------------------------------------------------
@@ -516,8 +523,8 @@ export default function Temple3DExperience({
       );
       skylightKey.shadow.camera.near = 1.0;
       skylightKey.shadow.camera.far = 56;
-      skylightKey.shadow.camera.left = -18;
-      skylightKey.shadow.camera.right = 18;
+      skylightKey.shadow.camera.left = -22;
+      skylightKey.shadow.camera.right = 19;
       skylightKey.shadow.camera.top = 20;
       skylightKey.shadow.camera.bottom = -20;
       skylightKey.shadow.bias = -0.0005;
@@ -531,16 +538,16 @@ export default function Temple3DExperience({
 
     // Primary offering lamps on Main Hall altar
     const leftLampLight = new THREE.PointLight(0xffcb7a, 0.45, 12.0, 1.65);
-    leftLampLight.position.set(-0.82, 1.81, -14.33);
+    leftLampLight.position.set(-0.82, 3.01, -17.73);
     scene.add(leftLampLight);
 
     const rightLampLight = new THREE.PointLight(0xffcb7a, 0.45, 12.0, 1.65);
-    rightLampLight.position.set(0.82, 1.81, -14.33);
+    rightLampLight.position.set(0.82, 3.01, -17.73);
     scene.add(rightLampLight);
 
     // Warm sanctuary front lamp light illuminating altar, lotus pedestal & backdrop at night
     const sanctuaryFrontGlowLight = new THREE.PointLight(0xffcd85, 0.0, 11.5, 1.55);
-    sanctuaryFrontGlowLight.position.set(0, 2.2, -14.8);
+    sanctuaryFrontGlowLight.position.set(0, 3.4, -18.2);
     scene.add(sanctuaryFrontGlowLight);
 
     // Restrained directional sanctuary focal accent integrated with Day/Night environment
@@ -552,18 +559,18 @@ export default function Temple3DExperience({
       0.85,
       1.45
     );
-    sanctuaryBuddhaFocalLight.position.set(0, 4.65, -14.35);
-    sanctuaryBuddhaFocalLight.target.position.set(0, 3.2, -17.7);
+    sanctuaryBuddhaFocalLight.position.set(0, 5.85, -17.75);
+    sanctuaryBuddhaFocalLight.target.position.set(0, 4.4, -21.1);
     scene.add(sanctuaryBuddhaFocalLight.target);
     scene.add(sanctuaryBuddhaFocalLight);
 
-    // Flanking Side Hall & Courtyard Lantern warm lights at night
+    // Flanking Side Hall portal warm fill lights at night (aligned to Side Hall portals X=±8.75, Z=+2.40)
     const leftWallSconceLight = new THREE.PointLight(0xffc372, 0.0, 14.5, 1.65);
-    leftWallSconceLight.position.set(-6.8, 2.35, 0);
+    leftWallSconceLight.position.set(-8.3, 2.41, 2.4);
     scene.add(leftWallSconceLight);
 
     const rightWallSconceLight = new THREE.PointLight(0xffc372, 0.0, 14.5, 1.65);
-    rightWallSconceLight.position.set(6.8, 2.35, 0);
+    rightWallSconceLight.position.set(8.3, 2.41, 2.4);
     scene.add(rightWallSconceLight);
 
     const applyEnvironmentAtFactor = (nf: number, elapsedSec: number) => {
@@ -647,6 +654,12 @@ export default function Temple3DExperience({
       courtyard.courtyardSconceFlames.forEach((flameMesh, idx) => {
         flameMesh.scale.set(1, idx % 2 === 0 ? scaleA : scaleB, 1);
       });
+
+      waterAndBanks.updateWaterEnvironment(
+        nf,
+        elapsedSec,
+        !isSoftwareGl && !prefersReducedMotionRef.current
+      );
     };
 
     // Apply initial Day/Night lighting immediately before first draw
@@ -1260,8 +1273,8 @@ export default function Temple3DExperience({
                 </strong>
                 {cameraMode === 'walk'
                   ? isEn
-                    ? 'Walk mode: use WASD or Arrow keys to stroll slowly through the South Gate, Courtyard, Corridors, Main Hall, and Side Halls; drag with mouse or finger to look around; press Esc to return to 360° Overview.'
-                    : '第一人称漫游模式：使用 WASD 或方向键缓步穿行山门、庭院、回廊、大雄宝殿及东西侧殿；拖动画面环顾四周；按 Esc 返回 360° 全景观察。'
+                    ? 'Walk mode: use WASD or Arrow keys to stroll slowly through the South Gate, Forecourt, Granite Stairs, Main Hall, and Side Halls; drag with mouse or finger to look around; press Esc to return to 360° Overview.'
+                    : '第一人称漫游模式：使用 WASD 或方向键缓步穿行山门、开阔前院、御阶、大雄宝殿及东西偏殿；拖动画面环顾四周；按 Esc 返回 360° 全景观察。'
                   : isEn
                     ? '360° Overview: drag to orbit around the temple exterior, right-drag or two-finger drag to pan, scroll or pinch to zoom, or switch to Walk to step inside the halls.'
                     : '360° 全景模式：拖动可环绕观察寺院建筑群，右键或双指拖动平移焦点，滚轮或双指缩放；点击顶部“漫游”可由山门步入殿堂内部。'}
